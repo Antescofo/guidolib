@@ -16,7 +16,7 @@ set (GUIDOFWKVERS C)
 set (SOVERS 1)
 
 if(UNIX)
-	add_definitions(-Wall -Wno-deprecated-register -DGCC)
+	add_definitions(-Wall -DGCC)
 endif(UNIX)
 
 #######################################
@@ -250,7 +250,11 @@ else(WIN32)
 endif(WIN32)
 
 if(APPLE)
-	set(LINK ${LINK} "-framework Carbon -compatibility_version 1.0.0 -lc++")
+	if (IOS STREQUAL "yes")
+		set(LINK ${LINK} "-framework CoreText -framework CoreFoundation -framework CoreGraphics -compatibility_version 1.0.0 -lc++")
+	else()
+		set(LINK ${LINK} "-framework Carbon -framework CoreText -compatibility_version 1.0.0 -lc++")
+	endif()
 elseif (UNIX)
       EXECUTE_PROCESS ( COMMAND "pkg-config"  "--libs" "cairo"
                 OUTPUT_VARIABLE TMP
@@ -263,9 +267,32 @@ endif(APPLE)
 #######################################
 # library generation
 if (IOS STREQUAL "yes")
-	add_library(${target} STATIC ${LIBCONTENT})
+	add_library(${target} SHARED ${LIBCONTENT})
 	set_target_properties ( ${target} PROPERTIES 
+				FRAMEWORK TRUE
+				FRAMEWORK_VERSION ${GUIDOFWKVERS}
+				PUBLIC_HEADER "${PUBLICHEADERS}"
+				DEFINE_SYMBOL LIBMUSICXML_EXPORTS
+				VERSION ${VERSION}
+#				MACOSX_RPATH TRUE
+				SOVERSION ${SOVERS}
+				MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${STRVERS}
+				MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION}
+				MACOSX_FRAMEWORK_BUNDLE_VERSION "A"
+				MACOSX_FRAMEWORK_IDENTIFIER ${target}
+				XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer"
 				XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${IOS_DEPLOYMENT_TARGET} )
+
+	if (STATICLIB)
+		message (STATUS "Static Guido lib will be generated - Use -DSTATICLIB=no to change.")
+		add_library(${statictarget} STATIC ${LIBCONTENT})
+	else ()
+		message (STATUS "Static Guido lib will not be generated - Use -DSTATICLIB=yes to change.")
+	endif ()
+
+	set (LIBDEST /usr/lib)
+
+	target_link_libraries (${target} ${LINK})
 
 else()
 

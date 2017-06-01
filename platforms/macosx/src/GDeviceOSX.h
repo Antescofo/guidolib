@@ -24,6 +24,7 @@
 #include <stack>
 
 #import <QuartzCore/QuartzCore.h>
+#import <CoreText/CoreText.h>
 
 #include "VGDevice.h"
 #include "VGPen.h"
@@ -151,6 +152,8 @@ class_export GDeviceOSX : public VGDevice
 		std::stack<GState>		mStateStack;
 	
 				const VGFont *	mCurrTextFont;
+                /** an attribute dictionary containing the font, that can be used right away in a CFAttributedString */
+                CFDictionaryRef mCurrTextFontAttribute;
 				const VGFont *	mCurrMusicFont;
 				
 				VRasterOpMode	mRasterMode;

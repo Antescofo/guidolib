@@ -26,6 +26,85 @@ using namespace std;
 #include "GFontOSX.h"
 #include "GSystemOSX.h" // guido hack - must be removed asap
 
+/** Contains all the data necessary to identify a font */
+typedef struct {
+    const char *name;
+    int size;
+    int attributes;
+} FontDescriptor;
+
+/** Used by CFDictionary: prints the description of a font descriptor */
+CFStringRef FontDescriptorCopyDescription(const void *value) {
+    const FontDescriptor *descriptor = (const FontDescriptor *)value;
+    return CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%s %d %d"), descriptor->name, descriptor->size, descriptor->attributes);
+}
+
+/** Used by CFDictionary: checks if two font descriptors are equal */
+Boolean FontDescriptorEqual(const void *value1, const void *value2) {
+    const FontDescriptor *descriptor1 = (const FontDescriptor *)value1;
+    const FontDescriptor *descriptor2 = (const FontDescriptor *)value2;
+    
+    /* Size */
+    if (descriptor1->size != descriptor2->size) {
+        return false;
+    }
+    
+    /* Attributes */
+    if (descriptor1->attributes != descriptor2->attributes) {
+        return false;
+    }
+    
+    /* Name last, because it is the longest to check */
+    if (strcmp(descriptor1->name, descriptor2->name) != 0) {
+        return false;
+    }
+    
+    return true;
+}
+
+/** Builds a hash for a C string, copied from  StackOverFlow */
+CFHashCode FontDescriptorHashString(const char *str)
+{
+    CFHashCode hash = 5381;
+    int c;
+    
+    while ((c = *str++))
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+    
+    return hash;
+}
+
+/** Used by CFDictionary: builds a hash for a font descriptor */
+CFHashCode FontDescriptorHash(const void *value) {
+    const FontDescriptor *descriptor = (const FontDescriptor *)value;
+    return FontDescriptorHashString(descriptor->name) ^ descriptor->size ^ (descriptor->attributes << 16);
+}
+
+/** Used by CFDictionary: releases a font descriptor. We should use a retain count but we don't, and we assume it is always 1. */
+void FontDescriptorRelease(CFAllocatorRef allocator, const void *value) {
+    const FontDescriptor *descriptor = (const FontDescriptor *)value;
+    CFAllocatorDeallocate(allocator, (void*)descriptor->name);
+    CFAllocatorDeallocate(allocator, (void*)value);
+}
+
+/** Used by CFDictionary: reatins a font descriptor. We should use a retain count but we don't, we assume it is in the stack and we copy
+ it to the heap. */
+const void *FontDescriptorRetain(CFAllocatorRef allocator, const void *value) {
+    /* We allocate the value somewhere */
+    const FontDescriptor *descriptor = (const FontDescriptor *)value;
+    FontDescriptor *newDescriptor = (FontDescriptor*) CFAllocatorAllocate(allocator, sizeof(FontDescriptor), 0);
+    char *newName = (char*)CFAllocatorAllocate(allocator, strlen(descriptor->name) + 1, 0);
+    strcpy(newName, descriptor->name);
+    newDescriptor -> name = newName;
+    newDescriptor -> size = descriptor -> size;
+    newDescriptor -> attributes = descriptor -> attributes;
+    return newDescriptor;
+}
+
+/** Cache of fonts, shared between all the devices. */
+static CFMutableDictionaryRef fontCache = NULL;
+
+
 // --------------------------------------------------------------
 GDeviceOSX::GDeviceOSX(int inWidth, int inHeight, VGSystem* sys)
 {
@@ -33,9 +112,10 @@ GDeviceOSX::GDeviceOSX(int inWidth, int inHeight, VGSystem* sys)
 	mPhysicalHeight = inHeight;
 	
 	mCurrTextFont = NULL;
+    mCurrTextFontAttribute = NULL;
 	mCurrMusicFont = NULL;
 	mRasterMode = kOpCopy;
-//	mSymbolMap = NULL; 
+//	mSymbolMap = NULL;
 	mScaleX = mScaleY = 1;
 	mOriginX = mOriginY = 0;
 
@@ -48,12 +128,21 @@ GDeviceOSX::GDeviceOSX(int inWidth, int inHeight, VGSystem* sys)
 	SetFontAlign( kAlignLeft | kAlignBase );
 	MoveTo(0,0);
 
-	// - GDeviceOSX specific ------------------	
-	mColorSpace = ::CGColorSpaceCreateDeviceRGB(); 
+	// - GDeviceOSX specific ------------------
+	mColorSpace = ::CGColorSpaceCreateDeviceRGB();
 	
 	// guido hack - must be removed asap
-	mSys = sys; 
+	mSys = sys;
 
+    CFDictionaryKeyCallBacks keyCallBacks;
+    keyCallBacks.copyDescription = FontDescriptorCopyDescription;
+    keyCallBacks.equal = FontDescriptorEqual;
+    keyCallBacks.hash = FontDescriptorHash;
+    keyCallBacks.release = FontDescriptorRelease;
+    keyCallBacks.retain = FontDescriptorRetain;
+    if (! fontCache) {
+        fontCache = CFDictionaryCreateMutable(kCFAllocatorDefault, 10, & keyCallBacks, & kCFTypeDictionaryValueCallBacks);
+    }
 }
 
 // --------------------------------------------------------------
@@ -85,7 +174,10 @@ void GDeviceOSX::Init()
 // --------------------------------------------------------------
 GDeviceOSX::~GDeviceOSX()
 {
-	::CGColorSpaceRelease(mColorSpace);	
+	::CGColorSpaceRelease(mColorSpace);
+    if (mCurrTextFontAttribute) {
+        CFRelease(mCurrTextFontAttribute);
+    }
 }
 
 /////////////////////////////////////////////////////////////////
@@ -282,20 +374,126 @@ void GDeviceOSX::SetMusicFont( const VGFont * inObj )
 	mCurrMusicFont = inObj;
 	
 }
+const char* convertGuidoFontNameToCoreText(const char *name, int properties) {
+    
+    if (strcmp(name, "Arial") == 0)
+    {
+        switch (properties) {
+            case GFontOSX::kFontBold:
+                return "Arial-BoldMT";
+            case GFontOSX::kFontItalic:
+                return "Arial-ItalicMT";
+            default:
+                return "ArialMT";
+        }
+    }else if (strcmp(name, "Palatino") == 0)
+    {
+        switch (properties) {
+            case GFontOSX::kFontBold:
+                return "Palatino-Bold";
+            case GFontOSX::kFontItalic:
+                return "Palatino-Italic";
+            default:
+                return "Palatino";
+        }
+    }else if (strcmp(name, "Baskerville") == 0)
+    {
+        switch (properties) {
+            case GFontOSX::kFontBold:
+                return "Baskerville-Bold";
+            case GFontOSX::kFontItalic:
+                return "Baskerville-Italic";
+            default:
+                return "Baskerville";
+        }
+    }else if (strcmp(name, "Didot") == 0)
+    {
+        switch (properties) {
+            case GFontOSX::kFontBold:
+                return "Didot-Bold";
+            case GFontOSX::kFontItalic:
+                return "Didot-Italic";
+            default:
+                return "Didot";
+        }
+    }else if (strcmp(name, "Times New Roman") == 0)
+    {
+        switch (properties) {
+            case GFontOSX::kFontBold:
+                return "TimesNewRomanPS-BoldMT";
+            case GFontOSX::kFontItalic:
+                return "TimesNewRomanPS-ItalicMT";
+            default:
+                return "TimesNewRomanPSMT";
+        }
+    }else {
+        /* Default: Georgia */
+        switch (properties) {
+            case GFontOSX::kFontBold:
+                return "Georgia-Bold";
+            case GFontOSX::kFontItalic:
+                return "Georgia-Italic";
+            default:
+                return "Georgia";
+        }
+    }
+    
+}
+
+/* Creates a CTFont from a VGFont */
+CTFontRef convertVGFontToCTFont(const VGFont *vgfont) {
+    
+    /* Both name and properties make up the name of the CTFont */
+    const char *name = convertGuidoFontNameToCoreText(vgfont->GetName(), vgfont->GetProperties());
+    
+    /* Create the CTFont */
+    return CTFontCreateWithName( CFStringCreateWithCString(kCFAllocatorDefault, name, kCFStringEncodingUTF8) , vgfont->GetSize(), NULL);
+    
+}
 
 // --------------------------------------------------------------
 void GDeviceOSX::SetTextFont( const VGFont* inObj )
 {
-	// CGContextSelectFont does not return an error code, so we first select
-	// a well-known font. If we did not, musical symbols may be displayed instead of 
-	// plain-text.
+    if (! inObj) {
+        return;
+    }
 
-//	::CGContextSelectFont(mContext, "Helvetica", inObj->GetSize(), kCGEncodingMacRoman);	// ok
-	if (inObj) {
-		::CGContextSelectFont(mContext, inObj->GetName(), inObj->GetSize(), kCGEncodingMacRoman);// ok
-		mCurrTextFont = inObj;
-	}
+    /* Save the font */
+    mCurrTextFont = inObj;
+    
+    /* Forget about the old attribute dictionary */
+    if (mCurrTextFontAttribute) {
+        CFRelease(mCurrTextFontAttribute);
+    }
+    
+    /* Build a description of the font, to be used by the cache */
+    FontDescriptor descriptor;
+    descriptor.name = inObj -> GetName();
+    descriptor.size = inObj -> GetSize();
+    descriptor.attributes = inObj ->  GetProperties();
+    
+    /* Check if the font is cached */
+    CFDictionaryRef cachedAttribute = (CFDictionaryRef) CFDictionaryGetValue(fontCache, & descriptor);
+    if (cachedAttribute) {
+        mCurrTextFontAttribute = cachedAttribute;
+        CFRetain(mCurrTextFontAttribute);
+        return;
+    }
+    
+    /* The font is not cached, create it */
+    CTFontRef ctfont = convertVGFontToCTFont(inObj);
+    
+    /* Create the attribute dictionary containing the font */
+    const void *keys = kCTFontAttributeName;
+    const void *values = ctfont;
+    mCurrTextFontAttribute = CFDictionaryCreate(kCFAllocatorDefault, &keys, &values, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    CFRelease(ctfont);
+    
+    /* Cache the attribute dictionary */
+    CFDictionarySetValue(fontCache, (const void*)& descriptor, (const void*)mCurrTextFontAttribute);
 }
+
+
 
 /////////////////////////////////////////////////////////////////
 // - Pen & brush services ---------------------------------------
@@ -605,258 +803,74 @@ void GDeviceOSX::DrawMusicSymbol( float x, float y, unsigned int inSymbolID )
 	PopFillColor();
 }
 // --------------------------------------------------------------
-#ifndef IOS
+
+/* Does not support multiline, if we need it we have to replace the CTLineRef with a CTFramesetterRef.
+ May not support OS X because the code assumes that the y-coordinate is flipped. */
 void GDeviceOSX::DrawString( float x, float y, const char * s, int inCharCount )
 {
-	// this is for macos 10.4 : select a dummy font first 
-	::CGContextSelectFont(mContext, "Monaco", mCurrTextFont->GetSize(), kCGEncodingMacRoman  );// ok
-	
-	if (s == 0 || s[ 0 ] == '\0' || inCharCount == 0)
-		return;
-
-	if (inCharCount == -1) 
-		inCharCount = (int)strlen( s );
-
-	// - Manage character encoding
-	const char * convStr = s; 
-	if( convStr == 0 ) return;
-
-	// - Calculate string dimensions
-	float w = 0;
-	float h = 0;
-	float baseline = 0;
-	mCurrTextFont->GetExtent( convStr, inCharCount, &w, &h, this );
-		
-	// - Perform text alignement
-	if( mTextAlign != ( kAlignLeft | kAlignBase )) {
-		if( mTextAlign & kAlignBottom )	// Vertical align
-			y -= baseline; 
-		else if( mTextAlign & kAlignTop )
-			y += h - baseline;
-
-		if( mTextAlign & kAlignRight )	// Horizontal align
-			x -= w;
-		else if( mTextAlign & kAlignCenter )
-			x -= (w * 0.5);
-	}
-
-	// - Draw text background
-//	if( mTextBackColor.mAlpha < 255 ){
-		PushPen( mTextBackColor, 1 );
-		PushFillColor( mTextBackColor );
-		Rectangle( x, y, x + w, y + h );
-		PopFillColor();
-		PopPen();
-//	}
-
-	::CGContextSelectFont(mContext, mCurrTextFont->GetName(), mCurrTextFont->GetSize(), kCFStringEncodingMacRoman);
-    
-	// - Draw text
-	PushFillColor( VGColor(mTextColor.mRed, mTextColor.mGreen, mTextColor.mBlue,  mTextColor.mAlpha) );
-	::CGContextShowTextAtPoint(mContext, x, y, convStr, (size_t)inCharCount );
-	PopFillColor();
-	
-	// - Debug: draw refpoint
-//	PushPen( GColor( 250, 0, 0 ), 5 );	
-//	Line( debugX - 20, debugY + 20, debugX + 20, debugY - 20 );
-//	Line( debugX - 20, debugY - 20, debugX + 20, debugY + 20 );	
-//	PopPen(); 
-}
-#else		// defined IOS
-static std::string fontName2iOSName(const string name, int properties)
-{
-	string iosname = "TimesNewRomanPSMT";
-    if (name == "Times New Roman") {
-        switch (properties) {
-            case 1:		iosname = "TimesNewRomanPS-BoldMT"; break;
-            case 2:		iosname = "TimesNewRomanPS-ItalicMT"; break;
-        }
+    /* Empty check */
+    if (s == NULL || inCharCount == 0) {
+        return;
     }
-	else if (name == "Arial") {
-        switch (properties) {
-            case 1:		iosname = "Arial-BoldMT"; break;
-            case 2:		iosname = "Arial-ItalicMT"; break;
-            default:	iosname = "ArialMT";
-        }
-    }
-	else if (name == "Palatino") {
-        switch (properties) {
-            case 1:		iosname = "Palatino-Bold"; break;
-            case 2:		iosname = "Palatino-Italic"; break;
-            default:	iosname = "Palatino";
-        }
-    }
-	else if (name == "Baskerville") {
-        switch (properties) {
-            case 1:		iosname = "Baskerville-Bold"; break;
-            case 2:		iosname = "Baskerville-Italic"; break;
-            default:	iosname = "Baskerville";
-        }
-    }
-	else {
-        // default to Times New Roman
-        switch (properties) {
-            case 1:		iosname = "TimesNewRomanPS-BoldMT"; break;
-            case 2:		iosname = "TimesNewRomanPS-ItalicMT";break;
-        }
-    }
-}
-
-void GDeviceOSX::DrawString( float x, float y, const char * s, int inCharCount )
-{
-    // - Manage character encoding
-    const char * convStr = s;
-    if( convStr == 0 ) return;
     
     // Create an attributed string
-    CFMutableAttributedStringRef attributedOverlayText = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
+    CFStringRef cfstring = CFStringCreateWithCString(kCFAllocatorDefault, s, kCFStringEncodingUTF8);
+    CFAttributedStringRef attributedOverlayText = CFAttributedStringCreate(kCFAllocatorDefault, cfstring, mCurrTextFontAttribute);
+    CFRelease(cfstring);
     
-    if (inCharCount>0)
-    {
-        //CFStringCreateWithBytes(kCFAllocatorDefault, reinterpret_cast<const UInt8*>(overlayText.data()), overlayText.size(), kCFStringEncodingUTF8, false);
-        //CFStringCreateWithCString(kCFAllocatorDefault, convStr, kCFStringEncodingUTF8)
-        CFAttributedStringReplaceString(attributedOverlayText, CFRangeMake(0, 0), CFStringCreateWithCString(kCFAllocatorDefault, convStr, kCFStringEncodingUTF8));
+    /// Create a single line containing the string
+    CTLineRef line = CTLineCreateWithAttributedString(attributedOverlayText);
+    CFRelease(attributedOverlayText);
+    
+    /* Get the bounds of the text, as if we drew it in the context without changing x,y */
+    CGContextSetTextPosition(mContext, x, y);
+    CGRect bounds = CTLineGetImageBounds(line, mContext);
+    
+    /* Get the ascent and descent */
+    CGFloat ascent, descent;
+    CTLineGetTypographicBounds(line, & ascent, & descent, NULL);
+    
+    // - Perform text alignement. If we change nothing, the line is drawn (by CGContext) at baseline, left aligned
+    if (mTextAlign & kAlignBottom) {
+        y -= descent;
     }
-    
-    std::string iosConvertedFontName = fontName2iOSName(mCurrTextFont->GetName(), mCurrTextFont->GetProperties());
-/*
-    std::string fontName = mCurrTextFont->GetName();
-    if (fontName == "Times New Roman")
-    {
-        switch (mCurrTextFont->GetProperties()) {
-            case 1:  // bold
-                iosConvertedFontName = "TimesNewRomanPS-BoldMT";
-                break;
-                
-            case 2:  // italic
-                iosConvertedFontName = "TimesNewRomanPS-ItalicMT";
-                break;
-            default:
-                break;
-        }
-    }else if (fontName == "Arial")
-    {
-        switch (mCurrTextFont->GetProperties()) {
-            case 1:  // bold
-                iosConvertedFontName = "Arial-BoldMT";
-                break;
-                
-            case 2:  // italic
-                iosConvertedFontName = "Arial-ItalicMT";
-                break;
-            default:
-                iosConvertedFontName = "ArialMT";
-                break;
-        }
-    }else if (fontName == "Palatino")
-    {
-        switch (mCurrTextFont->GetProperties()) {
-            case 1:  // bold
-                iosConvertedFontName = "Palatino-Bold";
-                break;
-                
-            case 2:  // italic
-                iosConvertedFontName = "Palatino-Italic";
-                break;
-            default:
-                iosConvertedFontName = "Palatino";
-                break;
-        }
-    }else if (fontName == "Baskerville")
-    {
-        switch (mCurrTextFont->GetProperties()) {
-            case 1:  // bold
-                iosConvertedFontName = "Baskerville-Bold";
-                break;
-                
-            case 2:  // italic
-                iosConvertedFontName = "Baskerville-Italic";
-                break;
-            default:
-                iosConvertedFontName = "Baskerville";
-                break;
-        }
-    }else {
-        // default to Times New Roman
-        switch (mCurrTextFont->GetProperties()) {
-            case 1:  // bold
-                iosConvertedFontName = "TimesNewRomanPS-BoldMT";
-                break;
-                
-            case 2:  // italic
-                iosConvertedFontName = "TimesNewRomanPS-ItalicMT";
-                break;
-            default:
-                break;
-        }
+    if (mTextAlign & kAlignTop) {
+        y += ascent;
     }
- */
-    
-    CTFontRef ctFont = CTFontCreateWithName( CFStringCreateWithCString(kCFAllocatorDefault, iosConvertedFontName.c_str(), kCFStringEncodingUTF8) , mCurrTextFont->GetSize(), NULL);
-    CFAttributedStringSetAttribute(attributedOverlayText,
-                                   CFRangeMake(0, CFAttributedStringGetLength(attributedOverlayText)),
-                                   kCTFontAttributeName,
-                                   ctFont);
-    CFRelease(ctFont);
-    
-    ///Create framesetter with the attributed text
-    CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString(attributedOverlayText);
-    CGSize suggestedSize = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, /* Framesetter */
-                                                                        CFRangeMake(0, 0), /* String range (entire string) */
-                                                                        NULL, /* Frame attributes */
-                                                                        CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX), /* Constraints (CGFLOAT_MAX indicates unconstrained) */
-                                                                        NULL /* Gives the range of string that fits into the constraints, doesn't matter in your situation */
-                                                                        );
-    
-    /// Set text alignment (paragraph style)
-    CTTextAlignment alignment = kCTTextAlignmentLeft;
-    
-    // - Perform text alignement
-    float baseline = 0.0, h = suggestedSize.height, w = suggestedSize.width;
-
-    if( mTextAlign != ( kAlignLeft | kAlignBase )) {
-        if( mTextAlign & kAlignBottom )	// Vertical align
-            y -= baseline;      // was y -= baseline;
-        else if( mTextAlign & kAlignTop )
-            y += 0.5*h - baseline;    // was  y += h - baseline
-        
-        if( mTextAlign & kAlignRight )	// Horizontal align
-        {
-            alignment = kCTTextAlignmentRight;
-            x -= w;
-        }
-        else if( mTextAlign & kAlignCenter )
-        {
-            alignment = kCTTextAlignmentCenter;
-            x -= (w * 0.5);
-        }else if( mTextAlign & kAlignLeft )
-        {
-            alignment = kCTTextAlignmentLeft;
-        }
+    if (mTextAlign & kAlignCenter) {
+        x -= bounds.size.width / 2;
     }
-    
-    CTParagraphStyleSetting settings[] = {kCTParagraphStyleSpecifierAlignment, sizeof(alignment), &alignment};
-    CTParagraphStyleRef paragraphStyle = CTParagraphStyleCreate(settings, sizeof(settings) / sizeof(settings[0]));
-    CFAttributedStringSetAttribute(attributedOverlayText,
-                                   CFRangeMake(0, CFAttributedStringGetLength(attributedOverlayText)),
-                                   kCTParagraphStyleAttributeName,
-                                   paragraphStyle);
-    CFRelease(paragraphStyle);
+    if (mTextAlign & kAlignRight) {
+        x -= bounds.size.width;
+    }
     
     // Core Text changes the state of the context, so save it
     CGContextSaveGState(mContext);
     
-    /// Draw attributed text using CTFrameDraw
-    CTFrameRef frame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), CGPathCreateWithRect(CGRectMake(x, y, suggestedSize.width, suggestedSize.height), NULL), NULL);
-    CTFrameDraw(frame, mContext);
-    CFRelease(framesetter);
+    /* Move to the real position */
+    CGContextSetTextPosition(mContext, x, y);
     
+    /* Draw text background (we use the image bounds of the text but it would be prettier with the typographic bounds) */
+    if (mTextBackColor.mAlpha) {
+        PushPen( mTextBackColor, 1 );
+        PushFillColor( mTextBackColor );
+        CGRect finalBounds = CTLineGetImageBounds(line, mContext);
+        CGContextFillRect(mContext, finalBounds);
+        PopFillColor();
+        PopPen();
+    }
+    
+    /// Draw the line, set the color
+    PushFillColor( VGColor(mTextColor.mRed, mTextColor.mGreen, mTextColor.mBlue,  mTextColor.mAlpha) );
+    CTLineDraw(line, mContext);
+    CFRelease(line);
+    PopFillColor();
+
     // Restore the state of the contexte
     CGContextRestoreGState(mContext);
-
-
+    
+    
 }
-#endif
 
 // --------------------------------------------------------------
 void *			

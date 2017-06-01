@@ -33,7 +33,7 @@ const float LSPACE = 50;		// Distance between two lines of staff (a dent).
 // Multiply a value by kVirtualToCm to convert it from virtual units to centimeters.
 // Divide by kVirtualToCm to convert from centimeters to virtual units.
 
-const float kVirtualToCm = (float)((3.0 * 2.0 * 2.54) / (LSPACE * 72.27));	// Was UNCONST
+const float kVirtualToCm = (float)((4.0 * 2.0 * 2.54) / (LSPACE * 72.27));	// Was UNCONST
 const float kCmToVirtual = (float)1.0 / kVirtualToCm;			// Was INVCONST
 
 const float kVirtualToInch = kVirtualToCm / (float)2.54;
