@@ -230,6 +230,11 @@ set(HEADERS ${HEADERS} "${SRC_PATH}/*/*.h")		# add header files
 file (GLOB LIBH RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${HEADERS} ${VGDEV_H})
 file (GLOB PUBLICHEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${HEADERS_PATH}/*.h" "${VGDEV_H}" "${SRC_PATH}/devices/*H")
 
+##### Antescofo related headers that should be in PUBLIC_HEADER
+list (APPEND PUBLICHEADERS "${SRC_PATH}/abstract/Fraction.h")
+list (APPEND PUBLICHEADERS "${SRC_PATH}/lib/GUIDOInternal.h")
+#####
+
 set(INCL ${INCL} "${SRC_PATH}/*")			# add include folders
 set(INCL ${INCL} "${VGDEV_PATH}")			# add include folders
 file (GLOB INCDIRS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${INCL})
