@@ -66,7 +66,8 @@ using namespace std;
 #include "BinaryFont.h"
 
 #include "guido2.h"
-#include "GMNCodePrintVisitor.h"
+#include "GRShowVisitor.h"
+//#include "GMNCodePrintVisitor.h"
 
 
 // ==========================================================================
@@ -363,6 +364,17 @@ GUIDOAPI(GRHandler) GuidoAR2GRParameterized(ARHandler ar, const GuidoGrParameter
 }
 
 // --------------------------------------------------------------------------
+GUIDOAPI(GuidoErrCode)	GuidoShowElement( GRHandler gr, GRElement elt, bool status)
+{
+	if ( !gr )			return guidoErrInvalidHandle;
+	if ( !gr->grmusic )	return guidoErrInvalidHandle;
+
+	GRShowVisitor v(elt, status);
+	gr->grmusic->accept (v);
+	return guidoNoErr;
+}
+
+// --------------------------------------------------------------------------
 GUIDOAPI(GuidoErrCode) GuidoUpdateGR( GRHandler gr, const GuidoLayoutSettings * settings)
 {
 	if ( !gr )			return guidoErrInvalidHandle;
@@ -595,11 +607,8 @@ GUIDOAPI(GuidoErrCode) GuidoOnDraw( GuidoOnDrawDesc * desc )
   	if( desc->handle->grmusic == 0 ) return guidoErrInvalidHandle;
  
   	GuidoErrCode result = guidoErrActionFailed;
- 	
     long startTime = GuidoTiming::getCurrentmsTime();
-
 	const bool drawReady = desc->hdc->BeginDraw();
-
 	if(drawReady) {
 		//if (desc->page <= 0)
 		//	desc->page = iter->page;
