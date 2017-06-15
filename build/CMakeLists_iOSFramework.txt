@@ -224,6 +224,11 @@ set(HEADERS ${HEADERS} "${SRC_PATH}/*/*.h")		# add header files
 file (GLOB LIBH RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${HEADERS} ${VGDEV_H})
 file (GLOB PUBLICHEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${HEADERS_PATH}/*.h" "${VGDEV_H}" "${SRC_PATH}/devices/*H")
 
+##### Antescofo related headers that should be in PUBLIC_HEADER
+list (APPEND PUBLICHEADERS "${SRC_PATH}/abstract/Fraction.h")
+list (APPEND PUBLICHEADERS "${SRC_PATH}/lib/GUIDOInternal.h")
+#####
+
 set(INCL ${INCL} "${SRC_PATH}/*")			# add include folders
 set(INCL ${INCL} "${VGDEV_PATH}")			# add include folders
 file (GLOB INCDIRS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${INCL})
@@ -261,8 +266,20 @@ endif(APPLE)
 #######################################
 # library generation
 if (IOS STREQUAL "yes")
-	add_library(${target} STATIC ${LIBCONTENT})
+	add_library(${target} SHARED ${LIBCONTENT})
 	set_target_properties ( ${target} PROPERTIES 
+				FRAMEWORK TRUE
+				FRAMEWORK_VERSION ${GUIDOFWKVERS}
+				PUBLIC_HEADER "${PUBLICHEADERS}"
+				DEFINE_SYMBOL LIBMUSICXML_EXPORTS
+				VERSION ${VERSION}
+#				MACOSX_RPATH TRUE
+				SOVERSION ${SOVERS}
+				MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${STRVERS}
+				MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION}
+				MACOSX_FRAMEWORK_BUNDLE_VERSION "A"
+				MACOSX_FRAMEWORK_IDENTIFIER ${target}
+				XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer"
 				XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${IOS_DEPLOYMENT_TARGET} 
 				XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
 
