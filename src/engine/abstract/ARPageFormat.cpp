@@ -23,8 +23,8 @@
 
 const float MINSIZEX = (float) (5 * kCmToVirtual);	// min size = 5 x 5 cm
 const float MINSIZEY = (float) (5 * kCmToVirtual);	
-const float MAXSIZEX = (float) (400 * kCmToVirtual); // (JB) arbitrary max value. was (32767) (Windows 95-98 GDI limitation ?)
-const float MAXSIZEY = (float) (900 * kCmToVirtual); // (JB) arbitrary max value. was (32767); // (AC): was 300*kCmToVirtual
+const float MAXSIZEX = (float) (2500 * kCmToVirtual); // (JB) arbitrary max value. was (32767) (Windows 95-98 GDI limitation ?) // (AC): was 300*...
+const float MAXSIZEY = (float) (1500 * kCmToVirtual); // (JB) arbitrary max value. was (32767); // (AC): was 300*kCmToVirtual
 
 ListOfTPLs ARPageFormat::ltpls(1);
 
