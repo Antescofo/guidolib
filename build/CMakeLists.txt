@@ -10,13 +10,13 @@ set (target GUIDOEngine)
 set (statictarget SGUIDOEngine)
 #######################################
 # versions management
-set (VERSION 1.64)
-set (STRVERS "v.1.64")
+set (VERSION 1.65)
+set (STRVERS "v.1.65")
 set (GUIDOFWKVERS C)
 set (SOVERS 1)
 
 if(UNIX)
-	add_definitions(-Wall -DGCC)
+	add_definitions(-Wall -Wno-deprecated-register -DGCC)
 endif(UNIX)
 
 #######################################
@@ -244,11 +244,7 @@ else(WIN32)
 endif(WIN32)
 
 if(APPLE)
-	if (IOS STREQUAL "yes")
-		set(LINK ${LINK} "-framework CoreText -framework CoreFoundation -framework CoreGraphics -compatibility_version 1.0.0 -lc++")
-	else()
-		set(LINK ${LINK} "-framework Carbon -framework CoreText -compatibility_version 1.0.0 -lc++")
-	endif()
+	set(LINK ${LINK} "-framework Carbon -framework CoreText -compatibility_version 1.0.0 -lc++")
 elseif (UNIX)
       EXECUTE_PROCESS ( COMMAND "pkg-config"  "--libs" "cairo"
                 OUTPUT_VARIABLE TMP
@@ -263,19 +259,7 @@ endif(APPLE)
 if (IOS STREQUAL "yes")
 	add_library(${target} STATIC ${LIBCONTENT})
 	set_target_properties ( ${target} PROPERTIES 
-				XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${IOS_DEPLOYMENT_TARGET} 
-				XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
-
-	if (STATICLIB)
-		message (STATUS "Static Guido lib will be generated - Use -DSTATICLIB=no to change.")
-		add_library(${statictarget} STATIC ${LIBCONTENT})
-	else ()
-		message (STATUS "Static Guido lib will not be generated - Use -DSTATICLIB=yes to change.")
-	endif ()
-
-	set (LIBDEST /usr/lib)
-
-	target_link_libraries (${target} ${LINK})
+				XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${IOS_DEPLOYMENT_TARGET} )
 
 else()
 

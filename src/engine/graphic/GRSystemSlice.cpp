@@ -1,7 +1,7 @@
 /*
   GUIDO Library
   Copyright (C) 2002  Holger Hoos, Juergen Kilian, Kai Renz
-  Copyright (C) 2002-2013 Grame
+  Copyright (C) 2002-2017 Grame
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -40,6 +40,8 @@ using namespace std;
 #include "VGDevice.h"
 #include "kf_ivect.h"
 #include "TCollisions.h"
+
+#include "TagParameterFloat.h"
 
 //#define TRACE
 #ifdef TRACE
@@ -149,9 +151,9 @@ GRBar * GRSystemSlice::getBarAt (const TYPE_TIMEPOSITION& t) const
 
 void GRSystemSlice::addRepeatBegin( GRRepeatBegin * mybar,const ARBar::TRanges& ranges, GRStaff * grstaff)
 {
-	ARRepeatBegin * ar = mybar->getARRepeatBegin();
+	const ARRepeatBegin * ar = mybar->getARRepeatBegin();
 	assert(ar);
-	ar->setRanges(ranges);
+//	ar->setRanges(ranges);
 	GRRepeatBegin * newrepeat = new GRRepeatBegin(ar);
 	newrepeat->setTagType(GRTag::SYSTEMTAG);
 	mHasSystemBars = true;
@@ -161,9 +163,9 @@ void GRSystemSlice::addRepeatBegin( GRRepeatBegin * mybar,const ARBar::TRanges& 
 
 void GRSystemSlice::addRepeatEnd ( GRRepeatEnd * mybar,const ARBar::TRanges& ranges, GRStaff * grstaff)
 {
-	ARRepeatEnd * ar = mybar->getARRepeatEnd();
+	const ARRepeatEnd * ar = mybar->getARRepeatEnd();
 	assert(ar);
-	ar->setRanges(ranges);
+//	ar->setRanges(ranges);
 	GRRepeatEnd * newrepeat = new GRRepeatEnd(ar, grstaff, mybar->getRelativeTimePosition(), grstaff->getProportionnalRender() );
 	newrepeat->setTagType(GRTag::SYSTEMTAG);
 	mHasSystemBars = true;
@@ -176,9 +178,9 @@ void GRSystemSlice::addBar(GRBar * mybar, const ARBar::TRanges& ranges, GRStaff 
 	// We have to build a new Barline ...
 	// the barline needs to know that it belongs to a system. 
 	// when the distance of staffs is being set, these tags must be updated (for length) 
-	ARBar * arbar = mybar->getARBar();
+	const ARBar * arbar = mybar->getARBar();
 	assert(arbar);
-	arbar->setRanges(ranges);
+//	arbar->setRanges(ranges);
 	GRBar * newbar = new GRBar(arbar, NULL, grstaff, mybar->getRelativeTimePosition(), grstaff->getProportionnalRender());
 	mHasSystemBars = true;
 
@@ -195,9 +197,9 @@ void GRSystemSlice::addBar(GRBar * mybar, const ARBar::TRanges& ranges, GRStaff 
 
 void GRSystemSlice::addFinishBar(GRFinishBar * mybar,const ARBar::TRanges& ranges, GRStaff * grstaff)
 {
-	ARFinishBar * arbar = mybar->getARFinishBar();
+	const ARFinishBar * arbar = mybar->getARFinishBar();
 	assert(arbar);
-	arbar->setRanges(ranges);
+//	arbar->setRanges(ranges);
 	GRFinishBar * newbar = new GRFinishBar(arbar, NULL, grstaff, mybar->getRelativeTimePosition(), grstaff->getProportionnalRender());
 	mHasSystemBars = true;
 	mybar->addAssociation(newbar);
@@ -206,9 +208,9 @@ void GRSystemSlice::addFinishBar(GRFinishBar * mybar,const ARBar::TRanges& range
 
 void GRSystemSlice::addDoubleBar(GRDoubleBar * mybar,const ARBar::TRanges& ranges, GRStaff * grstaff)
 {
-	ARDoubleBar * arbar = mybar->getARDoubleBar();
+	const ARDoubleBar * arbar = mybar->getARDoubleBar();
 	assert(arbar);
-	arbar->setRanges(ranges);
+//	arbar->setRanges(ranges);
 	GRDoubleBar * newbar = new GRDoubleBar(arbar, NULL, grstaff, mybar->getRelativeTimePosition(), grstaff->getProportionnalRender());
 	mHasSystemBars = true;
 	mybar->addAssociation(newbar);
@@ -371,6 +373,13 @@ void GRSystemSlice::Finish()
 			// the question is, wether the top margin ends at the staff or at the top element?
 			if (prev && !prev->getStaffState()->distanceset)
                 nextposition.y -= myrect.top;
+
+            // fixed stave spacing
+            if (theStaff->getStaffState()->getStaffDistance() != NULL) {
+                float staffDistance = theStaff->getStaffState()->getStaffDistance()->getValue(theStaff->getStaffLSPACE());
+                if (staffDistance > 0.0 && !first)
+                    nextposition.y = prev->getPosition().y + prev->getDredgeSize() + staffDistance;
+            }
 
             float staffYOffset = theStaff->getStaffState()->getYOffset(); // Y offset doesn't work for first staff
             nextposition.y += staffYOffset;

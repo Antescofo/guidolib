@@ -1,7 +1,7 @@
 /*
   GUIDO Library
   Copyright (C) 2002  Holger Hoos, Juergen Kilian, Kai Renz
-  Copyright (C) 2002-2013 Grame
+  Copyright (C) 2002-2017 Grame
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,6 +23,7 @@
 #include "GRStaff.h"
 #include "VGDevice.h"
 #include "VGFont.h"
+#include "TagParameterFloat.h"
 
 #include "GUIDOInternal.h"	// for gGlobalSettings.gDevice
 #include "FontManager.h"
@@ -33,7 +34,7 @@ using namespace std;
 #define GROUPSEVERAL	1		// control several time sign grouping
 
 //-------------------------------------------------------------------------------------
-GRMeter::GRMeter( ARMeter * ar, GRStaff * curstaff, bool p_ownsAR )
+GRMeter::GRMeter( const ARMeter * ar, GRStaff * curstaff, bool p_ownsAR )
   : GRTagARNotationElement(ar, curstaff->getStaffLSPACE(), p_ownsAR),
 	fMeters(ar->getMeters()), fGroupComplex(false)
 {
@@ -43,8 +44,11 @@ GRMeter::GRMeter( ARMeter * ar, GRStaff * curstaff, bool p_ownsAR )
 	mNeedsSpring = 1;
 	sconst = SCONST_METER;
 	fCurLSPACE = curstaff->getStaffLSPACE();
-	fNumericHeight	= fCurLSPACE * 0.85;		// adjust numeric glyph height
-    mTagSize	   *= curstaff->getSizeRatio() * ar->getSize();
+	fNumericHeight	= fCurLSPACE * 0.85f;		// adjust numeric glyph height
+//	const TagParameterFloat* p = ar->getSize();
+//	mTagSize	   *= curstaff->getSizeRatio() * ar->getSize();
+//	mTagSize	   *= curstaff->getSizeRatio() * (p ? p->getValue() : 1.f);
+	mTagSize	   *= curstaff->getSizeRatio();
     mIsInHeader		= ar->isInHeader();
 	fGroupComplex	= ar->groupComplex();
 	fType			= getARMeter()->getMeterType();
@@ -145,7 +149,7 @@ string GRMeter::makeDenominatorString (const std::vector<Fraction>& meters) cons
 	if (getARMeter()->isSingleUnit())
 		strStream << meters[0].getDenominator();
 	else if (fGroupComplex) {
-		int previous = 0;
+		size_t previous = 0;
 		for (size_t i = 0; i < n; i++) {
 			int d = meters[i].getDenominator();
 
@@ -253,7 +257,7 @@ std::pair<float,float> GRMeter::GetXOffsets(VGDevice & hdc, const std::string& n
 {
 	NVRect nbb = computeBoundingBox (&hdc, num);
 	NVRect dbb = computeBoundingBox (&hdc, dnum);
-	pair<float, float> offsets = make_pair(0,0);
+	pair<float, float> offsets = make_pair(0.f,0.f);
 	float diff = (nbb.Width() - dbb.Width()) / 2;
 	if (diff > 0)	offsets.second = diff;
 	else			offsets.first = -diff;
@@ -286,7 +290,7 @@ float GRMeter::DrawNumericSingle(VGDevice & hdc, const string& num, const string
 	DrawSymbolStr (num.c_str(), xpos, y, hdc);
 
 	xpos = x + offsets.second;
-    y += (2 * fCurLSPACE + 1.7 * fCurLSPACE * (mTagSize - 1) );
+    y += (2 * fCurLSPACE + 1.7f * fCurLSPACE * (mTagSize - 1) );
 	DrawSymbolStr (dnum.c_str(), xpos, y, hdc);
 	return bb.Width();
 }
@@ -339,6 +343,5 @@ void GRMeter::OnDraw(VGDevice & hdc) const
 }
 
 //-------------------------------------------------------------------------------------
-ARMeter*		GRMeter::getARMeter()			{ return static_cast<ARMeter*>(getAbstractRepresentation()); }
 const ARMeter*	GRMeter::getARMeter() const		{ return static_cast<const ARMeter*>(getAbstractRepresentation()); }
 

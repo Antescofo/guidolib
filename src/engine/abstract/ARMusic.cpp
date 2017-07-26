@@ -1,7 +1,7 @@
 /*
   GUIDO Library
   Copyright (C) 2002  Holger Hoos, Juergen Kilian, Kai Renz
-  Copyright (C) 2002-2013 Grame
+  Copyright (C) 2002-2017 Grame
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -91,14 +91,13 @@ bool ARMusic::getMeterAt (int voicenum, const GuidoDate &date, GuidoMeter& meter
 	if (!voice) return false;		// no such voice
 	TYPE_TIMEPOSITION tp (date.num, date.denom);
 	MeterVisitor mv (tp);
-	voice->goThrough(&mv);
+	voice->accept (mv);
 	meter = mv.getMeter();
 	return true;
 }
 
 void ARMusic::getTimeMap (TimeMapCollector& f) const
 {
-//	TYPE_DURATION duration = getDuration();
 	GuidoPos pos = GetHeadPosition();
     if(pos)
     {
@@ -110,26 +109,28 @@ void ARMusic::getTimeMap (TimeMapCollector& f) const
 	}
 }
 
-void ARMusic::goThrough(ARVisitor *visitor) const
+void ARMusic::accept(ARVisitor& visitor)
 {
+	visitor.visitIn (this);
 	GuidoPos pos = GetHeadPosition();
 	while (pos) {
 		ARMusicalVoice * e = GetNext(pos);
-		e->goThrough(visitor);
+		e->accept(visitor);
 	}
+	visitor.visitOut (this);
 }
 
-void ARMusic::resetGRRepresentation()
-{
-	ARMusicalEvent::resetGRRepresentation();
-	GuidoPos pos = GetHeadPosition();
-	ARMusicalVoice * e;
-	while(pos)
-	{
-		e=GetNext(pos);
-		e->resetGRRepresentation();
-	}
-}
+//void ARMusic::resetGRRepresentation()
+//{
+//	ARMusicalEvent::resetGRRepresentation();
+//	GuidoPos pos = GetHeadPosition();
+//	ARMusicalVoice * e;
+//	while(pos)
+//	{
+//		e=GetNext(pos);
+//		e->resetGRRepresentation();
+//	}
+//}
 
 /** \brief Introduces potential Breakpoints
 	in the first voice of a piece of music.
@@ -367,8 +368,7 @@ void ARMusic::doAutoStuff()
 	}
 
 //	GMNCodePrintVisitor v(cerr);
-//	this->goThrough(&v);
-
+//	this->accept (v);
 }
 
 /** \brief Removes tags that were added automatically
