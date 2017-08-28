@@ -43,8 +43,9 @@ if(APPLE)
 		set (CMAKE_XCODE_EFFECTIVE_PLATFORMS "iPhoneOS")
 		set (CMAKE_OSX_ARCHITECTURES "arm64 armv7 armv7s")
 		set (CMAKE_OSX_SYSROOT "iphoneos")
+
 		set (libtype STATIC)
-		set(IOS_DEPLOYMENT_TARGET 8.0) 
+		set(IOS_DEPLOYMENT_TARGET 9.3) 
 	else ()
 		message (STATUS "Generates Mac OS project- Use -DIOS=yes to change.")
 	 	#######################################
