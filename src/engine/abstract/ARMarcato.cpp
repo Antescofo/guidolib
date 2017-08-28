@@ -22,12 +22,11 @@
 
 using namespace std;
 
-static const TagParameterMap sARMarcatoMap (kARMarcatoParams);
 
 ARMarcato::ARMarcato()
 {
-	setupTagParameters (sARMarcatoMap);
-	rangesetting = RANGEDC;
+	setupTagParameters (gMaps->sARMarcatoMap);
+	rangesetting = ONLY; //RANGEDC;
     fPosition = NOTSET;
 }
 
