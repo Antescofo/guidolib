@@ -135,8 +135,8 @@ help:
 validate: $(validsvg)
 	@$(eval tmp := $(shell [ -f $(version)/ignore.$(VERSION).txt ] && echo "using $(version)/ignore.$(VERSION).txt"))	
 	@echo Validating version $(version) with $(VERSION) $(tmp)
-	make validtimemap
-	make validproll
+	$(MAKE) validtimemap
+	$(MAKE) validproll
 
 validsvg: $(validsvg)
 	@$(eval tmp := $(shell [ -f $(version)/ignore.$(VERSION).txt ] && echo "using $(version)/ignore.$(VERSION).txt"))	
@@ -157,7 +157,7 @@ validproll: $(validproll)
 pdfvalidate: $(validpdf)
 	@$(eval tmp := $(shell [ -f $(version)/ignore.$(VERSION).txt ] && echo "using $(version)/ignore.$(VERSION).txt"))	
 	@echo Validating version $(version) with $(VERSION) $(tmp)
-	make validmap
+	$(MAKE) validmap
 	
 #########################################################################
 # rules
@@ -214,7 +214,7 @@ $(version)/%.mid: ../%.gmn
 #########################################################################
 # leaks check tools
 checkleaks: $(LEAKTOOLS) $(leaksout)
-	make showleaks TOOL=$(TOOL)
+	$(MAKE) showleaks TOOL=$(TOOL)
 
 showleaks: $(leaksfiles)
 
@@ -355,14 +355,14 @@ cleantools:
 	rm -f $(LEAKTOOLS)
 
 guidodraw : guidodraw.cpp
-	g++ guidodraw.cpp -I$(SRC)/include -I$(SRC)/tools $(lib) -o guidodraw
+	$(CXX) guidodraw.cpp -I$(SRC)/include -I$(SRC)/tools $(lib) -o guidodraw
 
 guidoar2gr : guidoar2gr.cpp
-	g++ guidoar2gr.cpp -I$(SRC)/include -I$(SRC)/tools $(lib) -o guidoar2gr
+	$(CXX) guidoar2gr.cpp -I$(SRC)/include -I$(SRC)/tools $(lib) -o guidoar2gr
 
 guidoparse : guidoparse.cpp
-	g++ guidoparse.cpp -I$(SRC)/include $(lib) -o guidoparse
+	$(CXX) guidoparse.cpp -I$(SRC)/include $(lib) -o guidoparse
 
 forcepdfdate: forcepdfdate.cpp
-	g++ forcepdfdate.cpp -o forcepdfdate
+	$(CXX) forcepdfdate.cpp -o forcepdfdate
 

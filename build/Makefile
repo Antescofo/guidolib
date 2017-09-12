@@ -24,7 +24,6 @@ endif
 
 OUT  := GUIDOEngine.framework GUIDOEngine.tgz libGUIDOEngine.a
 MAC  ?= MacOS
-MAKE ?= make
 IOS  := ios
 
 # try to detect Visual Studio version used
@@ -64,6 +63,7 @@ help :
 	@echo "   java         : build the jni and java libraries"	
 	@echo "   js           : build the javascript library (requires emscripten)"	
 	@echo "   android      : build the GUIDOEngine static library for Android"	
+	@echo "   install      : install the Guido library and public headers (linux only)"	
 	@echo 
 	@echo "Platform targets to build the GUIDOEngine library are:"	
 	@echo "   macos [C++11=yes/no (default to no)]"	
@@ -175,14 +175,14 @@ winclean:
 #===============================================================
 .PHONY : $(LINUX) libGUIDOEngine.so
 
-linux : $(LINUX)/Makefile libGUIDOEngine.so
+linux : libGUIDOEngine.so
 
-libGUIDOEngine.so :  $(LINUX)/Makefile  $(LINUX)/libGUIDOEngine.so
+libGUIDOEngine.so :  $(LINUX)/libGUIDOEngine.so
 	rm -rf GUIDOEngine*.so*
 	$(MAKE) -C $(LINUX)
 	cp -R $(LINUX)/libGUIDOEngine*.so* .
 
-$(LINUX)/libGUIDOEngine.so : 
+$(LINUX)/libGUIDOEngine.so : $(LINUX)/Makefile 
 	$(MAKE) -C $(LINUX)
 	
 linuxcmake:
@@ -234,3 +234,18 @@ java :
 #===============================================================
 android :
 	$(MAKE) -C ../platforms/android/
+
+#===============================================================
+# install target - linux only
+#===============================================================
+DESTDIR ?= /usr
+install: 
+	[ $(TARGET) = "linux" ] && $(MAKE) linuxinstall
+
+linuxinstall:
+	$(MAKE) -C linux install
+	$(MAKE) -C ../src/tools/build linuxinstall
+	$(MAKE) -C ../environments/Qt install
+	mkdir -p $(DESTDIR)$(PREFIX)/share/fonts/guido
+	install -m 644 ../src/guido2.ttf $(DESTDIR)$(PREFIX)/share/fonts/guido/guido2.ttf 
+

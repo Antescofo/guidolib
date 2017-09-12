@@ -63,6 +63,13 @@ endif()
 
 #######################################
 # tools generation
+set(TOOLS guidoparse guidoar2gr guidodraw)
+foreach(tool ${TOOLS})
+	add_executable( ${tool} ${TESTS_PATH}/${tool}.cpp )
+	target_link_libraries( ${tool} ${GUIDOLIB})
+	add_dependencies(${tool} ${target})
+endforeach(tool)
+
 set(TOOLS guido2midi guido2svg guido2abstract guido2proll midi2proll guido2svgmap guidogetversion guidogetpagecount guidogetvoicecount guidogettimemap guidogetpagemap guidogetstaffmap guidogetsystemmap guidogetvoicemap)
 foreach(tool ${TOOLS})
 	add_executable( ${tool} ${TOOLS_PATH}/${tool}.cpp )
@@ -70,10 +77,19 @@ foreach(tool ${TOOLS})
 	add_dependencies(${tool} ${target})
 endforeach(tool)
 
-set(TOOLS guidoparse guidoar2gr guidodraw)
-foreach(tool ${TOOLS})
-	add_executable( ${tool} ${TESTS_PATH}/${tool}.cpp )
-	target_link_libraries( ${tool} ${GUIDOLIB})
-	add_dependencies(${tool} ${target})
-endforeach(tool)
+
+#######################################
+# install setup
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  SET(CMAKE_INSTALL_PREFIX /usr )
+endif()
+if (NOT WIN32 AND NOT APPLE)
+message (STATUS "Library install prefix set to ${CMAKE_INSTALL_PREFIX} - Use -DCMAKE_INSTALL_PREFIX=path to change.")
+
+install ( TARGETS ${TOOLS}
+    	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+)
+endif()
+
+
 

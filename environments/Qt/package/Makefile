@@ -49,9 +49,9 @@ macapp:
 macos:
 	[ -d $(MACOSX_NAME) ] || mkdir $(MACOSX_NAME) && rm -rf $(MACOSX_NAME)/*
 	[ -h $(ROOT)/build/MacOS/lib ] || ( cd $(ROOT)/build/MacOS && ln -s Release lib )
-	make common PACKAGE_NAME=$(MACOSX_NAME)
-	make macapp APPL=GuidoEditor
-	make macapp APPL=GuidoSceneComposer
+	$(MAKE) common PACKAGE_NAME=$(MACOSX_NAME)
+	$(MAKE) macapp APPL=GuidoEditor
+	$(MAKE) macapp APPL=GuidoSceneComposer
 	cp $(MACTOOLS) $(MACOSX_NAME)
 	cp -r $(ROOT)/build/MacOS/Release/GUIDOEngine.framework $(MACOSX_NAME)
 	cp $(ROOT)/src/guido2.ttf $(MACOSX_NAME)
@@ -64,7 +64,7 @@ check:
 	@ echo "Checking WIN32QTPATH..."
 	@[ -d "$(WIN32QTPATH)" ] || echo Invalid path to Qt: $(WIN32QTPATH)
 	-@[ -d "$(WIN32QTPATH)" ] && echo Make package using Qt path: $(WIN32QTPATH)
-	@echo Type 'make win32 WIN32QTPATH=/your/path' to change or edit this makefile.
+	@echo Type '$(MAKE) win32 WIN32QTPATH=/your/path' to change or edit this makefile.
 	@echo ----------------------------------------------------------------
 	@[ -d "$(WIN32QTPATH)" ]
 
@@ -73,10 +73,10 @@ samples:
 	tar czf gmn-examples.tgz gmn-examples
 
 linux:
-	make version=$(VERSION) -f makedeb
+	$(MAKE) version=$(VERSION) -f makedeb
 
 win64: 
-	@make -s check
+	@$(MAKE) -s check
 	[ -d $(WIN32_NAME)/plugins/imageformats ] || mkdir -p $(WIN32_NAME)/plugins/imageformats
 	[ -d $(WIN32_NAME)/plugins/platforms ] || mkdir -p $(WIN32_NAME)/plugins/platforms
 	[ -d $(WIN32_NAME)/plugins/printsupport ] || mkdir -p $(WIN32_NAME)/plugins/printsupport
@@ -92,7 +92,7 @@ win64:
 	cp 	$(WIN32QTPLUGS) $(WIN32_NAME)/plugins/imageformats
 	cp 	$(WIN32QTPLATFORMS) $(WIN32_NAME)/plugins/platforms
 	cp 	$(WIN32QTPRINT) $(WIN32_NAME)/plugins/printsupport
-	make common PACKAGE_NAME=$(WIN32_NAME)
+	$(MAKE) common PACKAGE_NAME=$(WIN32_NAME)
 
 common:
 	cp -R $(ROOT)/package/doc $(PACKAGE_NAME)
