@@ -15,6 +15,15 @@ else
 	fi
 fi
 
+##### Build XCode project if it doesn't exist
+bash buildXCodeProject.sh 
+
+##### Build iphoneos and iphonesimulator
+xcodebuild -project ios/guidolib.xcodeproj  -target GUIDOEngine -configuration Release -sdk iphoneos10.3 clean build 
+xcodebuild -project ios/guidolib.xcodeproj  -target GUIDOEngine -configuration Release -arch x86_64 -arch i386 only_active_arch=no -sdk iphonesimulator10.3 clean build 
+
+
+##### Move to Pod location
 libname="/libGUIDOEngine.a"
 
 # pod paths
