@@ -77,8 +77,8 @@ using namespace std;
 // ==========================================================================
 const int GUIDOENGINE_MAJOR_VERSION = 1;
 const int GUIDOENGINE_MINOR_VERSION = 6;
-const int GUIDOENGINE_SUB_VERSION   = 5;
-const char* GUIDOENGINE_VERSION_STR = "1.6.5";
+const int GUIDOENGINE_SUB_VERSION   = 6;
+const char* GUIDOENGINE_VERSION_STR = "1.6.6";
 
 ARPageFormat* gARPageFormat;
 const TagParametersMaps* gMaps = 0;
@@ -611,6 +611,26 @@ GUIDOAPI(GuidoErrCode) GuidoGetMeterAt (CARHandler inHandleAR, int voicenum, con
 	bool result = inHandleAR->armusic->getMeterAt( voicenum, date, meter );
 	return result ? guidoNoErr : guidoErrBadParameter;
 }
+
+// --------------------------------------------------------------------------
+// introduced in guido 1.66 [DF Oct. 18 2017]
+GUIDOAPI(GuidoErrCode) GuidoGetMetersAt (CARHandler inHandleAR, int voicenum, const GuidoDate &date, GuidoMeters& meters)
+{
+	if ((!inHandleAR) || ( inHandleAR->armusic == 0 ))
+		return guidoErrInvalidHandle;
+
+	meters = 0;
+	bool result = inHandleAR->armusic->getMetersAt( voicenum, date, meters );
+	return result ? guidoNoErr : guidoErrBadParameter;
+}
+// --------------------------------------------------------------------------
+GUIDOAPI(GuidoErrCode) GuidoFreeMeters (GuidoMeters meters)
+{
+	if (!meters) return guidoErrBadParameter;
+	delete [] meters;
+	return guidoNoErr;
+}
+
 
 // --------------------------------------------------------------------------
 //		- Score drawing and pages formating -
