@@ -71,7 +71,7 @@ fi
 
 ##### Update src
 localsrcpath="$(pwd)/../src"
-rsync -avz --exclude '.DS_Store' $localsrcpath $podsrcpath
+rsync -avz --exclude 'midisharelight' --exclude 'midi2guido' --exclude 'musedata2guido' --exclude 'sibelius2guido' --exclude 'utilities' --exclude 'samples' --exclude '.DS_Store' $localsrcpath $podsrcpath
 localplatformpath="$(pwd)/../platforms"
 rsync -avz --exclude 'linux' --exclude 'Max' --exclude 'PureData' --exclude 'win32' --exclude '.DS_Store' $localplatformpath $podsrcpath
 
