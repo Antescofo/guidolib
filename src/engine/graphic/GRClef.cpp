@@ -12,6 +12,7 @@
 
 */
 
+#include <iostream>
 #include <string.h>
 
 #include "ARClef.h"
@@ -27,7 +28,6 @@
 #include "GUIDOEngine.h"	// for AddGGSOutput 
 #include "secureio.h"
 
-#include <iostream>
 using namespace std;
 
 const char * const clef_cp8 = "8";
@@ -223,10 +223,6 @@ GRClef::GRClef(const ARClef * arClef, GRStaff *curstaff, bool ownsAR)
     mIsInHeader = arClef->isInHeader();
 }
 
-GRClef::~GRClef()
-{
-}
-
 // -----------------------------------------------------------------------------
 void GRClef::accept (GRVisitor& visitor)
 {
@@ -235,10 +231,20 @@ void GRClef::accept (GRVisitor& visitor)
 }
 
 // -----------------------------------------------------------------------------
+void GRClef::setHPosition( float inX )
+{
+//	cerr << (void*)this << " GRClef::setHPosition " << inX << endl;
+	GRTagARNotationElement::setHPosition(inX);
+}
+
+// -----------------------------------------------------------------------------
 void GRClef::OnDraw(VGDevice & hdc) const
 {
 	if (error)  return;
 	if (!mDraw || !mShow) return;
+
+//	NVRect r = mBoundingBox + mPosition;
+//	hdc.Frame(r.left, r.top, r.right, r.bottom);
 
 	GRTagARNotationElement::OnDraw(hdc);
 	if (mDoubleTreble)
