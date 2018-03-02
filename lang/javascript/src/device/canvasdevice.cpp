@@ -32,7 +32,7 @@ bool CanvasDevice::BeginDraw()
 		gU1D0cANVA$.PEN_COLORS = [gU1D0cANVA$.FONT_COLOR];
 		gU1D0cANVA$.FILL_COLORS = [gU1D0cANVA$.FILL_COLOR];
 		gU1D0cANVA$.PEN_WIDTHS = [gU1D0cANVA$.PEN_WIDTH];
-		gU1D0cANVA$.PEN = [{ "color" : gU1D0cANVA$.FONT_COLOR, "width" : gU1D0cANVA$.PEN_WIDTH}];
+		gU1D0cANVA$.PEN = ([{ "color" : gU1D0cANVA$.FONT_COLOR, "width" : gU1D0cANVA$.PEN_WIDTH}]);
 	);
 		return true;
 }

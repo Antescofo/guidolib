@@ -38,14 +38,14 @@ extern ARPageFormat gARPageFormat;
 // --------------------------------------------------------------------------
 // Prototypes are in "defines.h"
 void GuidoWarn( const char * inMessage, const char * info )	
-{ 
-	cerr << "Guido Warning: " << inMessage << " " << (info ? info : "") << endl;
+{
+//	cerr << "Guido Warning: " << inMessage << " " << (info ? info : "") << endl;
 }
 
 // --------------------------------------------------------------------------
 void GuidoTrace( const char * inMessage )	
-{ 
-	cerr << "Guido Trace: " << inMessage <<endl; 
+{
+//	cerr << "Guido Trace: " << inMessage <<endl;
 }
 
 // --------------------------------------------------------------------------
