@@ -22,7 +22,7 @@ Always branch out from `antescofo-master` and create pull-requests to that branc
 
 ## Upgrading the Library from Grame
 
-Ideally you should have a secondary remote called `grame` pointing to `https://github.com/grame-cncm/libmusicxml.git`. The `dev` branch on that repository contains latest additions and upgrades.
+Ideally you should have a secondary remote called `grame` pointing to `https://github.com/grame-cncm/guidolib.git`. The `dev` branch on that repository contains latest additions and upgrades.
 To upgrade latest contributions from Grame, create a new Branch and merge those contributions with that of `antescofo-master` and contribute as usual by create a Pull Request.
 
 ---
