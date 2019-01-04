@@ -46,6 +46,7 @@ if(APPLE)
 
 		set (libtype STATIC)
 		set(IOS_DEPLOYMENT_TARGET 9.3) 
+		set (FMWK "false")
 	else ()
 		message (STATUS "Generates Mac OS project- Use -DIOS=yes to change.")
 	 	#######################################

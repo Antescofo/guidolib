@@ -75,4 +75,9 @@ rsync -avz --exclude 'midisharelight' --exclude 'midi2guido' --exclude 'musedata
 localplatformpath="$(pwd)/../platforms"
 rsync -avz --exclude 'linux' --exclude 'Max' --exclude 'PureData' --exclude 'win32' --exclude '.DS_Store' $localplatformpath $podsrcpath
 
+##### Copy TTF font to Pod Asset
+podassetpath="$1/GuidoKit/Assets"
+guidofontpath="$(pwd)/../src/*.ttf"
+cp -v $guidofontpath $podassetpath
+
 
