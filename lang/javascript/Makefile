@@ -25,9 +25,9 @@ library = libGUIDOEngine
 
 WASM ?= no
 ifeq ($(WASM), yes)
-	target = ../$(library).wasm.js
+	target = $(library).wasm.js
 else
-	target = ../$(library).js
+	target = $(library).js
 endif
 
 OPTIONS :=  -s ALLOW_MEMORY_GROWTH=0 -s TOTAL_MEMORY=134217728 -s DISABLE_EXCEPTION_CATCHING=1 -s ASSERTIONS=0 -s MODULARIZE=1 -s EXPORT_NAME="'GuidoModule'"
