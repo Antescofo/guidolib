@@ -40,7 +40,7 @@ all:
 # building the library as asm.js
 ##############################################################
 $(library).js : $(objects)
-	emcc -O3 --bind --memory-init-file 0 $(objects) -o $(target) $(OPTIONS) -s ASM_JS=1
+	emcc -O3 --bind --memory-init-file 0 $(objects) -o $(target) $(OPTIONS) -s ASM_JS=1 -s WASM=0
 clean:
 	rm -f $(objects) $(target)
 

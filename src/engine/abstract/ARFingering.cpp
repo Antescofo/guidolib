@@ -12,35 +12,32 @@
 
 */
 
-#include <iostream>
-
-#include "ARArticulation.h"
+#include "ARFingering.h"
 #include "TagParameterStrings.h"
 #include "TagParameterString.h"
-#include "TimeUnwrap.h"
+#include "TagParameterFloat.h"
 
 using namespace std;
 
 
-ARArticulation::ARArticulation() : fPosition(kDefaultPosition)
+ARFingering::ARFingering(int pos) : fPosition(pos)
 {
-	setupTagParameters (gMaps->sARArticulationMap);
+	setupTagParameters (gMaps->sARFingeringMap);
 	rangesetting = ONLY;
 }
 
-void ARArticulation::setTagParameters (const TagParameterMap& params)
+
+void ARFingering::setTagParameters (const TagParameterMap& params)
 {
+	ARText::setTagParameters (params);
 	const TagParameterString* pos = getParameter<TagParameterString>(kPositionStr);
 	if (pos) {
 		string posStr = pos->getValue();
 		if (posStr == kAboveStr)		fPosition = kAbove;
 		else if (posStr == kBelowStr)	fPosition = kBelow;
-		else cerr << "Guido Warning: '" << posStr << "': incorrect articulation position";
+		else cerr << "Guido Warning: '" << posStr << "': incorrect fingering position value: " << posStr << endl;
 	}
+	if (fSize && !getParameter<TagParameterFloat>(kFSizeStr)) fFontSize = fSize;
 }
 
-// --------------------------------------------------------------------------
-void ARArticulation::browse(TimeUnwrap& mapper) const
-{
-	mapper.AtPos (this, TimeUnwrap::kAccent);
-}
+
