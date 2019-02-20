@@ -21,11 +21,12 @@ endif()
 
 #######################################
 # Options disabled by default
-option ( IOS 	"Generates project for iOS" off )
-option ( DIST 	"Compiles universal binaries (x86_64 i386) on MacOSX" off )
+option ( IOS 		"Generates project for iOS" off )
+option ( DIST 		"Compiles universal binaries (x86_64 i386) on MacOSX" off )
 option ( MIDIEXPORT "MIDI export support (requires MidiShareLight)" off)
 option ( INDEPENDENTSVG "Independent SVG support (gets all font information from provided SVG files)" off)
 option ( STATICLIB  "Generates a static library (default for iOS)" off)
+option ( SMUFL  	"Use SMUFL compliant Bravura font" off)
 option ( GL "Links to opengl device" off)
 
 
@@ -57,11 +58,11 @@ if(APPLE)
 			message (STATUS "Only the current architecture will be compiled - Use -DDIST=yes to change.")
 		endif ()
 	add_definitions(-D_USE_QD_COORDINATES_ )
-	set (CMAKE_C++_FLAGS -mmacosx-version-min=10.9)
+	set (CMAKE_C++_FLAGS -mmacosx-version-min=10.10)
 #	set (CMAKE_MACOSX_RPATH 1)
-	set (CMAKE_LDFLAGS -mmacosx-version-min=10.9)
-	set (CMAKE_OSX_DEPLOYMENT_TARGET 10.9)
-	set (MACOSX_DEPLOYMENT_TARGET 10.9)
+	set (CMAKE_LDFLAGS -mmacosx-version-min=10.10)
+	set (CMAKE_OSX_DEPLOYMENT_TARGET 10.10)
+	set (MACOSX_DEPLOYMENT_TARGET 10.10)
 	endif ()
 
 #########################################
@@ -85,6 +86,14 @@ elseif (WIN32)
  endif ()
 endif()
 
+
+#########################################
+# optional SMUFL support
+#########################################
+if (SMUFL)
+ message (STATUS "Generates SMUFL compliant code.")
+ add_definitions(-DSMUFL)
+endif()
 add_definitions(-DGUIDOExport)
 
 #######################################
