@@ -1,6 +1,8 @@
 SOURCES += main.cpp
 
 QTROOT = $$PWD/../..
+macx:DESTDIR = $$PWD
+win32:DESTDIR = $$PWD/..
 
 win32 {
 	SOURCES += XGetopt.cpp

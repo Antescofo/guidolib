@@ -19,8 +19,8 @@ fi
 bash buildXCodeProject.sh 
 
 ##### Build iphoneos and iphonesimulator
-xcodebuild -project ios/guidolib.xcodeproj  -target GUIDOEngine -configuration Release -sdk iphoneos clean build 
-xcodebuild -project ios/guidolib.xcodeproj  -target GUIDOEngine -configuration Release -arch x86_64 -arch i386 only_active_arch=no -sdk iphonesimulator clean build 
+xcodebuild -project ios/guidolib.xcodeproj  -target GUIDOEngine -configuration Release -sdk iphoneos CONFIGURATION_BUILD_DIR=ios/Release-iphoneos clean build 
+xcodebuild -project ios/guidolib.xcodeproj  -target GUIDOEngine -configuration Release -arch x86_64 -arch i386 only_active_arch=no -sdk iphonesimulator CONFIGURATION_BUILD_DIR=ios/Release-iphonesimulator clean build 
 
 
 ##### Move to Pod location
