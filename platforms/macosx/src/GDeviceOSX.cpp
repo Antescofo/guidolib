@@ -275,27 +275,13 @@ void GDeviceOSX::Rectangle( float left, float top, float right, float bottom )
 // --------------------------------------------------------------
 void GDeviceOSX::SetMusicFont( const VGFont * inObj )
 {
-	// CGContextSelectFont does not return an error code, so we first select
-	// a well-known font. If we did not, musical symbols may be displayed instead of 
-	// plain-text.
-
-//	::CGContextSelectFont(mContext, "Helvetica", inObj->GetSize(), kCGEncodingMacRoman  );	// ok
-	::CGContextSelectFont(mContext, inObj->GetName(), inObj->GetSize(), kCGEncodingFontSpecific );// ok
-	
 	mCurrMusicFont = inObj;
-	
 }
 
 // --------------------------------------------------------------
 void GDeviceOSX::SetTextFont( const VGFont* inObj )
 {
-	// CGContextSelectFont does not return an error code, so we first select
-	// a well-known font. If we did not, musical symbols may be displayed instead of 
-	// plain-text.
-
-//	::CGContextSelectFont(mContext, "Helvetica", inObj->GetSize(), kCGEncodingMacRoman);	// ok
 	if (inObj) {
-		::CGContextSelectFont(mContext, inObj->GetName(), inObj->GetSize(), kCGEncodingMacRoman);// ok
 		mCurrTextFont = inObj;
 	}
 }
@@ -588,7 +574,7 @@ void GDeviceOSX::DrawMusicSymbol( float x, float y, unsigned int inSymbolID )
 		float w = 0;
 		float h = 0;
 		float baseline = 0;
-		mCurrMusicFont->GetExtent( (char)inSymbolID, &w, &h, this );
+        mCurrMusicFont->GetExtent( inSymbolID, &w, &h, this );
 		if( mTextAlign & kAlignBottom )	// Vertical align
 			y -= baseline; 
 		else if( mTextAlign & kAlignTop )
@@ -600,112 +586,15 @@ void GDeviceOSX::DrawMusicSymbol( float x, float y, unsigned int inSymbolID )
 			x -= (w * float(0.5));
 	}
 
-	::CGContextSelectFont(mContext, mCurrMusicFont->GetName(), mCurrMusicFont->GetSize(), kCGEncodingMacRoman  );// ok
+    CGPoint pointInUserCoordinates = CGPointMake(x, y);
+    CGAffineTransform textMatrix = CGContextGetTextMatrix(mContext);
+    CGAffineTransform inverse = CGAffineTransformInvert(textMatrix);
+    CGPoint pointInTextCoordinates = CGPointApplyAffineTransform(pointInUserCoordinates, inverse);
 
 	// - Draw text
 	PushFillColor( VGColor(mTextColor.mRed, mTextColor.mGreen, mTextColor.mBlue, mTextColor.mAlpha) );
-	::CGContextShowGlyphsAtPoint(mContext, x, y, &glyph, 1 );
+    CTFontDrawGlyphs(macFont->GetCTFont(), &glyph, &pointInTextCoordinates, 1, mContext);
 	PopFillColor();
-}
-// --------------------------------------------------------------
-//#ifndef IOS
-#if 0
-void GDeviceOSX::DrawString( float x, float y, const char * s, int inCharCount )
-{
-	// this is for macos 10.4 : select a dummy font first 
-	::CGContextSelectFont(mContext, "Monaco", mCurrTextFont->GetSize(), kCGEncodingMacRoman  );// ok
-	
-	if (s == 0 || s[ 0 ] == '\0' || inCharCount == 0)
-		return;
-
-	if (inCharCount == -1) 
-		inCharCount = (int)strlen( s );
-
-	// - Manage character encoding
-	const char * convStr = s; 
-	if( convStr == 0 ) return;
-
-	// - Calculate string dimensions
-	float w = 0;
-	float h = 0;
-	float baseline = 0;
-	mCurrTextFont->GetExtent( convStr, inCharCount, &w, &h, this );
-		
-	// - Perform text alignement
-	if( mTextAlign != ( kAlignLeft | kAlignBase )) {
-		if( mTextAlign & kAlignBottom )	// Vertical align
-			y -= baseline; 
-		else if( mTextAlign & kAlignTop )
-			y += h - baseline;
-
-		if( mTextAlign & kAlignRight )	// Horizontal align
-			x -= w;
-		else if( mTextAlign & kAlignCenter )
-			x -= (w * 0.5);
-	}
-
-	// - Draw text background
-//	if( mTextBackColor.mAlpha < 255 ){
-		PushPen( mTextBackColor, 1 );
-		PushFillColor( mTextBackColor );
-		Rectangle( x, y, x + w, y + h );
-		PopFillColor();
-		PopPen();
-//	}
-
-	::CGContextSelectFont(mContext, mCurrTextFont->GetName(), mCurrTextFont->GetSize(), kCFStringEncodingMacRoman);
-    
-	// - Draw text
-	PushFillColor( VGColor(mTextColor.mRed, mTextColor.mGreen, mTextColor.mBlue,  mTextColor.mAlpha) );
-	::CGContextShowTextAtPoint(mContext, x, y, convStr, (size_t)inCharCount );
-	PopFillColor();
-	
-	// - Debug: draw refpoint
-//	PushPen( GColor( 250, 0, 0 ), 5 );	
-//	Line( debugX - 20, debugY + 20, debugX + 20, debugY - 20 );
-//	Line( debugX - 20, debugY - 20, debugX + 20, debugY + 20 );	
-//	PopPen(); 
-}
-#else		// defined IOS
-static std::string fontName2iOSName(const string name, int properties)
-{
-	string iosname = "TimesNewRomanPSMT";
-    if (name == "Times New Roman") {
-        switch (properties) {
-            case 1:		iosname = "TimesNewRomanPS-BoldMT"; break;
-            case 2:		iosname = "TimesNewRomanPS-ItalicMT"; break;
-        }
-    }
-	else if (name == "Arial") {
-        switch (properties) {
-            case 1:		iosname = "Arial-BoldMT"; break;
-            case 2:		iosname = "Arial-ItalicMT"; break;
-            default:	iosname = "ArialMT";
-        }
-    }
-	else if (name == "Palatino") {
-        switch (properties) {
-            case 1:		iosname = "Palatino-Bold"; break;
-            case 2:		iosname = "Palatino-Italic"; break;
-            default:	iosname = "Palatino";
-        }
-    }
-	else if (name == "Baskerville") {
-        switch (properties) {
-            case 1:		iosname = "Baskerville-Bold"; break;
-            case 2:		iosname = "Baskerville-Italic"; break;
-            default:	iosname = "Baskerville";
-        }
-    }
-	else {
-        // default to Times New Roman
-        switch (properties) {
-            case 1:		iosname = "TimesNewRomanPS-BoldMT"; break;
-            case 2:		iosname = "TimesNewRomanPS-ItalicMT";break;
-            default:	iosname = "TimesNewRomanPS";
-        }
-    }
-    return iosname;
 }
 
 void GDeviceOSX::DrawString( float x, float y, const char * s, int inCharCount )
@@ -715,100 +604,11 @@ void GDeviceOSX::DrawString( float x, float y, const char * s, int inCharCount )
     if( convStr == 0 ) return;
     
     // Create an attributed string
-    CFMutableAttributedStringRef attributedOverlayText = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
-    
-    if (inCharCount>0)
-    {
-        //CFStringCreateWithBytes(kCFAllocatorDefault, reinterpret_cast<const UInt8*>(overlayText.data()), overlayText.size(), kCFStringEncodingUTF8, false);
-        //CFStringCreateWithCString(kCFAllocatorDefault, convStr, kCFStringEncodingUTF8)
-        CFAttributedStringReplaceString(attributedOverlayText, CFRangeMake(0, 0), CFStringCreateWithCString(kCFAllocatorDefault, convStr, kCFStringEncodingUTF8));
-    }
-    
-    std::string iosConvertedFontName = fontName2iOSName(mCurrTextFont->GetName(), mCurrTextFont->GetProperties());
-/*
-    std::string fontName = mCurrTextFont->GetName();
-    if (fontName == "Times New Roman")
-    {
-        switch (mCurrTextFont->GetProperties()) {
-            case 1:  // bold
-                iosConvertedFontName = "TimesNewRomanPS-BoldMT";
-                break;
-                
-            case 2:  // italic
-                iosConvertedFontName = "TimesNewRomanPS-ItalicMT";
-                break;
-            default:
-                break;
-        }
-    }else if (fontName == "Arial")
-    {
-        switch (mCurrTextFont->GetProperties()) {
-            case 1:  // bold
-                iosConvertedFontName = "Arial-BoldMT";
-                break;
-                
-            case 2:  // italic
-                iosConvertedFontName = "Arial-ItalicMT";
-                break;
-            default:
-                iosConvertedFontName = "ArialMT";
-                break;
-        }
-    }else if (fontName == "Palatino")
-    {
-        switch (mCurrTextFont->GetProperties()) {
-            case 1:  // bold
-                iosConvertedFontName = "Palatino-Bold";
-                break;
-                
-            case 2:  // italic
-                iosConvertedFontName = "Palatino-Italic";
-                break;
-            default:
-                iosConvertedFontName = "Palatino";
-                break;
-        }
-    }else if (fontName == "Baskerville")
-    {
-        switch (mCurrTextFont->GetProperties()) {
-            case 1:  // bold
-                iosConvertedFontName = "Baskerville-Bold";
-                break;
-                
-            case 2:  // italic
-                iosConvertedFontName = "Baskerville-Italic";
-                break;
-            default:
-                iosConvertedFontName = "Baskerville";
-                break;
-        }
-    }else {
-        // default to Times New Roman
-        switch (mCurrTextFont->GetProperties()) {
-            case 1:  // bold
-                iosConvertedFontName = "TimesNewRomanPS-BoldMT";
-                break;
-                
-            case 2:  // italic
-                iosConvertedFontName = "TimesNewRomanPS-ItalicMT";
-                break;
-            default:
-                break;
-        }
-    }
- */
+    GFontOSX *font = (GFontOSX *)mCurrTextFont;
+    CFDictionaryRef attributes = font->GetCTFontDictionary();
+    CFStringRef string = CFStringCreateWithBytes(NULL, (const UInt8 *)s, inCharCount, kCFStringEncodingUTF8, false);
+    CFAttributedStringRef attributedOverlayText = CFAttributedStringCreate(kCFAllocatorDefault, string, attributes);
 
-#warning ("GDeviceOSX::DrawString is not implemented (deprecated functions and types change)")
-//==================================================================================
-// The code below doesn't compile any more one with on MacOS 10.12 using Xcode 8.3
-//==================================================================================
-    CTFontRef ctFont = CTFontCreateWithName( CFStringCreateWithCString(kCFAllocatorDefault, iosConvertedFontName.c_str(), kCFStringEncodingUTF8) , mCurrTextFont->GetSize(), NULL);
-    CFAttributedStringSetAttribute(attributedOverlayText,
-                                   CFRangeMake(0, CFAttributedStringGetLength(attributedOverlayText)),
-                                   kCTFontAttributeName,
-                                   ctFont);
-    CFRelease(ctFont);
-    
     ///Create framesetter with the attributed text
     CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString(attributedOverlayText);
     CGSize suggestedSize = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, /* Framesetter */
@@ -817,6 +617,8 @@ void GDeviceOSX::DrawString( float x, float y, const char * s, int inCharCount )
                                                                         CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX), /* Constraints (CGFLOAT_MAX indicates unconstrained) */
                                                                         NULL /* Gives the range of string that fits into the constraints, doesn't matter in your situation */
                                                                         );
+    CFRelease(attributedOverlayText);
+    CFRelease(framesetter);
     
     /// Set text alignment (paragraph style)
     CTTextAlignment alignment = kCTTextAlignmentLeft;
@@ -844,27 +646,33 @@ void GDeviceOSX::DrawString( float x, float y, const char * s, int inCharCount )
             alignment = kCTTextAlignmentLeft;
         }
     }
-    
+
+    // Second pass of frame setting with paragraph style.
+
     CTParagraphStyleSetting settings[] = {kCTParagraphStyleSpecifierAlignment, sizeof(alignment), &alignment};
     CTParagraphStyleRef paragraphStyle = CTParagraphStyleCreate(settings, sizeof(settings) / sizeof(settings[0]));
-    CFAttributedStringSetAttribute(attributedOverlayText,
-                                   CFRangeMake(0, CFAttributedStringGetLength(attributedOverlayText)),
-                                   kCTParagraphStyleAttributeName,
-                                   paragraphStyle);
-    CFRelease(paragraphStyle);
-    
+    CFMutableDictionaryRef mutableAttributes = CFDictionaryCreateMutableCopy(kCFAllocatorDefault, 2, attributes);
+    CFDictionarySetValue(mutableAttributes, kCTParagraphStyleAttributeName, paragraphStyle);
+    attributedOverlayText = CFAttributedStringCreate(kCFAllocatorDefault, string, mutableAttributes);
+    framesetter = CTFramesetterCreateWithAttributedString(attributedOverlayText);
+
     // Core Text changes the state of the context, so save it
     CGContextSaveGState(mContext);
     
     /// Draw attributed text using CTFrameDraw
-    CTFrameRef frame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), CGPathCreateWithRect(CGRectMake(x, y, suggestedSize.width, suggestedSize.height), NULL), NULL);
+    CGPathRef path = CGPathCreateWithRect(CGRectMake(x, y, suggestedSize.width, suggestedSize.height), NULL);
+    CTFrameRef frame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, 0), path, NULL);
     CTFrameDraw(frame, mContext);
+    CFRelease(frame);
+    CFRelease(path);
     CFRelease(framesetter);
-    
+    CFRelease(attributedOverlayText);
+    CFRelease(mutableAttributes);
+    CFRelease(paragraphStyle);
+
     // Restore the state of the contexte
     CGContextRestoreGState(mContext);
 }
-#endif
 
 // --------------------------------------------------------------
 void *			
