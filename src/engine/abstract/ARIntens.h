@@ -25,7 +25,7 @@ class ARIntens :  public ARFontAble
 {
 	public:
 				 ARIntens(const char * txt);
-				 ARIntens();
+				 ARIntens(bool autopos);
 		virtual ~ARIntens() {}
 
 		virtual void setTagParameters (const TagParameterMap& params);
@@ -40,10 +40,13 @@ class ARIntens :  public ARFontAble
 
 		virtual void browse(TimeUnwrap& mapper) const;
 
+		bool	  autoPos() const 					{ return fAutoPos; }
+
 	protected:
 		std::string fIntens;
 		std::string fBefore;
 		std::string fAfter;
+		bool 		fAutoPos;
 };
 
 #endif
