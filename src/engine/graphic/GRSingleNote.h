@@ -107,10 +107,11 @@ class GRSingleNote : public GRNote
 
 		virtual void	tellPosition( GObject * caller, const NVPoint & newPosition ); 
 		virtual const	GRSingleNote* isSingleNote() const		{ return this; }
+		virtual 		GRSingleNote* isSingleNote() 			{ return this; }
 
 	  	GRStdNoteHead *	getNoteHead() const;
 	  	void			extractAccidentals( GRAccidentalList * outList ) const;
-	  	NVRect			getEnclosingBox(bool includeAccidentals=true, bool includeSlurs = true, bool includeTrills=true) const;		// gives a rect that enclose the note, accidentals and articulations
+	  	NVRect			getEnclosingBox(bool includeAccidentals=true, bool includeSlurs = true, bool includeTrills=true) const;		// gives a position rect that enclose the note, accidentals and articulations
 
         ARTHead::HEADSTATE getHeadState() { return mHeadState; }
 

@@ -85,7 +85,6 @@
 #include "ARRitardando.h"
 #include "ARSegno.h"
 #include "ARShareLocation.h"
-#include "ARShareStem.h"
 #include "ARSlur.h"
 #include "ARSpace.h"
 #include "ARSpecial.h"
@@ -146,6 +145,7 @@ ARFactory::ARFactory()
 	mVoiceAdded(false),
 	mAutoLyricsPos(false),
 	mAutoInstrPos(false),
+	mAutoIntensPos(false),
 	mFingeringPos(ARAuto::kDefault),
 	mFingeringSize(0),
     mFilePath()
@@ -242,6 +242,7 @@ void ARFactory::createVoice()
 	mVoiceAdded = false;
 	mAutoLyricsPos = false;
 	mAutoInstrPos = false;
+	mAutoIntensPos= false;
 	mFingeringPos = ARAuto::kDefault;
 	mFingeringSize = 0;
 	mCurrentKey = 0;
@@ -1077,7 +1078,7 @@ void ARFactory::createTag( const char * name, int no )
 				mCurrentVoice->AddTail(tmp);
 			}
 			else if (!strcmp(name, kTagIntensity ) || !strcmp(name, kTagIntens ) || !strcmp(name, kTagI )) {
-				ARIntens * tmp = new ARIntens;
+				ARIntens * tmp = new ARIntens (mAutoIntensPos);
 				mTags.AddHead(tmp);
 				mCurrentVoice->AddTail(tmp);
 				
@@ -1963,6 +1964,7 @@ void ARFactory::addTag()
 	if (autoTag) {
 		mAutoLyricsPos = (autoTag->getAutoLyricsPos() == ARAuto::kOn);
 		mAutoInstrPos = (autoTag->getAutoInstrPos() == ARAuto::kOn);
+		mAutoIntensPos = (autoTag->getAutoIntensPos() == ARAuto::kOn);
 		if (autoTag->hasFingeringPos())  mFingeringPos  = autoTag->getFingeringPos();
 		if (autoTag->hasFingeringSize()) mFingeringSize = autoTag->getFingeringSize();
 	}
