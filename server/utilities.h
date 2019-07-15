@@ -45,7 +45,7 @@ extern int kVerbose;
 typedef std::pair<std::string, std::string> TArg;
 typedef std::map<std::string, std::string> TArgs;
     //typedef std::vector<TArg> TArgs;
-    
+
 bool atob(std::string name);
 int atoib(std::string name);
 
@@ -117,7 +117,7 @@ logstream& operator <<(logstream& out, const T& val)
     return out;
 }
 
-#define log	(*gLog)
+#define serverlog (*gLog)
 #define logend	(gLogEndl)
 
 //    void write_to_log(std::string message, std::string logfile, bool daemon);

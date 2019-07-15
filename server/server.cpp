@@ -257,34 +257,34 @@ int HTTPDServer::send (struct MHD_Connection *connection, const char *page, int 
       if (fLogmode == 0) {
         const char *sep = " ; ";
         if (fVerbose & CODE_VERBOSE) {
-          log << status << sep;
+          serverlog << status << sep;
         }
         if (fVerbose & MIME_VERBOSE) {
-          log << type << sep;
+          serverlog << type << sep;
         }
         if (fVerbose & LENGTH_VERBOSE) {
-          log << length << sep;
+          serverlog << length << sep;
         }
-        log << logend;
+        serverlog << logend;
       }
       else if (fLogmode == 1) {
         const char *tab = "  ";
         if (fVerbose & CODE_VERBOSE) {
-          log << tab << "<code>" << logend;
-          log << tab << tab << status << logend;
-          log << tab << "</code>" << logend;
+          serverlog << tab << "<code>" << logend;
+          serverlog << tab << tab << status << logend;
+          serverlog << tab << "</code>" << logend;
         }
         if (fVerbose & MIME_VERBOSE) {
-          log << tab << "<mime>" << logend;
-          log << tab << tab << type << logend;
-          log << tab << "</mime>" << logend;
+          serverlog << tab << "<mime>" << logend;
+          serverlog << tab << tab << type << logend;
+          serverlog << tab << "</mime>" << logend;
         }
         if (fVerbose & LENGTH_VERBOSE) {
-          log << tab << "<length>" << logend;
-          log << tab << tab << length << logend;
-          log << tab << "</length>" << logend;
+          serverlog << tab << "<length>" << logend;
+          serverlog << tab << tab << length << logend;
+          serverlog << tab << "</length>" << logend;
         }
-        log << "</entry>" << logend;
+        serverlog << "</entry>" << logend;
       }
     }
     struct MHD_Response *response = MHD_create_response_from_buffer (length, (void *) page, MHD_RESPMEM_MUST_COPY);
@@ -566,13 +566,13 @@ void HTTPDServer::logSendGuido(struct MHD_Connection *connection, const char* ur
 	if (fVerbose > 0) {
 	  if (fLogmode == 0) {
 		const char *sep = " ; ";
-		log << log.date() << sep;
+		serverlog << serverlog.date() << sep;
 		if (fVerbose & IP_VERBOSE) {
 		  struct sockaddr *so;
 		  char buf[kInetAddrLen];
 		  so = MHD_get_connection_info (connection,
 										MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
-		  log << inet_ntop(so->sa_family,
+		  serverlog << inet_ntop(so->sa_family,
 						   so->sa_data + 2, buf, kInetAddrLen) << sep;
 		}
 		if (fVerbose & HEADER_VERBOSE) {
@@ -584,19 +584,19 @@ void HTTPDServer::logSendGuido(struct MHD_Connection *connection, const char* ur
 			  if (!ampersand)
 				ampersand = true;
 			  else
-				log << "&";
-			  log << it->first;
-			  log << "=";
-			  log << it->second;
+				serverlog << "&";
+			  serverlog << it->first;
+			  serverlog << "=";
+			  serverlog << it->second;
 			}
 		  }
-		  log << sep;
+		  serverlog << sep;
 		}
 		if (fVerbose & REQUEST_VERBOSE) {
-		  log << type << sep;
+		  serverlog << type << sep;
 		}
 		if (fVerbose & URL_VERBOSE) {
-		  log << url << sep;
+		  serverlog << url << sep;
 		}
 		if (fVerbose & QUERY_VERBOSE) {
 		  if (args.size()) {
@@ -605,79 +605,79 @@ void HTTPDServer::logSendGuido(struct MHD_Connection *connection, const char* ur
 			  if (!ampersand)
 				ampersand = true;
 			  else
-				log << "&";
-			  log << it->first;
-			  log << "=";
-			  log << curl_escape(it->second.c_str (), 0);
+				serverlog << "&";
+			  serverlog << it->first;
+			  serverlog << "=";
+			  serverlog << curl_escape(it->second.c_str (), 0);
 			}
 		  }
-		  log << sep;
+		  serverlog << sep;
 		}
 		// we close the entry when we send
 	  }
 	  else if (fLogmode == 1) {
 		const char *tab = "  ";
-		log << "<entry>" << logend;
-		log << tab << "<date>" << logend;
-		log << tab << tab << log.date() << logend;
-		log << tab << "</date>" << logend;
+		serverlog << "<entry>" << logend;
+		serverlog << tab << "<date>" << logend;
+		serverlog << tab << tab << serverlog.date() << logend;
+		serverlog << tab << "</date>" << logend;
 		if (fVerbose & IP_VERBOSE) {
 		  struct sockaddr *so;
 		  char buf[kInetAddrLen];
 		  so = MHD_get_connection_info (connection,
 										MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
-		  log << tab << "<ip>" << logend;
-		  log << tab << tab << inet_ntop(so->sa_family,
+		  serverlog << tab << "<ip>" << logend;
+		  serverlog << tab << tab << inet_ntop(so->sa_family,
 						   so->sa_data + 2, buf, kInetAddrLen)
 			  << logend;
-		  log << tab << "</ip>" << logend;
+		  serverlog << tab << "</ip>" << logend;
 		}
 		if (fVerbose & HEADER_VERBOSE) {
 		  TArgs headerArgs;
 		  MHD_get_connection_values (connection, MHD_HEADER_KIND, _get_params, &headerArgs);
 		  if (headerArgs.size()) {
-			log << tab << "<header>" << logend;
+			serverlog << tab << "<header>" << logend;
 			for(TArgs::const_iterator it = headerArgs.begin(); it != headerArgs.end(); it++) {
-			  log << tab << tab << "<pair>" << logend;
-			  log << tab << tab << tab << "<name>" << logend;
-			  log << tab << tab << tab << tab << it->first << logend;
-			  log << tab << tab << tab << "</name>" << logend;
-			  log << tab << tab << tab << "<value>" << logend;
-			  log << tab << tab << tab << tab << it->second << logend;
-			  log << tab << tab << tab << "</value>" << logend;
-			  log << tab << tab << "</pair>" << logend;
+			  serverlog << tab << tab << "<pair>" << logend;
+			  serverlog << tab << tab << tab << "<name>" << logend;
+			  serverlog << tab << tab << tab << tab << it->first << logend;
+			  serverlog << tab << tab << tab << "</name>" << logend;
+			  serverlog << tab << tab << tab << "<value>" << logend;
+			  serverlog << tab << tab << tab << tab << it->second << logend;
+			  serverlog << tab << tab << tab << "</value>" << logend;
+			  serverlog << tab << tab << "</pair>" << logend;
 			}
-			log << tab << "</header>" << logend;
+			serverlog << tab << "</header>" << logend;
 		  }
 		}
 		if (fVerbose & REQUEST_VERBOSE) {
-		  log << tab << "<method>" << logend;
-		  log << tab << tab << type << logend;
-		  log << tab << "</method>" << logend;
+		  serverlog << tab << "<method>" << logend;
+		  serverlog << tab << tab << type << logend;
+		  serverlog << tab << "</method>" << logend;
 		}
 		if (fVerbose & URL_VERBOSE) {
-		  log << tab << "<url>" << logend;
-		  log << tab << tab << url << logend;
-		  log << tab << "</url>" << logend;
+		  serverlog << tab << "<url>" << logend;
+		  serverlog << tab << tab << url << logend;
+		  serverlog << tab << "</url>" << logend;
 		}
 		if (fVerbose & QUERY_VERBOSE) {
 		  if (args.size()) {
-			log << tab << "<query>" << logend;
+			serverlog << tab << "<query>" << logend;
 			for(TArgs::const_iterator it = args.begin(); it != args.end(); it++) {
-			  log << tab << tab << "<pair>" << logend;
-			  log << tab << tab << tab << "<name>" << logend;
-			  log << tab << tab << tab << tab << it->first << logend;
-			  log << tab << tab << tab << "</name>" << logend;
-			  log << tab << tab << tab << "<value>" << logend;
-			  log << tab << tab << tab << tab << curl_escape(it->second.c_str (), 0) << logend;
-			  log << tab << tab << tab << "</value>" << logend;
-			  log << tab << tab << "</pair>" << logend;
+			  serverlog << tab << tab << "<pair>" << logend;
+			  serverlog << tab << tab << tab << "<name>" << logend;
+			  serverlog << tab << tab << tab << tab << it->first << logend;
+			  serverlog << tab << tab << tab << "</name>" << logend;
+			  serverlog << tab << tab << tab << "<value>" << logend;
+			  serverlog << tab << tab << tab << tab << curl_escape(it->second.c_str (), 0) << logend;
+			  serverlog << tab << tab << tab << "</value>" << logend;
+			  serverlog << tab << tab << "</pair>" << logend;
 			}
-			log << tab << "</query>" << logend;
+			serverlog << tab << "</query>" << logend;
 		  }
 		}
 		// we close the entry when we send
-		//log << "</entry>" << logend;
+		//serverlog << "</entry>" << logend;
 	  }
 	}
 }

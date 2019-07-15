@@ -1,0 +1,13 @@
+version: '3.7'
+
+services:
+  guidotools:
+    build:
+      context: .
+    volumes:
+      - ./tools:/app/tools
+      - ./platforms:/app/platforms
+      - ./server:/app/server
+      - ./lang:/app/lang
+
+# docker-compose build && docker-compose run --rm -v ~/Desktop/coucou.xml:/coucou.xml guidotools videogeneration /coucou.xml b c

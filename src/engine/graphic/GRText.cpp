@@ -191,7 +191,8 @@ FloatRect GRText::getTextMetrics(VGDevice & hdc, const GRStaff* staff ) const
 	const VGFont* savedFont = hdc.GetTextFont();
 	hdc.SetTextFont( hmyfont );
 	hmyfont->GetExtent(theText, charCount, &w, &h, &hdc);
-	hdc.SetTextFont( savedFont );
+        if (savedFont)
+          hdc.SetTextFont( savedFont );
 	if( arText->isLyric() && arText->isAutoPos() ) {
 		y += curLSPACE * 0.75f;
 		r.Set(x, y-h, x+w, y);

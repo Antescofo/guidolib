@@ -147,7 +147,7 @@ static bool launchServer (int port, int verbose, int logmode, const string cache
 	}
     if (server.start(port)) {
         if (daemon) {
-            log << "Guido server v." << kVersionStr << " with Guido v." << GuidoGetVersionStr() << " is running on port " << port << logend;
+            serverlog << "Guido server v." << kVersionStr << " with Guido v." << GuidoGetVersionStr() << " is running on port " << port << logend;
             while (true) { sleep(1); }
         } else {
             cout << "Guido server v." << kVersionStr << " with Guido v." << GuidoGetVersionStr() << " is running on port " << port << endl;
@@ -163,7 +163,7 @@ static bool launchServer (int port, int verbose, int logmode, const string cache
         server.stop();
         ret = true;
     } else {
-        log << "Can't start Guido httpd server on the specified port. Try a different port." << logend;
+        serverlog << "Can't start Guido httpd server on the specified port. Try a different port." << logend;
     }
 	stopEngine();
     return ret;
@@ -254,13 +254,13 @@ int main(int argc, char **argv)
         // Create a new SID for the child process
         pid_t sid = setsid();
         if (sid < 0) {
-            log << "SID creation failed (errno " << errno << ")" << logend;
+            serverlog << "SID creation failed (errno " << errno << ")" << logend;
             exit(EXIT_FAILURE);
         }
         */
         // Change the current working directory
         if ((chdir("/")) < 0) {
-            log << "Could not change the directory to the root directory." << logend;
+            serverlog << "Could not change the directory to the root directory." << logend;
             exit(EXIT_FAILURE);
         }
 
