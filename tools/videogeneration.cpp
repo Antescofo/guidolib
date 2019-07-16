@@ -113,7 +113,9 @@ struct Element {
 class MyMapCollector : public MapCollector, public std::vector<Element> {
 public:
   virtual void Graph2TimeMap( const FloatRect& box, const TimeSegment& dates, const GuidoElementInfos& infos ) {
-    this->push_back(Element(box, dates, infos));
+    if (infos.type == kNote) {
+      this->push_back(Element(box, dates, infos));
+    }
   }
 };
 
