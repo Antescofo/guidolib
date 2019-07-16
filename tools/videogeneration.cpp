@@ -3,10 +3,120 @@
 #include <fstream>
 #include <libmusicxml/libmusicxml.h>
 #include "cairo_guido2img.h"
+#include "string.h"
+#include "CairoSystem.h"
+#include "CairoDevice.h"
+#include "SVGSystem.h"
+#include "SVGDevice.h"
+#include "BinarySystem.h"
+#include "BinaryDevice.h"
+
+#include <cairo.h>
+#include <Magick++.h>
+
+#include <assert.h>
+
 #include "engine.h"
 #include "guidosession.h"
 
 using namespace std;
+using namespace guidohttpd;
+
+typedef struct
+{
+  char *data_;
+  char *start_;
+  int size_;
+  void reset() {
+    size_ = 0;
+    data_ = start_;
+  }
+} png_stream_t;
+
+static cairo_status_t
+write_png_stream_to_byte_array (void *in_closure, const unsigned char *data,
+                                unsigned int length)
+{
+  png_stream_t* closure = (png_stream_t*)in_closure;
+
+  memcpy(closure->data_, data, length);
+  closure->data_ += length;
+  closure->size_ += length;
+  return CAIRO_STATUS_SUCCESS;
+}
+
+GuidoOnDrawDesc* get_on_draw_desc(guidosession* const currentSession, GuidoSessionScoreParameters &scoreParameters) {
+  GuidoPageFormat curFormat;
+  GuidoGetPageFormat(currentSession->getGRHandler(), scoreParameters.page, &curFormat);
+  int width = curFormat.width;
+  int height = curFormat.height;
+
+  cairo_surface_t *surface;
+  cairo_t *cr;
+  surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+  cr = cairo_create(surface);
+
+  CairoSystem* sys = new CairoSystem(cr);
+
+  // VGDevice * dev = sys->CreateDisplayDevice();
+  VGDevice * dev = sys->CreateMemoryDevice(width, height);
+  dev->SelectFillColor(VGColor(255,255,255));
+  dev->Rectangle (0, 0, width, height);
+  dev->SelectFillColor(VGColor(0,0,0));
+  GuidoOnDrawDesc* desc = new GuidoOnDrawDesc();
+
+  desc->handle = currentSession->getGRHandler();
+  desc->hdc = dev;
+  desc->page = scoreParameters.page;
+  desc->updateRegion.erase = true;
+  desc->scrollx = desc->scrolly = 0;
+  desc->sizex = width;
+  desc->sizey = height;
+  desc->isprint = false;
+  return desc;
+}
+
+//int convert_score_to_png(guidosession* const currentSession, GuidoSessionScoreParameters &scoreParameters, png_stream_t& fBuffer)
+int convert_score_to_png(GuidoOnDrawDesc* desc, png_stream_t& fBuffer, FloatRect* r = 0, CairoDevice* other_device = 0)
+{
+  GuidoErrCode err = 0;
+  CairoDevice* cairo_device = (CairoDevice*)desc->hdc;
+  fBuffer.reset();
+  if (r && other_device) {
+    cairo_device->CopyPixels(other_device);
+    cairo_device->SelectFillColor(VGColor(0, 0, 255));
+    cairo_device->Rectangle(r->left, r->top, r->right, r->bottom);
+    cairo_device->SelectFillColor(VGColor(0, 0, 0));
+  }
+  else {
+    cairo_device->SelectFillColor(VGColor(0, 0, 0));
+    err = GuidoOnDraw(desc);
+  }
+  cairo_surface_t* surface = cairo_device->getSurface();
+  cairo_surface_write_to_png_stream(surface, write_png_stream_to_byte_array, &fBuffer);
+  return err;
+}
+
+struct Element {
+  FloatRect box;
+  TimeSegment dates;
+  GuidoElementInfos infos;
+
+  Element(const FloatRect& box_, const TimeSegment& dates_, const GuidoElementInfos& infos_) :
+    box(box_),
+    dates(dates_),
+    infos(infos_)
+    {
+    }
+};
+
+class MyMapCollector : public MapCollector, public std::vector<Element> {
+public:
+  virtual void Graph2TimeMap( const FloatRect& box, const TimeSegment& dates, const GuidoElementInfos& infos ) {
+    this->push_back(Element(box, dates, infos));
+  }
+};
+
 
 int main(int argc, char* argv[]) {
   if (argc < 4) {
@@ -26,30 +136,40 @@ int main(int argc, char* argv[]) {
   guidohttpd::startEngine();
 
   GuidoLayoutSettings layoutSettings;
-  layoutSettings.systemsDistance = 320;
-  // layoutSettings.systemsDistance = 75;
-
-  layoutSettings.systemsDistribution = kNeverDistrib;
-  // layoutSettings.systemsDistribution = kAutoDistrib;
+  /*
+  layoutSettings.systemsDistance = 75;
+  layoutSettings.systemsDistribution = kAutoDistrib;
   layoutSettings.systemsDistribLimit = 0.25;
   layoutSettings.force = 750;
-  layoutSettings.spring = 1.12;
+  layoutSettings.spring = 1.1;
   layoutSettings.neighborhoodSpacing = 0;
   layoutSettings.optimalPageFill = 1;
   layoutSettings.resizePage2Music = 1;
   layoutSettings.proportionalRenderingForceMultiplicator = 0;
+  layoutSettings.checkLyricsCollisions = false;
+  */
+
+  layoutSettings.systemsDistance = 320;
+  layoutSettings.systemsDistribution = kAutoDistrib;
+  layoutSettings.systemsDistribLimit = 0.25;
+  layoutSettings.force = 750;
+  layoutSettings.spring = 1.11;
+  layoutSettings.neighborhoodSpacing = 0;
+  layoutSettings.optimalPageFill = 1;
+  layoutSettings.resizePage2Music = 0;
+  layoutSettings.proportionalRenderingForceMultiplicator = 0;
   layoutSettings.checkLyricsCollisions = true;
+
   float youtube_ratio = 1280.0 / 720.0;
-  float height = GuidoCM2Unit(29.7);
+  float height = GuidoCM2Unit(20);
+  float width = height * youtube_ratio;
   guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.layoutSettings = layoutSettings;
-  guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.width = height * youtube_ratio;
+  guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.width = width;
   guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.height = height;
-
-  guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.marginleft = GuidoCM2Unit(1);
-  guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.margintop = GuidoCM2Unit(5);
-  guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.marginright = GuidoCM2Unit(1);
-  guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.marginbottom = GuidoCM2Unit(1);
-
+  guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.marginleft = GuidoCM2Unit(2);
+  guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.margintop = GuidoCM2Unit(2);
+  guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.marginright = GuidoCM2Unit(2);
+  guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.marginbottom = GuidoCM2Unit(2);
   guidohttpd::guidosession::sDefaultScoreParameters.page = page;
   guidohttpd::guidosession::sDefaultScoreParameters.format = guidohttpd::GUIDO_WEB_API_PNG;
   // guidohttpd::guidosession::sDefaultScoreParameters.format = guidohttpd::GUIDO_WEB_API_SVG;
@@ -57,21 +177,58 @@ int main(int argc, char* argv[]) {
   std::stringstream guido;
   MusicXML2::musicxmlfile2guido(musicxml_file.c_str(), false, guido);
   std::string svg_font_file = "/app/src/guido2.svg";
-  guidohttpd::cairo_guido2img guido2img(svg_font_file);
   guidohttpd::guidosession* currentSession = new guidohttpd::guidosession(svg_font_file, guido.str(), "1shauishauis.gmm");
-  // DA
+  currentSession->updateGRH(guidohttpd::guidosession::sDefaultScoreParameters);
   int pageCount = GuidoGetPageCount(currentSession->getGRHandler());
   std::cout << "PAGECOUNT:" << pageCount << std::endl;
   guidohttpd::GuidoSessionScoreParameters scoreParameters = guidohttpd::guidosession::sDefaultScoreParameters;
+  png_stream_t fBuffer;
+  fBuffer.data_ = new char[10485760];
+  fBuffer.start_ = fBuffer.data_;
+  fBuffer.size_ = 0;
 
-  int err = guido2img.convertScore(currentSession, scoreParameters);
-  std::cout << "ERR:" << err << std::endl;
-  if (err == 0) {
-    ofstream myfile;
-    myfile.open ("output.png");
-    myfile.write(guido2img.data(), guido2img.size());
-    myfile.close();
+  CGRHandler gr = currentSession->getGRHandler();
+  std::vector<std::pair<float, GuidoDate> > audio_to_beat_mapping;
+  int current_page = 1;
+  TimeSegment t;
+  FloatRect r;
+  int err = 0;
+  int nframe = 0;
+
+  for (int current_page = 1; current_page <= pageCount; ++current_page) {
+    Time2GraphicMap beat_mapping;
+
+    std::cout << "CURRENT PAGE:" << current_page << std::endl;
+    MyMapCollector map_collector;
+    GuidoGetMap(gr, current_page, width, height, kGuidoEvent, map_collector);
+    GuidoOnDrawDesc* main_desc = get_on_draw_desc(currentSession, scoreParameters);
+    GuidoOnDrawDesc* desc = get_on_draw_desc(currentSession, scoreParameters);
+
+    main_desc->page = desc->page = current_page;
+    err = convert_score_to_png(main_desc, fBuffer);
+    CairoDevice* main_device = (CairoDevice*)main_desc->hdc;
+    if (err != 0) {
+      std::cerr << "An error occured" << std::endl;
+      return 1;
+    }
+    for (auto it = map_collector.begin(); it != map_collector.end(); it++) {
+      FloatRect& r = it->box;
+      err = convert_score_to_png(desc, fBuffer, &r, main_device);
+      if (err == 0) {
+        ofstream myfile;
+        std::string output_file_path = "output" + std::to_string(nframe++) + ".png";
+        myfile.open (output_file_path);
+        myfile.write(fBuffer.start_, fBuffer.size_);
+        myfile.close();
+        std::cout << "Output image in " << output_file_path << std::endl;
+        // break;
+      }
+      else {
+        std::cerr << "An error occured" << std::endl;
+        return 1;
+      }
+    }
   }
-  std::cout << guido2img.size() << std::endl;
+  std::cout << "ALL DONE" << std::endl;
   return 0;
 }

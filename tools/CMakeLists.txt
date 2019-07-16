@@ -127,7 +127,7 @@ else()
   set(LINK ${LINK}  "-l GUIDOEngine")
   LINK_DIRECTORIES(${ROOT}/build/linux/)
 endif(APPLE)
-set(CMAKE_CXX_FLAGS "-g -ggdb")
+set(CMAKE_CXX_FLAGS "-O3 -fpermissive")
 add_executable(${target} ${LOCAL_CPP_SOURCES} ${REMOTE_CPP_SOURCES} ${SERVER_CPP_SOURCES} ${SERVER_C_SOURCES} ${CAIRO_CPP_SOURCES} ${JSON_CPP_SOURCES})
 
 target_link_libraries(${target} ${LINK})

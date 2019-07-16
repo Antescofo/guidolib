@@ -34,6 +34,8 @@ COPY src /app/src
 WORKDIR /app/build
 RUN make -j 4 && make install
 
+RUN apt-get install -y valgrind
+
 COPY tools /app/tools
 WORKDIR /app/tools
 
