@@ -31,7 +31,7 @@
 
 
 // -------------------------------------------------------------------
-CairoDevice::CairoDevice(cairo_t * dev, VGSystem * sys) 
+CairoDevice::CairoDevice(cairo_t * dev, VGSystem * sys)
 	: fNativeDevice(0), fSystem(sys), fTextFont(0), fMusicFont(0), fFillColor(0,0,0), fPenColor(0,0,0)
 {
 	fNativeDevice = cairo_reference (dev);
@@ -40,18 +40,18 @@ CairoDevice::CairoDevice(cairo_t * dev, VGSystem * sys)
 	SetFontAlign( kAlignLeft | kAlignBase );
 }
 
-CairoDevice::CairoDevice(int w, int h, VGSystem * sys) 
+CairoDevice::CairoDevice(int w, int h, VGSystem * sys)
 	: fNativeDevice(0), fSystem(sys), fTextFont(0), fMusicFont(0), fFillColor(255,255,255), fPenColor(0,0,0)
 {
 	cairo_surface_t* surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
 	fNativeDevice = cairo_create (surface);
-	cairo_surface_destroy (surface);	
+	cairo_surface_destroy (surface);
 	SetFontColor( VGColor(0,0,0,ALPHA_OPAQUE) );
 	SetFontBackgroundColor( VGColor(255,255,255,ALPHA_TRANSPARENT) );	// transparent
 	SetFontAlign( kAlignLeft | kAlignBase );
 }
 
-CairoDevice::~CairoDevice() 
+CairoDevice::~CairoDevice()
 {
 	if (fNativeDevice) cairo_destroy (fNativeDevice);
 }
@@ -62,7 +62,7 @@ CairoDevice::~CairoDevice()
 // -------------------------------------------------------------------
 bool CairoDevice::BeginDraw()	{ cairo_save   (fNativeDevice);  return true; }
 void CairoDevice::EndDraw()		{ cairo_restore (fNativeDevice); }
-void CairoDevice::InvalidateRect( float left, float top, float right, float bottom ) 
+void CairoDevice::InvalidateRect( float left, float top, float right, float bottom )
 {
 	cairo_surface_t* surface = cairo_get_target (fNativeDevice);
 	cairo_surface_mark_dirty_rectangle (surface, left, top, right-left, bottom-top);
@@ -73,24 +73,24 @@ void CairoDevice::InvalidateRect( float left, float top, float right, float bott
 // -------------------------------------------------------------------
 void CairoDevice::MoveTo( float x, float y )	{ cairo_move_to (fNativeDevice, x, y); }
 
-void CairoDevice::LineTo( float x, float y )	
-{ 
-	cairo_line_to (fNativeDevice, x, y); 
+void CairoDevice::LineTo( float x, float y )
+{
+	cairo_line_to (fNativeDevice, x, y);
 	cairo_set_source_rgba (fNativeDevice, c2cc(fPenColor.mRed), c2cc(fPenColor.mGreen), c2cc(fPenColor.mBlue), c2cc(fPenColor.mAlpha));
-	cairo_stroke (fNativeDevice); 
+	cairo_stroke (fNativeDevice);
 }
 
-void CairoDevice::Line( float x1, float y1, float x2, float y2 )	
-{ 
-	MoveTo(x1,y1); 
-	LineTo(x2,y2); 
+void CairoDevice::Line( float x1, float y1, float x2, float y2 )
+{
+	MoveTo(x1,y1);
+	LineTo(x2,y2);
 }
 
 void CairoDevice::Frame( float left, float top, float right, float bottom )
 {
 	cairo_rectangle (fNativeDevice, left, top, right-left, bottom-top);
 	cairo_set_source_rgba (fNativeDevice, c2cc(fPenColor.mRed), c2cc(fPenColor.mGreen), c2cc(fPenColor.mBlue), c2cc(fPenColor.mAlpha));
-	cairo_stroke (fNativeDevice); 
+	cairo_stroke (fNativeDevice);
 }
 
 // --------------------------------------------------------------
@@ -106,17 +106,17 @@ void CairoDevice::Arc( float left, float top, float right, float bottom, float s
 	const float midY = (top + bottom) * 0.5f;
 	const float width = right - left;
 	const float height = bottom - top;
-	
+
 	// - Draw
-	const float angle1 = CoordToRadian( startX - midX, startY - midY );		
+	const float angle1 = CoordToRadian( startX - midX, startY - midY );
 	const float angle2 = CoordToRadian( endX - midX, endY - midY );
 	cairo_save (fNativeDevice);
 	cairo_translate (fNativeDevice, midX + width / 2., midY + height / 2.);
 	cairo_scale (fNativeDevice, width / 2., height / 2.);
 	cairo_arc (fNativeDevice, midX, midY, angle1, angle2, 0);
-	cairo_restore (fNativeDevice);	
+	cairo_restore (fNativeDevice);
 	cairo_set_source_rgba (fNativeDevice, c2cc(fPenColor.mRed), c2cc(fPenColor.mGreen), c2cc(fPenColor.mBlue), c2cc(fPenColor.mAlpha));
-	cairo_stroke (fNativeDevice); 
+	cairo_stroke (fNativeDevice);
 }
 
 // -------------------------------------------------------------------
@@ -130,9 +130,9 @@ void CairoDevice::Triangle( float x1, float y1, float x2, float y2, float x3, fl
 	cairo_line_to (fNativeDevice, x3, y3);
 	cairo_line_to (fNativeDevice, x1, y1);
 	cairo_set_source_rgba (fNativeDevice, c2cc(fPenColor.mRed), c2cc(fPenColor.mGreen), c2cc(fPenColor.mBlue), c2cc(fPenColor.mAlpha));
-	cairo_stroke_preserve (fNativeDevice); 
+	cairo_stroke_preserve (fNativeDevice);
 	cairo_set_source_rgba (fNativeDevice, c2cc(fFillColor.mRed), c2cc(fFillColor.mGreen), c2cc(fFillColor.mBlue), c2cc(fFillColor.mAlpha));
-	cairo_fill (fNativeDevice); 
+	cairo_fill (fNativeDevice);
 }
 
 void CairoDevice::Polygon( const float * xCoords, const float * yCoords, int count )
@@ -143,24 +143,24 @@ void CairoDevice::Polygon( const float * xCoords, const float * yCoords, int cou
 		cairo_line_to (fNativeDevice, xCoords[i], yCoords[i]);
 	cairo_line_to (fNativeDevice, xCoords[0], yCoords[0]);
 	cairo_set_source_rgba (fNativeDevice, c2cc(fPenColor.mRed), c2cc(fPenColor.mGreen), c2cc(fPenColor.mBlue), c2cc(fPenColor.mAlpha));
-	cairo_stroke_preserve (fNativeDevice); 
+	cairo_stroke_preserve (fNativeDevice);
 	cairo_set_source_rgba (fNativeDevice, c2cc(fFillColor.mRed), c2cc(fFillColor.mGreen), c2cc(fFillColor.mBlue), c2cc(fFillColor.mAlpha));
-	cairo_fill (fNativeDevice); 
+	cairo_fill (fNativeDevice);
 }
 
 void CairoDevice::Rectangle( float left,  float top, float right, float bottom )
 {
 	cairo_rectangle (fNativeDevice, left, top, right-left, bottom-top);
 	cairo_set_source_rgba (fNativeDevice, c2cc(fPenColor.mRed), c2cc(fPenColor.mGreen), c2cc(fPenColor.mBlue), c2cc(fPenColor.mAlpha));
-	cairo_stroke_preserve (fNativeDevice); 
+	cairo_stroke_preserve (fNativeDevice);
 	cairo_set_source_rgba (fNativeDevice, c2cc(fFillColor.mRed), c2cc(fFillColor.mGreen), c2cc(fFillColor.mBlue), c2cc(fFillColor.mAlpha));
-	cairo_fill (fNativeDevice); 
+	cairo_fill (fNativeDevice);
 }
 
 // -------------------------------------------------------------------
 // - Pen & brush services -
 // -------------------------------------------------------------------
-void CairoDevice::SelectPen( const VGColor & color, float witdh ) 
+void CairoDevice::SelectPen( const VGColor & color, float witdh )
 {
 	SelectPenColor (color);
 	SelectPenWidth (witdh);
@@ -181,8 +181,8 @@ void CairoDevice::SelectFillColor( const VGColor & color )					{ fFillColor  = c
 void CairoDevice::PushFillColor( const VGColor & color )
 {
 	double r, g, b, a;
-	cairo_pattern_get_rgba (cairo_get_source(fNativeDevice), &r, &g, &b, &a);	
-	fFillColorStack.push (VGColor(cc2c(r), cc2c(g), cc2c(b), cc2c(a))); 
+	cairo_pattern_get_rgba (cairo_get_source(fNativeDevice), &r, &g, &b, &a);
+	fFillColorStack.push (VGColor(cc2c(r), cc2c(g), cc2c(b), cc2c(a)));
 	SelectFillColor (color);
 }
 void CairoDevice::PopFillColor()
@@ -196,8 +196,8 @@ void CairoDevice::SelectPenColor( const VGColor & color)					{ fPenColor = color
 void CairoDevice::PushPenColor( const VGColor & color)
 {
 	double r, g, b, a;
-	cairo_pattern_get_rgba (cairo_get_source(fNativeDevice), &r, &g, &b, &a);	
-	fPenColorStack.push (VGColor(cc2c(r), cc2c(g), cc2c(b), cc2c(a))); 
+	cairo_pattern_get_rgba (cairo_get_source(fNativeDevice), &r, &g, &b, &a);
+	fPenColorStack.push (VGColor(cc2c(r), cc2c(g), cc2c(b), cc2c(a)));
 	SelectPenColor (color);
 }
 void CairoDevice::PopPenColor()
@@ -208,13 +208,13 @@ void CairoDevice::PopPenColor()
 
 // -------------------------------------------------------------------
 void CairoDevice::SelectPenWidth( float width)
-{ 
-	cairo_set_line_width (fNativeDevice, width); 
+{
+	cairo_set_line_width (fNativeDevice, width);
 }
 void CairoDevice::PushPenWidth( float width)
 {
 	fPenWidthStack.push( cairo_get_line_width(fNativeDevice) );
-	SelectPenWidth( width );	
+	SelectPenWidth( width );
 }
 void CairoDevice::PopPenWidth()
 {
@@ -232,9 +232,9 @@ bool CairoDevice::CopyPixels( VGDevice* pSrcDC, float alpha)
 {
 	cairo_t* src = (cairo_t*)pSrcDC->GetNativeContext();
 	cairo_surface_t* surface = cairo_get_target (src);
-	if ( cairo_surface_get_type (surface) == CAIRO_SURFACE_TYPE_IMAGE) {
-		cairo_set_source_surface (fNativeDevice, surface, pSrcDC->GetWidth(), pSrcDC->GetHeight());
-		cairo_paint (fNativeDevice);
+        if ( cairo_surface_get_type (surface) == CAIRO_SURFACE_TYPE_IMAGE) {
+          cairo_set_source_surface (fNativeDevice, surface, 0, 0);
+          cairo_paint (fNativeDevice);
 	}
 	return false;
 }
@@ -273,8 +273,8 @@ bool CairoDevice::CopyPixels( int xDest, int yDest, int dstWidth, int dstHeight,
 // -------------------------------------------------------------------
 void CairoDevice::SetScale( float x, float y )		{ cairo_scale(fNativeDevice, x, y); }
 void CairoDevice::OffsetOrigin( float x, float y )	{ cairo_translate(fNativeDevice, x, y); }
-void CairoDevice::SetOrigin( float x, float y )	
-{ 
+void CairoDevice::SetOrigin( float x, float y )
+{
 	cairo_matrix_t matrix;
 	cairo_get_matrix (fNativeDevice, &matrix);
 	matrix.x0 = x;
@@ -282,17 +282,17 @@ void CairoDevice::SetOrigin( float x, float y )
 	cairo_set_matrix (fNativeDevice, &matrix);
 }
 
-void CairoDevice::LogicalToDevice( float * x, float * y ) const	
-{ 
+void CairoDevice::LogicalToDevice( float * x, float * y ) const
+{
 	double dx, dy;
 	cairo_user_to_device(fNativeDevice, &dx, &dy);
 	*x = dx;
 	*y = dy;
 }
-void CairoDevice::DeviceToLogical( float * x, float * y ) const	
-{ 
+void CairoDevice::DeviceToLogical( float * x, float * y ) const
+{
 	double dx, dy;
-	cairo_device_to_user(fNativeDevice, &dx, &dy); 
+	cairo_device_to_user(fNativeDevice, &dx, &dy);
 	*x = dx;
 	*y = dy;
 }
@@ -327,6 +327,7 @@ float CairoDevice::GetYOrigin() const
 
 void CairoDevice::NotifySize( int w, int h )
 {
+  std::cout << "notify size" << std::endl;
 	cairo_surface_t* surface = cairo_get_target (fNativeDevice);
 	if ( cairo_surface_get_type (surface) == CAIRO_SURFACE_TYPE_IMAGE) {
 		cairo_surface_t* surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
@@ -415,7 +416,7 @@ void CairoDevice::ShowText( const VGFont* font, float x, float y, const char * s
 	// - Perform text alignement
 	if( fTextAlign != ( kAlignLeft | kAlignBase )) {
 		if( fTextAlign & kAlignBottom )	// Vertical align
-			y -= baseline; 
+			y -= baseline;
 		else if( fTextAlign & kAlignTop )
 			y += h - baseline;
 
@@ -443,7 +444,7 @@ void CairoDevice::SetFontColor( const VGColor & color )				{ fTextColor = color;
 VGColor CairoDevice::GetFontColor() const							{ return fTextColor; }
 void CairoDevice::SetFontBackgroundColor( const VGColor & color )	{ fTextBackground = color; }
 VGColor CairoDevice::GetFontBackgroundColor() const					{ return fTextBackground; }
-void CairoDevice::SetFontAlign( unsigned int align )				{ fTextAlign = align; } 
+void CairoDevice::SetFontAlign( unsigned int align )				{ fTextAlign = align; }
 unsigned int CairoDevice::GetFontAlign() const						{ return fTextAlign; }
 
 // -------------------------------------------------------------------
@@ -451,4 +452,3 @@ void CairoDevice::SetDPITag( float inDPI )	{}
 float CairoDevice::GetDPITag() const		{ return 72.0f; }
 void* CairoDevice::GetBitMapPixels()		{ return 0; }
 void CairoDevice::ReleaseBitMapPixels()		{}
-
