@@ -48,11 +48,13 @@ write_png_stream_to_byte_array (void *in_closure, const unsigned char *data,
 GuidoOnDrawDesc* get_on_draw_desc(guidosession* const currentSession, GuidoSessionScoreParameters &scoreParameters) {
   GuidoPageFormat curFormat;
   GuidoGetPageFormat(currentSession->getGRHandler(), scoreParameters.page, &curFormat);
-  int width = curFormat.width;
-  int height = curFormat.height;
-
+  //int width = curFormat.width / 2.0;
+  // int height = curFormat.height / 2.0;
+  int width = 1280;
+  int height = 720;
   cairo_surface_t *surface;
   cairo_t *cr;
+
   surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
   cr = cairo_create(surface);
 
@@ -77,16 +79,19 @@ GuidoOnDrawDesc* get_on_draw_desc(guidosession* const currentSession, GuidoSessi
 }
 
 //int convert_score_to_png(guidosession* const currentSession, GuidoSessionScoreParameters &scoreParameters, png_stream_t& fBuffer)
-int convert_score_to_png(GuidoOnDrawDesc* desc, png_stream_t& fBuffer, FloatRect* r = 0, CairoDevice* other_device = 0)
+int convert_score_to_png(GuidoOnDrawDesc* desc, png_stream_t& fBuffer, FloatRect* r = 0, CairoDevice* other_device = 0, float sizex = 1, float sizey = 1)
 {
   GuidoErrCode err = GuidoErrCode::guidoNoErr;
   CairoDevice* cairo_device = (CairoDevice*)desc->hdc;
   fBuffer.reset();
   if (r && other_device) {
     cairo_device->CopyPixels(other_device);
+    cairo_device->SelectPenColor(VGColor(0, 0, 255, 100));
     cairo_device->SelectFillColor(VGColor(0, 0, 255, 100));
-    cairo_device->Rectangle(r->left, r->top, r->left + (desc->sizex * 0.01), r->bottom);
+    cairo_device->Rectangle(r->left * sizex, r->top * sizey, (r->left + (desc->sizex * 0.02)) * sizex, r->bottom * sizey);
     cairo_device->SelectFillColor(VGColor(0, 0, 0));
+    cairo_device->SelectPenColor(VGColor(0, 0, 0));
+
   }
   else {
     cairo_device->SelectFillColor(VGColor(0, 0, 0));
@@ -163,8 +168,12 @@ int main(int argc, char* argv[]) {
   layoutSettings.checkLyricsCollisions = true;
 
   float youtube_ratio = 1280.0 / 720.0;
-  float height = GuidoCM2Unit(20);
+  float height = GuidoCM2Unit(25);
   float width = height * youtube_ratio;
+
+  float sizex = 1280.0 / width;
+  float sizey = 720.0 / height;
+
   guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.layoutSettings = layoutSettings;
   guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.width = width;
   guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.height = height;
@@ -226,7 +235,7 @@ int main(int argc, char* argv[]) {
         return 1;
       }
       //FloatRect& r = it->box;
-      err = convert_score_to_png(desc, fBuffer, &r, main_device);
+      err = convert_score_to_png(desc, fBuffer, &r, main_device, sizex, sizey);
       if (err == 0) {
         ofstream myfile;
         std::string output_file_path = "output" + std::to_string(nframe++) + ".png";
