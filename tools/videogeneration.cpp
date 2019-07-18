@@ -79,13 +79,13 @@ GuidoOnDrawDesc* get_on_draw_desc(guidosession* const currentSession, GuidoSessi
 //int convert_score_to_png(guidosession* const currentSession, GuidoSessionScoreParameters &scoreParameters, png_stream_t& fBuffer)
 int convert_score_to_png(GuidoOnDrawDesc* desc, png_stream_t& fBuffer, FloatRect* r = 0, CairoDevice* other_device = 0)
 {
-  GuidoErrCode err = 0;
+  GuidoErrCode err = GuidoErrCode::guidoNoErr;
   CairoDevice* cairo_device = (CairoDevice*)desc->hdc;
   fBuffer.reset();
   if (r && other_device) {
     cairo_device->CopyPixels(other_device);
-    cairo_device->SelectFillColor(VGColor(0, 0, 255));
-    cairo_device->Rectangle(r->left, r->top, r->right, r->bottom);
+    cairo_device->SelectFillColor(VGColor(0, 0, 255, 100));
+    cairo_device->Rectangle(r->left, r->top, r->left + (desc->sizex * 0.01), r->bottom);
     cairo_device->SelectFillColor(VGColor(0, 0, 0));
   }
   else {
@@ -203,9 +203,12 @@ int main(int argc, char* argv[]) {
     std::cout << "CURRENT PAGE:" << current_page << std::endl;
     MyMapCollector map_collector;
     GuidoGetMap(gr, current_page, width, height, kGuidoEvent, map_collector);
+     //GuidoGetMap(gr, current_page, width, height, kGuidoSystem, map_collector);
+
     GuidoOnDrawDesc* main_desc = get_on_draw_desc(currentSession, scoreParameters);
     GuidoOnDrawDesc* desc = get_on_draw_desc(currentSession, scoreParameters);
-
+    Time2GraphicMap systemMap;
+    GuidoGetSystemMap(gr, current_page, width, height, systemMap);
     main_desc->page = desc->page = current_page;
     err = convert_score_to_png(main_desc, fBuffer);
     CairoDevice* main_device = (CairoDevice*)main_desc->hdc;
@@ -214,7 +217,15 @@ int main(int argc, char* argv[]) {
       return 1;
     }
     for (auto it = map_collector.begin(); it != map_collector.end(); it++) {
-      FloatRect& r = it->box;
+      FloatRect r;
+      TimeSegment t;
+      bool result = GuidoGetTime(it->dates.first, systemMap, t, r);
+      if (!result) {
+        std::cerr << "Beat not found" << std::endl;
+        continue;
+        return 1;
+      }
+      //FloatRect& r = it->box;
       err = convert_score_to_png(desc, fBuffer, &r, main_device);
       if (err == 0) {
         ofstream myfile;
