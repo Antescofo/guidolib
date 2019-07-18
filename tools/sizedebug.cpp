@@ -2,6 +2,7 @@
 
 #include <string>
 #include <math.h>
+#include <cstdlib>
 
 #include "GUIDOParse.h"
 #include "GUIDOEngine.h"
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
 	VGDevice* dev = sys.CreateMemoryDevice(kSize, kSize);
     GuidoInitDesc gd = { dev, 0, 0, 0 };
     GuidoInit (&gd);
-	
+
 	GuidoParser *parser = GuidoOpenParser();
 	for (int i=1; i < argc; i++) {
 		string file = argv[i];

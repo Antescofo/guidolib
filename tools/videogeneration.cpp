@@ -81,7 +81,7 @@ GuidoOnDrawDesc* get_on_draw_desc(guidosession* const currentSession, GuidoSessi
 //int convert_score_to_png(guidosession* const currentSession, GuidoSessionScoreParameters &scoreParameters, png_stream_t& fBuffer)
 int convert_score_to_png(GuidoOnDrawDesc* desc, png_stream_t& fBuffer, FloatRect* r = 0, CairoDevice* other_device = 0, float sizex = 1, float sizey = 1)
 {
-  GuidoErrCode err = GuidoErrCode::guidoNoErr;
+  GuidoErrCode err = guidoNoErr;
   CairoDevice* cairo_device = (CairoDevice*)desc->hdc;
   fBuffer.reset();
   if (r && other_device) {
@@ -123,6 +123,13 @@ public:
     }
   }
 };
+
+
+std::string to_string(int n) {
+  std::stringstream ss;
+  ss << n;
+  return ss.str();
+}
 
 
 int main(int argc, char* argv[]) {
@@ -225,7 +232,7 @@ int main(int argc, char* argv[]) {
       std::cerr << "An error occured" << std::endl;
       return 1;
     }
-    for (auto it = map_collector.begin(); it != map_collector.end(); it++) {
+    for (std::vector<Element>::iterator it = map_collector.begin(); it != map_collector.end(); it++) {
       FloatRect r;
       TimeSegment t;
       bool result = GuidoGetTime(it->dates.first, systemMap, t, r);
@@ -239,7 +246,7 @@ int main(int argc, char* argv[]) {
       if (err == 0) {
         ofstream myfile;
         std::string output_file_path = "output" + std::to_string(nframe++) + ".png";
-        myfile.open (output_file_path);
+        myfile.open (output_file_path.c_str());
         myfile.write(fBuffer.start_, fBuffer.size_);
         myfile.close();
         std::cout << "Output image in " << output_file_path << std::endl;

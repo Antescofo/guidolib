@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:16.04
 
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
@@ -34,9 +34,10 @@ COPY src /app/src
 WORKDIR /app/build
 RUN make -j 4 && make install
 
-RUN apt-get install -y valgrind
+RUN apt-get install -y valgrind ffmpeg
 
 COPY tools /app/tools
 WORKDIR /app/tools
-
 RUN make -j 4 && make install
+
+COPY tools/videogen.sh /usr/bin/videogen.sh
