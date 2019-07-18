@@ -10,4 +10,4 @@ services:
       - ./server:/app/server
       - ./lang:/app/lang
 
-# docker-compose build && docker-compose run --rm -v ~/Desktop/coucou.xml:/coucou.xml guidotools videogeneration /coucou.xml b c
+# docker-compose build && time docker-compose run --rm -v ~/Desktop/accomp.xml:/accomp.xml -v ~/Desktop/accomp.asco:/accomp.asco -v ~/Desktop/accomp.mp3:/accomp.mp3 guidotools videogen.sh /accomp.xml /accomp.asco /accomp.mp3 final_output.mp4

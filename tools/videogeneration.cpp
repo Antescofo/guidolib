@@ -133,16 +133,15 @@ std::string to_string(int n) {
 
 
 int main(int argc, char* argv[]) {
-  if (argc < 4) {
+  if (argc < 3) {
     cerr << "Usage: "
          << argv[0]
-         << " musicxml_file audio_file output_video"
+         << " musicxml_file asco_file"
          << endl;
     return 1;
   }
   string musicxml_file = argv[1];
-  string audio_file = argv[2];
-  string output_video = argv[3];
+  string asco_file = argv[2];
 
   int page = 1;
 
