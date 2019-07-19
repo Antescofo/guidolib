@@ -18,6 +18,7 @@
 
 #include "engine.h"
 #include "guidosession.h"
+#include "Fraction.h"
 
 using namespace std;
 using namespace guidohttpd;
@@ -132,6 +133,103 @@ std::string to_string(int n) {
 }
 
 
+bool replace(std::string& str, const std::string& from, const std::string& to) {
+  while (1) {
+    size_t start_pos = str.find(from);
+    if(start_pos == std::string::npos)
+      return false;
+    str.replace(start_pos, from.length(), to);
+  }
+  return true;
+}
+
+
+int parse_int(std::string& content, int& off) {
+  int num = 0;
+  while ((off < content.size()) && ((content[off] >= '0') && (content[off] <= '9'))) {
+    num = num * 10 + (content[off] - '0');
+    ++off;
+  }
+  return num;
+}
+
+float parse_float(std::string& content, int& off) {
+  float num = 0;
+  while ((off < content.size()) && ((content[off] >= '0') && (content[off] <= '9'))) {
+    num = num * 10 + (content[off] - '0');
+    ++off;
+  }
+  if (content[off] == '.') {
+    ++off;
+    int npow = 0;
+    while ((off < content.size()) && ((content[off] >= '0') && (content[off] <= '9'))) {
+      num = num * 10 + (content[off] - '0');
+      ++off;
+      ++npow;
+    }
+    num /= pow(10, npow);
+  }
+  return num;
+}
+
+bool parse_guido_date(std::string& content, int& off, Fraction& out) {
+  int denom = 1;
+  int num = parse_int(content, off);
+
+
+  if (content[off] == '/') {
+    ++off;
+    denom = parse_int(content, off);
+  }
+  if (content[off] == ')') {
+    ++off;
+  }
+  out.setNumerator(num);
+  out.setDenominator(denom);
+}
+
+bool parse_asco(std::string& asco_file, std::vector<std::pair<GuidoDate*, float> >& date_to_time) {
+  std::cout << "parsing asco file:"
+            << asco_file
+            << std::endl;
+  std::ifstream ifs(asco_file.c_str());
+  std::string content;
+  getline(ifs, content, '\0');
+  // content.erase(std::remove(content.begin(), content.end(), '\n'), content.end());
+  replace(content, "\t", " ");
+  replace(content, "\n", " ");
+  replace(content, ",", " ");
+  replace(content, "  ", " ");
+  replace(content, "} }", "}}");
+
+  size_t start_pos = content.find("NIM {") + 5;
+  size_t end_pos = content.find("}}");
+
+  content = content.substr(start_pos, end_pos - start_pos);
+  // BEAT TIME BEAT TIME BEAT TIME
+  replace(content, " ", "");
+  int off = 0;
+  Fraction cumul;
+
+  while (off < content.size()) {
+    if (content[off] == '(') {
+      ++off;
+    }
+    Fraction out;
+    parse_guido_date(content, off, out);
+    cumul += out;
+    float time = parse_float(content, off);
+    GuidoDate* date = new GuidoDate();
+    date->num = cumul.getNumerator();
+    date->denom = cumul.getDenominator();
+    date_to_time.push_back(std::pair<GuidoDate*, float>(date, time));
+    std::cout << "Time:" << time
+              << " @" << cumul.getNumerator() << "/" << cumul.getDenominator()
+              << std::endl;
+  }
+}
+
+
 int main(int argc, char* argv[]) {
   if (argc < 3) {
     cerr << "Usage: "
@@ -142,7 +240,9 @@ int main(int argc, char* argv[]) {
   }
   string musicxml_file = argv[1];
   string asco_file = argv[2];
+  std::vector<std::pair<GuidoDate*, float> > date_to_time;
 
+  parse_asco(asco_file, date_to_time);
   int page = 1;
 
   guidohttpd::makeApplication(argc, argv);
@@ -150,16 +250,16 @@ int main(int argc, char* argv[]) {
 
   GuidoLayoutSettings layoutSettings;
   /*
-  layoutSettings.systemsDistance = 75;
-  layoutSettings.systemsDistribution = kAutoDistrib;
-  layoutSettings.systemsDistribLimit = 0.25;
-  layoutSettings.force = 750;
-  layoutSettings.spring = 1.1;
-  layoutSettings.neighborhoodSpacing = 0;
-  layoutSettings.optimalPageFill = 1;
-  layoutSettings.resizePage2Music = 1;
-  layoutSettings.proportionalRenderingForceMultiplicator = 0;
-  layoutSettings.checkLyricsCollisions = false;
+    layoutSettings.systemsDistance = 75;
+    layoutSettings.systemsDistribution = kAutoDistrib;
+    layoutSettings.systemsDistribLimit = 0.25;
+    layoutSettings.force = 750;
+    layoutSettings.spring = 1.1;
+    layoutSettings.neighborhoodSpacing = 0;
+    layoutSettings.optimalPageFill = 1;
+    layoutSettings.resizePage2Music = 1;
+    layoutSettings.proportionalRenderingForceMultiplicator = 0;
+    layoutSettings.checkLyricsCollisions = false;
   */
 
   layoutSettings.systemsDistance = 320;
@@ -205,20 +305,95 @@ int main(int argc, char* argv[]) {
   fBuffer.size_ = 0;
 
   CGRHandler gr = currentSession->getGRHandler();
-  std::vector<std::pair<float, GuidoDate> > audio_to_beat_mapping;
-  int current_page = 1;
   TimeSegment t;
   FloatRect r;
   int err = 0;
   int nframe = 0;
+  int current_page = 0;
+  Time2GraphicMap systemMap;
+  bool result = false;
+  GuidoOnDrawDesc* main_desc;
+  GuidoOnDrawDesc* desc = get_on_draw_desc(currentSession, scoreParameters);;
+  CairoDevice* main_device;
 
-  for (int current_page = 1; current_page <= pageCount; ++current_page) {
-    Time2GraphicMap beat_mapping;
+  float fps = 24;
+  float last_draw = 0;
+  for (auto it = date_to_time.begin(); it != date_to_time.end(); ++it) {
+    bool pageChange = (current_page == 0);
 
+    std::cout << "Query beat " << *it->first << " @page " << current_page << std::endl;
+    if (!pageChange) {
+      result = GuidoGetTime(*it->first, systemMap, t, r);
+      std::cout << t.first << std::endl;
+
+      if (!result) {
+        pageChange = true;
+      }
+    }
+    if (pageChange) {
+      ++current_page;
+      if (current_page > pageCount) {
+        std::cout << "Aborted, no more page @"
+                  << it->second << "s"
+                  << std::endl;
+        break;
+      }
+      main_desc = get_on_draw_desc(currentSession, scoreParameters);
+      main_device = (CairoDevice*)main_desc->hdc;
+
+
+      std::cout << "CURRENT PAGE:" << current_page << std::endl;
+      GuidoGetSystemMap(gr, current_page, width, height, systemMap);
+      main_desc->page = desc->page = current_page;
+      err = convert_score_to_png(main_desc, fBuffer);
+      if (err != 0) {
+        std::cerr << "An error occured" << std::endl;
+        return 1;
+      }
+      err = GuidoGetSystemMap(gr, current_page, width, height, systemMap);
+      if (err != 0) {
+        std::cerr << "An error occured" << std::endl;
+        return 1;
+      }
+      result = GuidoGetTime(*it->first, systemMap, t, r);
+      if (!result) {
+        std::cerr << "Beat still not found after page change" << std::endl;
+        return 1;
+      }
+    }
+    std::cout << "DRAW BEAT:" << t.first << std::endl;
+    err = convert_score_to_png(desc, fBuffer, &r, main_device, sizex, sizey);
+    if (err == 0) {
+      float duration = 2;
+      auto next = it + 1;
+      if (next != date_to_time.end()) {
+        duration = next->second - it->second;
+      }
+      int target_frame = round((it->second + duration) * fps);
+      int nframe_todraw = target_frame - nframe;
+      for (int k = 0; k < nframe_todraw; ++k) {
+        ofstream myfile;
+        std::string output_file_path = "output" + std::to_string(nframe++) + ".png";
+        myfile.open (output_file_path.c_str());
+        myfile.write(fBuffer.start_, fBuffer.size_);
+        myfile.close();
+        std::cout << "Output image in " << output_file_path << std::endl;
+      }
+      // break;
+    }
+    else {
+      std::cerr << "An error occured" << std::endl;
+      return 1;
+    }
+  }
+
+  return 0;
+  /*
+    for (int current_page = 1; current_page <= pageCount; ++current_page) {
     std::cout << "CURRENT PAGE:" << current_page << std::endl;
     MyMapCollector map_collector;
     GuidoGetMap(gr, current_page, width, height, kGuidoEvent, map_collector);
-     //GuidoGetMap(gr, current_page, width, height, kGuidoSystem, map_collector);
+    //GuidoGetMap(gr, current_page, width, height, kGuidoSystem, map_collector);
 
     GuidoOnDrawDesc* main_desc = get_on_draw_desc(currentSession, scoreParameters);
     GuidoOnDrawDesc* desc = get_on_draw_desc(currentSession, scoreParameters);
@@ -228,35 +403,37 @@ int main(int argc, char* argv[]) {
     err = convert_score_to_png(main_desc, fBuffer);
     CairoDevice* main_device = (CairoDevice*)main_desc->hdc;
     if (err != 0) {
-      std::cerr << "An error occured" << std::endl;
-      return 1;
+    std::cerr << "An error occured" << std::endl;
+    return 1;
     }
     for (std::vector<Element>::iterator it = map_collector.begin(); it != map_collector.end(); it++) {
-      FloatRect r;
-      TimeSegment t;
-      bool result = GuidoGetTime(it->dates.first, systemMap, t, r);
-      if (!result) {
-        std::cerr << "Beat not found" << std::endl;
-        continue;
-        return 1;
-      }
-      //FloatRect& r = it->box;
-      err = convert_score_to_png(desc, fBuffer, &r, main_device, sizex, sizey);
-      if (err == 0) {
-        ofstream myfile;
-        std::string output_file_path = "output" + std::to_string(nframe++) + ".png";
-        myfile.open (output_file_path.c_str());
-        myfile.write(fBuffer.start_, fBuffer.size_);
-        myfile.close();
-        std::cout << "Output image in " << output_file_path << std::endl;
-        // break;
-      }
-      else {
-        std::cerr << "An error occured" << std::endl;
-        return 1;
-      }
+    FloatRect r;
+    TimeSegment t;
+    bool result = GuidoGetTime(it->dates.first, systemMap, t, r);
+    std::cout << t.first << std::endl;
+    // return 1;
+    if (!result) {
+    std::cerr << "Beat not found" << std::endl;
+    return 1;
     }
-  }
+    //FloatRect& r = it->box;
+    err = convert_score_to_png(desc, fBuffer, &r, main_device, sizex, sizey);
+    if (err == 0) {
+    ofstream myfile;
+    std::string output_file_path = "output" + std::to_string(nframe++) + ".png";
+    myfile.open (output_file_path.c_str());
+    myfile.write(fBuffer.start_, fBuffer.size_);
+    myfile.close();
+    std::cout << "Output image in " << output_file_path << std::endl;
+    // break;
+    }
+    else {
+    std::cerr << "An error occured" << std::endl;
+    return 1;
+    }
+    }
+    }
+  */
   std::cout << "ALL DONE" << std::endl;
   return 0;
 }
