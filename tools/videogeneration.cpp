@@ -185,7 +185,20 @@ bool parse_guido_date(std::string& content, int& off, Fraction& out) {
     ++off;
   }
   out.setNumerator(num);
+  // out.setDenominator(denom * 4);
   out.setDenominator(denom);
+
+}
+
+bool erase_tag(std::string& guidostr, std::string tag) {
+  size_t start_pos = guidostr.find("\\" + tag + "<\"");
+  if (start_pos != string::npos) {
+    size_t end_pos = guidostr.find(">", start_pos);
+    std::cout << start_pos << " " << end_pos << std::endl;
+    guidostr.erase(start_pos, 1 + end_pos - start_pos);
+    return true;
+  }
+  return false;
 }
 
 bool parse_asco(std::string& asco_file, std::vector<std::pair<GuidoDate*, float> >& date_to_time) {
@@ -217,11 +230,14 @@ bool parse_asco(std::string& asco_file, std::vector<std::pair<GuidoDate*, float>
     }
     Fraction out;
     parse_guido_date(content, off, out);
+    std::cout << out.getNumerator() << " " << out.getDenominator() << std::endl;
     cumul += out;
     float time = parse_float(content, off);
     GuidoDate* date = new GuidoDate();
     date->num = cumul.getNumerator();
+    // date->denom = cumul.getDenominator();
     date->denom = cumul.getDenominator();
+
     date_to_time.push_back(std::pair<GuidoDate*, float>(date, time));
     std::cout << "Time:" << time
               << " @" << cumul.getNumerator() << "/" << cumul.getDenominator()
@@ -293,8 +309,12 @@ int main(int argc, char* argv[]) {
 
   std::stringstream guido;
   MusicXML2::musicxmlfile2guido(musicxml_file.c_str(), false, guido);
+  std::string guidostr = guido.str();
+  erase_tag(guidostr, "title");
+  erase_tag(guidostr, "composer");
+  std::cout << guidostr << std::endl;
   std::string svg_font_file = "/app/src/guido2.svg";
-  guidohttpd::guidosession* currentSession = new guidohttpd::guidosession(svg_font_file, guido.str(), "1shauishauis.gmm");
+  guidohttpd::guidosession* currentSession = new guidohttpd::guidosession(svg_font_file, guidostr, "1shauishauis.gmm");
   currentSession->updateGRH(guidohttpd::guidosession::sDefaultScoreParameters);
   int pageCount = GuidoGetPageCount(currentSession->getGRHandler());
   std::cout << "PAGECOUNT:" << pageCount << std::endl;
@@ -324,10 +344,10 @@ int main(int argc, char* argv[]) {
     std::cout << "Query beat " << *it->first << " @page " << current_page << std::endl;
     if (!pageChange) {
       result = GuidoGetTime(*it->first, systemMap, t, r);
-      std::cout << t.first << std::endl;
-
+      // SHOULD BE BEAT 60 at the end of page 1 !(measure 41)
       if (!result) {
         pageChange = true;
+        // return 1;
       }
     }
     if (pageChange) {
@@ -341,9 +361,7 @@ int main(int argc, char* argv[]) {
       main_desc = get_on_draw_desc(currentSession, scoreParameters);
       main_device = (CairoDevice*)main_desc->hdc;
 
-
       std::cout << "CURRENT PAGE:" << current_page << std::endl;
-      GuidoGetSystemMap(gr, current_page, width, height, systemMap);
       main_desc->page = desc->page = current_page;
       err = convert_score_to_png(main_desc, fBuffer);
       if (err != 0) {
@@ -351,6 +369,9 @@ int main(int argc, char* argv[]) {
         return 1;
       }
       err = GuidoGetSystemMap(gr, current_page, width, height, systemMap);
+      for (auto it = systemMap.begin(); it != systemMap.end(); it++) {
+        std::cout << it->first.first << std::endl;
+      }
       if (err != 0) {
         std::cerr << "An error occured" << std::endl;
         return 1;
@@ -361,7 +382,6 @@ int main(int argc, char* argv[]) {
         return 1;
       }
     }
-    std::cout << "DRAW BEAT:" << t.first << std::endl;
     err = convert_score_to_png(desc, fBuffer, &r, main_device, sizex, sizey);
     if (err == 0) {
       float duration = 2;
@@ -377,7 +397,6 @@ int main(int argc, char* argv[]) {
         myfile.open (output_file_path.c_str());
         myfile.write(fBuffer.start_, fBuffer.size_);
         myfile.close();
-        std::cout << "Output image in " << output_file_path << std::endl;
       }
       // break;
     }
