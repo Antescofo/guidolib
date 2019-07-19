@@ -89,7 +89,11 @@ int convert_score_to_png(GuidoOnDrawDesc* desc, png_stream_t& fBuffer, FloatRect
     cairo_device->CopyPixels(other_device);
     cairo_device->SelectPenColor(VGColor(0, 0, 255, 100));
     cairo_device->SelectFillColor(VGColor(0, 0, 255, 100));
-    cairo_device->Rectangle(r->left * sizex, r->top * sizey, (r->left + (desc->sizex * 0.02)) * sizex, r->bottom * sizey);
+    if (r->right < r->left) {
+      std::swap(r->right, r->left);
+    }
+    
+    cairo_device->Rectangle(r->left * sizex, r->top * sizey, (r->left + (desc->sizex * 0.04)) * sizex, r->bottom * sizey);
     cairo_device->SelectFillColor(VGColor(0, 0, 0));
     cairo_device->SelectPenColor(VGColor(0, 0, 0));
 
@@ -185,9 +189,7 @@ bool parse_guido_date(std::string& content, int& off, Fraction& out) {
     ++off;
   }
   out.setNumerator(num);
-  // out.setDenominator(denom * 4);
   out.setDenominator(denom);
-
 }
 
 bool erase_tag(std::string& guidostr, std::string tag) {
@@ -312,7 +314,6 @@ int main(int argc, char* argv[]) {
   std::string guidostr = guido.str();
   erase_tag(guidostr, "title");
   erase_tag(guidostr, "composer");
-  std::cout << guidostr << std::endl;
   std::string svg_font_file = "/app/src/guido2.svg";
   guidohttpd::guidosession* currentSession = new guidohttpd::guidosession(svg_font_file, guidostr, "1shauishauis.gmm");
   currentSession->updateGRH(guidohttpd::guidosession::sDefaultScoreParameters);
@@ -370,7 +371,7 @@ int main(int argc, char* argv[]) {
       }
       err = GuidoGetSystemMap(gr, current_page, width, height, systemMap);
       for (auto it = systemMap.begin(); it != systemMap.end(); it++) {
-        std::cout << it->first.first << std::endl;
+        std::cout << it->first.first << " " << it->first.second << std::endl;
       }
       if (err != 0) {
         std::cerr << "An error occured" << std::endl;
