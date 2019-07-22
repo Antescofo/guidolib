@@ -1,6 +1,6 @@
 #! /bin/bash
 
-rm -f output* $4
+rm -f output* $4 final_audio.mp3 audio.raw audio.wav
 
 videogeneration $1 $2 && \
     ffmpeg -framerate 24 -i output%01d.png output.mp4 && \
