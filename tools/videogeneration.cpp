@@ -278,11 +278,12 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
   */
 
   // step is compute with the mapping
-  float bps = 3.0;
+  double bps = 3.0;
   auto itrecording = date_to_time.begin();
-  float timeoffset = 0;
+  double timeoffset = 0;
   bool first = true;
 
+  float lasttime = -0.1;
   for (auto it = map_collector.begin(); it != map_collector.end(); ++it) {
     float bdate = to_float(it->dates.first);
     float edate = to_float(it->dates.second);
@@ -293,9 +294,9 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
     // update itrecording
     auto lnext = itrecording + 1;
 
-    if (first || (edate > to_float(*lnext->first))) {
+    if (first || (bdate > to_float(*lnext->first))) {
       first = false;
-      while ((lnext != date_to_time.end()) && (edate > to_float(*lnext->first))) {
+      while ((lnext != date_to_time.end()) && (bdate > to_float(*lnext->first))) {
         ++itrecording;
         lnext = itrecording + 1;
       }
@@ -321,12 +322,22 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
       std::cout << "INIT OFFSET:" << timeoffset << std::endl;
     }
     // it->time = itrecording->second;
+    std::cout << it->dates << std::endl;
     it->time = itrecording->second + timeoffset;
     std::cout << it->time << " = "
-              << itrecording->second
-              << " + " << timeoffset
-              << std::endl;
-    timeoffset += (edate - bdate) / bps;
+              << itrecording->second << " + " << timeoffset << std::endl;
+    if (lasttime > it->time) {
+      std::cout << "ERROR:"
+                << lasttime << " " << it->time
+                << std::endl;
+    }
+    lasttime = it->time;
+
+    auto next_note = it + 1;
+
+    if ((next_note != map_collector.end()) && (next_note->dates.first.num != it->dates.first.num) || (next_note->dates.first.denom != it->dates.first.denom)) {
+      timeoffset += (edate - bdate) / bps;
+    }
     std::cout << bdate << " => " << edate << std::endl << std::endl;
   }
 }
