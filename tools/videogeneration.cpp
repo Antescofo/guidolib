@@ -453,7 +453,7 @@ int main(int argc, char* argv[]) {
   float sample_rate = 16000;
   float* lout = new float[(int)sample_rate * 180];
   fluid_synth_set_sample_rate(synth, sample_rate);
-  fluid_synth_set_gain(synth, 0.8);
+  fluid_synth_set_gain(synth, 0.5);
   loadsoundfont(synth);
   
   /*
