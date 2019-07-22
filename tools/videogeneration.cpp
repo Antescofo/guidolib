@@ -1,7 +1,10 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <cstdio>
 #include <libmusicxml/libmusicxml.h>
+#include <fluidsynth.h>
+
 #include "cairo_guido2img.h"
 #include "string.h"
 #include "CairoSystem.h"
@@ -343,6 +346,12 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
 }
 
 
+int loadsoundfont(fluid_synth_t* synth)
+{
+  return fluid_synth_sfload(synth, "/usr/share/sounds/sf2/FluidR3_GM.sf2", 1);
+}
+
+
 int main(int argc, char* argv[]) {
   if (argc < 3) {
     cerr << "Usage: "
@@ -425,15 +434,41 @@ int main(int argc, char* argv[]) {
   FloatRect r;
   int err = 0;
   int nframe = 0;
+  long audio_nframe = 0;
   Time2GraphicMap systemMap;
   bool result = false;
   GuidoOnDrawDesc* main_desc;
   GuidoOnDrawDesc* desc = get_on_draw_desc(currentSession, scoreParameters);;
   CairoDevice* main_device;
-
   float fps = 24;
   float last_draw = 0;
   MyMapCollector map_collector;
+
+  fluid_settings_t* settings;
+  fluid_synth_t* synth;
+  fluid_midi_router_t* router;
+  fluid_midi_router_rule_t* rule;
+  settings = new_fluid_settings();
+  synth = new_fluid_synth(settings);
+  float sample_rate = 16000;
+  float* lout = new float[(int)sample_rate * 180];
+  fluid_synth_set_sample_rate(synth, sample_rate);
+  fluid_synth_set_gain(synth, 2);
+  loadsoundfont(synth);
+  
+  /*
+    FLUIDSYNTH_API int fluid_synth_write_float  (       fluid_synth_t *         synth,
+    int         len,
+    void *      lout,
+    int         loff,
+    int         lincr,
+    void *      rout,
+    int         roff,
+    int         rincr
+    )
+  */
+
+  auto pFile = fopen("audio.raw", "wb");
 
   for (int npage = 1; npage <= pageCount; ++npage) {
     map_collector.page = npage;
@@ -443,6 +478,7 @@ int main(int argc, char* argv[]) {
   interpolate(date_to_time, map_collector);
   // return 1; // to remove todo
   int last_page = 0;
+
   for (auto it = map_collector.begin(); it != map_collector.end(); ++it) {
     int current_page = it->page;
 
@@ -485,6 +521,22 @@ int main(int argc, char* argv[]) {
       }
       int target_frame = round((it->time + duration) * fps);
       int nframe_todraw = target_frame - nframe;
+      long target_audio_frame = round((it->time + duration) * sample_rate);
+      long naudio_frame = target_audio_frame - audio_nframe;
+
+      int midiPitch = it->infos.midiPitch;
+      if (midiPitch > 0) {
+        fluid_synth_noteon(synth, 1, midiPitch, 127);
+      }
+        // fluid_synth_noteon (fluid_synth_t *synth, int chan, int key, int vel)
+      fluid_synth_write_float(synth, naudio_frame, lout, 0, 1, lout, 0, 1);
+      fwrite(lout, 1, naudio_frame * sizeof(float), pFile);
+      // fluid_synth_noteoff (fluid_synth_t *synth, int chan, int key)
+      if (midiPitch > 0) {
+        fluid_synth_noteoff(synth, 1, midiPitch);
+      }
+
+      audio_nframe = target_audio_frame;
       for (int k = 0; k < nframe_todraw; ++k) {
         ofstream myfile;
         std::string output_file_path = "output" + std::to_string(nframe++) + ".png";
@@ -548,5 +600,6 @@ int main(int argc, char* argv[]) {
     }
   */
   std::cout << "ALL DONE" << std::endl;
+  fclose(pFile);
   return 0;
 }

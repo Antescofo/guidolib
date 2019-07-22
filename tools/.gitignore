@@ -1,3 +1,6 @@
 build
 *.png
 *.mp4
+*.mp3
+*.raw
+*.wav

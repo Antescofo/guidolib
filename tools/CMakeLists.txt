@@ -62,7 +62,6 @@ if(musicxml_INCLUDE_DIRS)
 endif()
 set(LINK ${LINK} ${musicxml_LIBRARIES})
 
-
 # microhttpd
 libfind_pkg_check_modules(microhttpd_PKGCONF libmicrohttpd)
 find_path(microhttpd_INCLUDE_DIR
@@ -80,6 +79,24 @@ if(microhttpd_INCLUDE_DIRS)
   add_definitions("-I" ${microhttpd_INCLUDE_DIRS})
 endif()
 set(LINK ${LINK} ${microhttpd_LIBRARIES})
+
+# fluidsynth
+libfind_pkg_check_modules(fluidsynth_PKGCONF libfluidsynth)
+find_path(fluidsynth_INCLUDE_DIR
+  NAMES fluidsynth.h
+  PATHS ${fluidsynth_PKGCONF_INCLUDE_DIRS}
+)
+find_library(fluidsynth_LIBRARY
+  NAMES fluidsynth
+  PATHS ${fluidsynth_PKGCONF_LIBRARY_DIRS}
+)
+set(fluidsynth_PROCESS_INCLUDES fluidsynth_INCLUDE_DIR)
+set(fluidsynth_PROCESS_LIBS fluidsynth_LIBRARY)
+libfind_process(fluidsynth)
+if(fluidsynth_INCLUDE_DIRS)
+  add_definitions("-I" ${fluidsynth_INCLUDE_DIRS})
+endif()
+set(LINK ${LINK} ${fluidsynth_LIBRARIES})
 
 # crypto
 libfind_pkg_check_modules(crypto_PKGCONF libcrypto)

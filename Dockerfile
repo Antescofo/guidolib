@@ -34,7 +34,7 @@ COPY src /app/src
 WORKDIR /app/build
 RUN make -j 4 && make install
 
-RUN apt-get install -y valgrind ffmpeg
+RUN apt-get install -y valgrind ffmpeg fluid-soundfont-gm libfluidsynth-dev sox
 
 COPY tools /app/tools
 WORKDIR /app/tools
