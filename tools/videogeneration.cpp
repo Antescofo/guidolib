@@ -92,7 +92,7 @@ int convert_score_to_png(GuidoOnDrawDesc* desc, png_stream_t& fBuffer, FloatRect
     if (r->right < r->left) {
       std::swap(r->right, r->left);
     }
-    
+
     cairo_device->Rectangle(r->left * sizex, r->top * sizey, (r->left + (desc->sizex * 0.04)) * sizex, r->bottom * sizey);
     cairo_device->SelectFillColor(VGColor(0, 0, 0));
     cairo_device->SelectPenColor(VGColor(0, 0, 0));
@@ -111,20 +111,26 @@ struct Element {
   FloatRect box;
   TimeSegment dates;
   GuidoElementInfos infos;
+  int page;
+  float time;
 
-  Element(const FloatRect& box_, const TimeSegment& dates_, const GuidoElementInfos& infos_) :
+  Element(const FloatRect& box_, const TimeSegment& dates_, const GuidoElementInfos& infos_, int page_) :
     box(box_),
     dates(dates_),
-    infos(infos_)
+    infos(infos_),
+    page(page_),
+    time(0)
     {
     }
 };
 
 class MyMapCollector : public MapCollector, public std::vector<Element> {
 public:
+  int page = 1;
+
   virtual void Graph2TimeMap( const FloatRect& box, const TimeSegment& dates, const GuidoElementInfos& infos ) {
-    if (infos.type == kNote) {
-      this->push_back(Element(box, dates, infos));
+    if ((infos.type == kNote) || (infos.type == kRest)) {
+      this->push_back(Element(box, dates, infos, this->page));
     }
   }
 };
@@ -189,7 +195,7 @@ bool parse_guido_date(std::string& content, int& off, Fraction& out) {
     ++off;
   }
   out.setNumerator(num);
-  out.setDenominator(denom);
+  out.setDenominator(denom * 4);
 }
 
 bool erase_tag(std::string& guidostr, std::string tag) {
@@ -237,13 +243,91 @@ bool parse_asco(std::string& asco_file, std::vector<std::pair<GuidoDate*, float>
     float time = parse_float(content, off);
     GuidoDate* date = new GuidoDate();
     date->num = cumul.getNumerator();
-    // date->denom = cumul.getDenominator();
     date->denom = cumul.getDenominator();
 
     date_to_time.push_back(std::pair<GuidoDate*, float>(date, time));
     std::cout << "Time:" << time
               << " @" << cumul.getNumerator() << "/" << cumul.getDenominator()
               << std::endl;
+  }
+}
+
+
+float to_float(GuidoDate& a) {
+  return (float)a.num / (float)a.denom;
+}
+
+bool sort_by_date(Element& a, Element& b)
+{
+  float af = to_float(a.dates.first);
+  float bf = to_float(b.dates.first);
+  return (af < bf);
+}
+
+
+void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMapCollector& map_collector) {
+  /*
+    for (auto it = date_to_time.begin(); it != date_to_time.end(); ++it) {
+    auto next = it + 1;
+    float duration = 2;
+
+    if (next != date_to_time.end()) {
+    duration = next->second - it->second;
+    }
+    }
+  */
+
+  // step is compute with the mapping
+  float bps = 3.0;
+  auto itrecording = date_to_time.begin();
+  float timeoffset = 0;
+  bool first = true;
+
+  for (auto it = map_collector.begin(); it != map_collector.end(); ++it) {
+    float bdate = to_float(it->dates.first);
+    float edate = to_float(it->dates.second);
+    float beat_duration = edate - bdate;
+
+    float duration_recording = 2;
+
+    // update itrecording
+    auto lnext = itrecording + 1;
+
+    if (first || (edate > to_float(*lnext->first))) {
+      first = false;
+      while ((lnext != date_to_time.end()) && (edate > to_float(*lnext->first))) {
+        ++itrecording;
+        lnext = itrecording + 1;
+      }
+      if (lnext != date_to_time.end()) {
+        float beat_duration = to_float(*lnext->first) - to_float(*itrecording->first);
+        float sec_duration = lnext->second - itrecording->second;
+
+        // if (beat_duration > 0) {
+        if (sec_duration > 0) {
+          bps = beat_duration / sec_duration;
+          // step = sec_duration / beat_duration;
+          std::cout << std::endl << "BPS IS:" << bps
+                    << " = " << beat_duration
+                    << " / " << sec_duration
+                    << std::endl;
+        }
+      }
+      // timeoffset = (to_float(*itrecording->first) - bdate) / bps;
+      timeoffset = (bdate - to_float(*itrecording->first)) / bps;
+
+      std::cout << "INIT OFFSET DATE:" << to_float(*itrecording->first) << " " << bdate << std::endl;
+
+      std::cout << "INIT OFFSET:" << timeoffset << std::endl;
+    }
+    // it->time = itrecording->second;
+    it->time = itrecording->second + timeoffset;
+    std::cout << it->time << " = "
+              << itrecording->second
+              << " + " << timeoffset
+              << std::endl;
+    timeoffset += (edate - bdate) / bps;
+    std::cout << bdate << " => " << edate << std::endl << std::endl;
   }
 }
 
@@ -330,7 +414,6 @@ int main(int argc, char* argv[]) {
   FloatRect r;
   int err = 0;
   int nframe = 0;
-  int current_page = 0;
   Time2GraphicMap systemMap;
   bool result = false;
   GuidoOnDrawDesc* main_desc;
@@ -339,23 +422,24 @@ int main(int argc, char* argv[]) {
 
   float fps = 24;
   float last_draw = 0;
-  for (auto it = date_to_time.begin(); it != date_to_time.end(); ++it) {
-    bool pageChange = (current_page == 0);
+  MyMapCollector map_collector;
 
-    std::cout << "Query beat " << *it->first << " @page " << current_page << std::endl;
-    if (!pageChange) {
-      result = GuidoGetTime(*it->first, systemMap, t, r);
-      // SHOULD BE BEAT 60 at the end of page 1 !(measure 41)
-      if (!result) {
-        pageChange = true;
-        // return 1;
-      }
-    }
-    if (pageChange) {
-      ++current_page;
+  for (int npage = 1; npage <= pageCount; ++npage) {
+    map_collector.page = npage;
+    GuidoGetMap(gr, npage, width, height, kGuidoEvent, map_collector);
+  }
+  std::sort(map_collector.begin(), map_collector.end(), sort_by_date);
+  interpolate(date_to_time, map_collector);
+  // return 1; // to remove todo
+  int last_page = 0;
+  for (auto it = map_collector.begin(); it != map_collector.end(); ++it) {
+    int current_page = it->page;
+
+    if (current_page != last_page) {
+      last_page = current_page;
       if (current_page > pageCount) {
         std::cout << "Aborted, no more page @"
-                  << it->second << "s"
+                  << it->time << "s"
                   << std::endl;
         break;
       }
@@ -370,27 +454,25 @@ int main(int argc, char* argv[]) {
         return 1;
       }
       err = GuidoGetSystemMap(gr, current_page, width, height, systemMap);
-      for (auto it = systemMap.begin(); it != systemMap.end(); it++) {
-        std::cout << it->first.first << " " << it->first.second << std::endl;
-      }
       if (err != 0) {
         std::cerr << "An error occured" << std::endl;
         return 1;
       }
-      result = GuidoGetTime(*it->first, systemMap, t, r);
-      if (!result) {
-        std::cerr << "Beat still not found after page change" << std::endl;
-        return 1;
-      }
+    }
+
+    result = GuidoGetTime(it->dates.first, systemMap, t, r);
+    if (!result) {
+      std::cerr << "Beat not found" << std::endl;
+      return 1;
     }
     err = convert_score_to_png(desc, fBuffer, &r, main_device, sizex, sizey);
     if (err == 0) {
       float duration = 2;
       auto next = it + 1;
-      if (next != date_to_time.end()) {
-        duration = next->second - it->second;
+      if (next != map_collector.end()) {
+        duration = next->time - it->time;
       }
-      int target_frame = round((it->second + duration) * fps);
+      int target_frame = round((it->time + duration) * fps);
       int nframe_todraw = target_frame - nframe;
       for (int k = 0; k < nframe_todraw; ++k) {
         ofstream myfile;
