@@ -450,10 +450,10 @@ int main(int argc, char* argv[]) {
   fluid_midi_router_rule_t* rule;
   settings = new_fluid_settings();
   synth = new_fluid_synth(settings);
-  float sample_rate = 16000;
+  float sample_rate = 48000;
   float* lout = new float[(int)sample_rate * 180];
   fluid_synth_set_sample_rate(synth, sample_rate);
-  fluid_synth_set_gain(synth, 0.2);
+  fluid_synth_set_gain(synth, 0.25);
   loadsoundfont(synth);
   
   /*
