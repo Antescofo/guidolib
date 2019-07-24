@@ -3,7 +3,7 @@ FROM ubuntu:16.04
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
 WORKDIR /
-RUN apt-get update && apt-get install -y git make g++ libcairo2-dev openjdk-8-jdk default-jdk cmake libmagick++-dev libmicrohttpd-dev libcurl4-openssl-dev libssl-dev
+RUN apt-get update && apt-get install -y git make g++ libcairo2-dev openjdk-8-jdk default-jdk cmake libmagick++-dev libmicrohttpd-dev libcurl4-openssl-dev libssl-dev valgrind ffmpeg fluid-soundfont-gm libfluidsynth-dev sox
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 
 RUN git clone https://github.com/grame-cncm/libmusicxml.git
@@ -33,8 +33,6 @@ COPY src /app/src
 
 WORKDIR /app/build
 RUN make -j 4 && make install
-
-RUN apt-get install -y valgrind ffmpeg fluid-soundfont-gm libfluidsynth-dev sox
 
 COPY tools /app/tools
 WORKDIR /app/tools

@@ -455,7 +455,7 @@ int main(int argc, char* argv[]) {
   fluid_synth_set_sample_rate(synth, sample_rate);
   fluid_synth_set_gain(synth, 0.25);
   loadsoundfont(synth);
-  
+
   /*
     FLUIDSYNTH_API int fluid_synth_write_float  (       fluid_synth_t *         synth,
     int         len,
@@ -478,7 +478,7 @@ int main(int argc, char* argv[]) {
   interpolate(date_to_time, map_collector);
   // return 1; // to remove todo
   int last_page = 0;
-
+  bool last_tied = false;
   for (auto it = map_collector.begin(); it != map_collector.end(); ++it) {
     int current_page = it->page;
 
@@ -525,14 +525,21 @@ int main(int argc, char* argv[]) {
       long naudio_frame = target_audio_frame - audio_nframe;
 
       int midiPitch = it->infos.midiPitch;
-      if (midiPitch > 0) {
+      std::cout << midiPitch << " " << it->infos.isTied << " " << it->infos.intensity << std::endl;
+      bool should_play = (midiPitch > 0);
+
+      if (it->infos.isTied && last_tied) {
+        should_play = false;
+      }
+      last_tied = it->infos.isTied;
+      if (should_play) {
         fluid_synth_noteon(synth, 1, midiPitch, 127);
       }
         // fluid_synth_noteon (fluid_synth_t *synth, int chan, int key, int vel)
       fluid_synth_write_float(synth, naudio_frame, lout, 0, 1, lout, 0, 1);
       fwrite(lout, 1, naudio_frame * sizeof(float), pFile);
       // fluid_synth_noteoff (fluid_synth_t *synth, int chan, int key)
-      if (midiPitch > 0) {
+      if (should_play) {
         fluid_synth_noteoff(synth, 1, midiPitch);
       }
 

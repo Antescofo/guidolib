@@ -20,14 +20,14 @@
 
 /** \brief not yet documented
 */
-class ARTie : public ARBowing  
+class ARTie : public ARBowing
 {
   	public:
 				 	 ARTie() {}
       	virtual 	~ARTie() {}
 
 	  	virtual bool MatchEndTag(const char * s);
-
+                virtual ARMusicalObject *isARTie()           { return this; }
 	  	virtual void browse(TimeUnwrap& mapper) const;
 		virtual const char*	getTagName() const		{ return "ARTie"; };
 		virtual std::string getGMNName() const		{ return "\\tie"; };

@@ -78,6 +78,8 @@ class ARPositionTag
         virtual ARMusicalObject *isARDisplayDuration() { return NULL; }
         virtual ARMusicalObject *isARChordTag()        { return NULL; }
         virtual ARMusicalObject *isARGrace()           { return NULL; }
+        virtual ARMusicalObject *isARTie()           { return NULL; }
+
         virtual const ARMusicalObject *isARFeatheredBeam() const    { return NULL; }
 
 	protected:
