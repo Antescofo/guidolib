@@ -4,3 +4,6 @@ build
 *.mp3
 *.raw
 *.wav
+v2_all_store.json
+cached_*
+

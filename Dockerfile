@@ -38,4 +38,8 @@ COPY tools /app/tools
 WORKDIR /app/tools
 RUN make -j 4 && make install
 
-COPY tools/videogen.sh /usr/bin/videogen.sh
+
+RUN apt-get install -y python3-pip
+RUN pip3 install requests
+RUN ln -s /app/tools/videogen.sh /usr/bin/videogen.sh
+RUN ln -s /app/tools/generate_video.py /usr/bin/generate_video
