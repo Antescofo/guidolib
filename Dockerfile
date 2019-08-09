@@ -3,8 +3,12 @@ FROM ubuntu:16.04
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
 WORKDIR /
-RUN apt-get update && apt-get install -y git make g++ libcairo2-dev openjdk-8-jdk default-jdk cmake libmagick++-dev libmicrohttpd-dev libcurl4-openssl-dev libssl-dev valgrind ffmpeg fluid-soundfont-gm libfluidsynth-dev sox
+RUN apt-get update && apt-get install -y git make g++ libcairo2-dev openjdk-8-jdk default-jdk cmake libmagick++-dev libmicrohttpd-dev libcurl4-openssl-dev libssl-dev valgrind ffmpeg fluid-soundfont-gm libfluidsynth-dev sox python3-pip python-pip
+
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+
+RUN pip3 install requests
+RUN pip install httplib2 google-api-python-client oauth2client progressbar2
 
 RUN git clone https://github.com/grame-cncm/libmusicxml.git
 WORKDIR /libmusicxml/build
@@ -38,8 +42,6 @@ COPY tools /app/tools
 WORKDIR /app/tools
 RUN make -j 4 && make install
 
-
-RUN apt-get install -y python3-pip
-RUN pip3 install requests
 RUN ln -s /app/tools/videogen.sh /usr/bin/videogen.sh
 RUN ln -s /app/tools/generate_video.py /usr/bin/generate_video
+RUN ln -s /app/tools/upload_video.py /usr/bin/upload_video.py

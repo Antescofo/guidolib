@@ -139,6 +139,41 @@ if not recordings:
     print('No recording found for this accompaniment')
     sys.exit(1)
 
+# Load opus_detail
+# Load author_detail
+
+
+
+opus_pk = piece_detail['opus']
+opus_detail = None
+for opus in v2_all['opus']:
+    if opus['pk'] == opus_pk:
+        opus_detail = opus
+        break
+
+author_pk = opus_detail['authors'][0]
+author_detail = None
+for author in v2_all['author']:
+    if author['pk'] == author_pk:
+        author_detail = author
+        break
+
+piece_title = opus_detail['full_title']
+author_title = author_detail['first_name'] + ' ' + author_detail['last_name']
+
+video_title = str(author_title) + ' - ' + str(piece_title)
+video_description = 'Learn to play ' + video_title + '.\nCheck out our Metronaut app https://apps.apple.com/us/app/metronaut-musical-companion/id1202148484'
+keywords = [str(piece_title), str(author_title)]
+video_keywords = ','.join(keywords)
+video_category = "10"  # Music, see https://gist.github.com/dgp/1b24bf2961521bd75d6c
+# video_privacy = "public"
+video_privacy = "unlisted"  # For testing only
+video_file = None
+
+print(video_title)
+print(video_description)
+print(video_keywords)
+
 musicxml_url = selected_accomp['musicxml_file'] or selected_accomp['solo_musicxml_file']
 asco_url = selected_accomp['asco_file']
 mp3_url = recordings[0]['compressed_file']
@@ -156,19 +191,28 @@ assert asco_file, 'No asco file could be found'
 assert mp3_file, 'No mp3 file could be found'
 
 print('Process video for', piece_pk, accomp_pk)
-
 output_file = '/app/tools/final_output.mp4'
-try:
-    os.remove(output_file)
-except:
-    pass
-subprocess.run(['videogen.sh', musicxml_file, asco_file, mp3_file, output_file])
-if not os.path.exists(output_file):
-    print('Error generating video')
-    sys.exit(1)
-print('Done processing video in', output_file)
-# We process the video here
+if True:
+    try:
+        os.remove(output_file)
+    except:
+        pass
+    subprocess.run(['videogen.sh', musicxml_file, asco_file, mp3_file, output_file])
+    if not os.path.exists(output_file):
+        print('Error generating video')
+        sys.exit(1)
+    print('Done processing video in', output_file)
+
+video_file = output_file
+
 # We upload the video here
+subprocess.run(['python', './upload_video.py',
+                '--title=' + str(video_title)+ '',
+                '--description=' + str(video_description) + '',
+                '--keywords=' + str(video_keywords) + '',
+                '--category=' + str(video_category) + '',
+                '--privacyStatus=' + video_privacy + '',
+                '--file=' + video_file])
 
 processing_store['processed_pieces'].append(piece_pk)
 processing_store['processed_accompaniments'].append(accomp_pk)

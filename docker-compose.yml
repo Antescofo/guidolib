@@ -9,12 +9,11 @@ services:
       - ./platforms:/app/platforms
       - ./server:/app/server
       - ./lang:/app/lang
-
 # docker-compose build && time docker-compose run --rm -v ~/Desktop/accomp.xml:/accomp.xml -v ~/Desktop/accomp.asco:/accomp.asco -v ~/Desktop/accomp.mp3:/accomp.mp3 guidotools videogen.sh /accomp.xml /accomp.asco /accomp.mp3 final_output.mp4
 
 
 # Create a random accompanimement that is not generated yet
-# docker-compose run --rm guidotools generate_video
+# docker-compose run -p 8080:8080 --rm guidotools generate_video
 
 # Create a specific accompaniment
-# docker-compose run --rm guidotools generate_video ACCOM_PK
+# docker-compose run -p 8080:8080 --rm guidotools generate_video ACCOM_PK
