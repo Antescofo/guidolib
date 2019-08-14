@@ -1,9 +1,17 @@
 GUIDO Engine history
 
+
 ----------------------------------------------------------------
   version 1.6.7
+- correctly handle harmony string in harmony tag
+- add position attribute to harmony tag
+- add harmonyPos attribute to auto tag
+- add new GuidoGetTempoList API
+- add new GuidoGR2SVGColored API
+- update wasm bindings
 - add 'autopos' attribute to \intens  
 - add 'autoIntensPos' and 'intensAutoPos' attributes to \set and \auto global voice settings 
+- key supports a 'free' parameter, the "free=..." value is becoming obsolete
 - fix stem length issue on last note when beaming reverse directions
 - fix incorrect stem direction with cross staff chord
 - fix staff lines count limitation + various layout issues with bars
@@ -14,6 +22,7 @@ GUIDO Engine history
 - fix incorrect beaming with chords spanning different staves
 - fix incorrect slur position with different staves
 - fix incorrect tempo position (stacked on the beginning of the staff)
+- fix incorrect flag position with multi staves chords
 
 ----------------------------------------------------------------
   version 1.6.6

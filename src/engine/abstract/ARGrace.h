@@ -21,6 +21,20 @@
 
 class TagParameterInt;
 
+/*@mkdoc
+
+@group:Notes
+
+@tagname:\grace
+@tagalias:
+@tagtype:R
+@tagnotation:display grace notes
+@tagdesc
+See the [notes](@EXAMPLES/notes/) example.
+@tagend
+
+*/
+
 /** \brief not yet documented
 */
 class ARGrace : public ARMTParameter, public ARPositionTag

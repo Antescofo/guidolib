@@ -24,6 +24,37 @@
 class ARBase;
 class TagParameterString;
 
+/*@mkdoc
+
+@group:Notes
+
+@tagname:\tuplet
+@tagalias:
+@tagtype:R
+@tagnotation:displays an octava sign and transposes the notes accordingly
+@tagdesc
+@tagend
+
+@params:
+@param:format:string:a format string for shape control:*none*:false
+@param:position:string:below or above:above:true
+@param:dy1:unit:displacement of the left anchor point:0:true
+@param:dy2:unit:displacement of the right anchor point:0:true
+@param:lineThickness:float:the tuplet line thickness (if any):4:true
+@param:bold:boolean:to use bold font:false:true
+@param:textSize:float:the text size:1:true
+@param:dispNote:string:a note duration:*none*:true
+@paramdesc
+- the **format** string must be in "x", "-x-", "x:y", "-x:y-", or "--"
+where 'x' and 'y' are the numbers and '-' denotes the presence of left and right tuplet braces.
+- **textSize** is a ratio: 1 is for nominal size
+- **dispNote** is similar to [\displayDuration](#displayduration): it forces the notes appearance whatever their duration. The **dispNote** string must be in the form "/n", where n is a number (e.g. "/16" to display sixteenth notes)
+
+See the [notes](@EXAMPLES/notes/) example.
+@paramend
+
+*/
+
 #define kDefaultThickness	4.f
 /** \brief Abstract representation of a tuplet.
 */
@@ -41,7 +72,8 @@ class ARTuplet :  public ARMTParameter, public ARPositionTag
 		virtual const char*	getParamsStr() const	{ return kARTupletParams; };
 		virtual const char*	getTagName() const		{ return "ARTuplet"; };
 		virtual std::string getGMNName() const		{ return "\\tuplet"; };
- 
+ 		virtual bool MatchEndTag(const char * s);
+
             void  setupTuplet( ARBase * inBase );
             void  parseTupletFormatString();
 

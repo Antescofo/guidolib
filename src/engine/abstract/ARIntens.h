@@ -19,6 +19,33 @@
 
 #include "ARFontAble.h"
 
+
+/*@mkdoc
+
+@group:Dynamics
+
+@tagname:\intensity
+@tagalias:\intens<br />\i
+@tagtype:P
+@tagnotation:dynamic marks
+@tagdesc
+@tagend
+
+
+@params:
+@param:type:string:a dynamic string:*none*:false
+@param:before:string:a string displayed before the dynamic mark:*none*:true
+@param:after:string:a string displayed after the dynamic mark:*none*:true
+@param:autopos:boolean:when 'on', try to automatically avoid collisions:off:true
+#fontparams:
+@paramdesc
+- supported dynamic strings are "p", "pp", "ppp", "pppp", "f", "ff", "fff", "ffff", "mf", "mp", "sf", "sfz", "rfz" and "fz"
+
+See the [Dynamics](@EXAMPLES/dynamics/) example.
+@paramend
+
+*/
+
 /** \brief The intensity tag.
 */
 class ARIntens :  public ARFontAble

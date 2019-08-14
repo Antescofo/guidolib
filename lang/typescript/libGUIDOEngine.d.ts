@@ -43,6 +43,7 @@ interface GuidoLayoutSettings {
 	optimalPageFill:        number;
 	resizePage2Music:       number;
 	proportionalRenderingForceMultiplicator: number;
+	checkLyricsCollisions: number;
 }
 
 interface GuidoOnDrawDesc {
@@ -89,10 +90,15 @@ interface GuidoEngineAdapter {
 	ar2grSettings       (ar: ARHandler, settings: GuidoLayoutSettings): GRHandler;	    	
     updateGR            (gr: GRHandler): GuidoErrCode;
     updateGRSettings    (gr: GRHandler, settings: GuidoLayoutSettings): GuidoErrCode;
+    showElement    		(gr: GRHandler, elt: int, status: boolean): GuidoErrCode;
 
 	freeAR      (ar: ARHandler): void;
 	freeGR      (gr: GRHandler): void;
     
+    getParsingTime  (): number;
+    getAR2GRTime    (): number;
+    getOnDrawTime   (): number;
+
     getErrorString              (errCode: GuidoErrCode): string;	
 	getDefaultLayoutSettings    (): GuidoLayoutSettings; 
     	
@@ -210,16 +216,16 @@ interface GuidoElementInfos {
     midiPitch   : number; 
 }
 
-interface GuidoScoreMapAdapter {
-    constructor: GuidoScoreMapAdapter;
+interface GUIDOScoreMap {
+    constructor: GUIDOScoreMap;
 
     getPageMap      (gr: GRHandler, pagenum: number, w: number, h: number)                      : string;
     getStaffMap     (gr: GRHandler, pagenum: number, w: number, h: number, staff: number)       : string;
     getVoiceMap     (gr: GRHandler, pagenum: number, w: number, h: number, voice: number)       : string;
     getSystemMap    (gr: GRHandler, pagenum: number, w: number, h: number)                      : string;
-    getTime         (date: GuidoDate, map: Time2GraphicMap, t: TimeSegment, r: Rect)            : boolean;
-    getPoint        (x: number, y: number, map: Time2GraphicMap, t: TimeSegment, r: Rect)       : boolean;
-    getTimeMap      (gr: ARHandler, f: TimeMapCollector)                                        : GuidoErrCode;
+    getTime         (date: GuidoDate, map: string)                                              : string;
+    getPoint        (x: number, y: number, map: string)                                         : string;
+    getTimeMap      (ar: ARHandler)                                                             : string;
     getPianoRollMap (pr: PianoRoll, width: number, height: number)								: string;
 }
 
