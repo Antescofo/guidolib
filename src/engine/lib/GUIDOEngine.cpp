@@ -221,14 +221,14 @@ static void uniconv(const char *filename)
 GUIDOAPI(GuidoErrCode) GuidoParseFile(const char * filename, ARHandler * ar)
 {
 	if( !filename || !ar )	return guidoErrBadParameter;
-	
+
 	*ar = 0;
 
  	// first convert unicode files
 	uniconv(filename);
  	// Check if file exists.
     ARHandler music = 0;
-    
+
     GuidoParser *parser = GuidoOpenParser();
     music = GuidoFile2AR(parser, filename);
     GuidoCloseParser(parser);
@@ -248,7 +248,7 @@ GUIDOAPI(GuidoErrCode) GuidoParseFile(const char * filename, ARHandler * ar)
 GUIDOAPI(GuidoErrCode) GuidoParseString (const char * str, ARHandler* ar)
 {
 	if( !str || !ar )	return guidoErrBadParameter;
-	
+
 	*ar = 0;
 
     ARHandler music = 0;
@@ -623,11 +623,32 @@ GUIDOAPI(GuidoErrCode) GuidoGetMetersAt (CARHandler inHandleAR, int voicenum, co
 	bool result = inHandleAR->armusic->getMetersAt( voicenum, date, meters );
 	return result ? guidoNoErr : guidoErrBadParameter;
 }
+
 // --------------------------------------------------------------------------
 GUIDOAPI(GuidoErrCode) GuidoFreeMeters (GuidoMeters meters)
 {
 	if (!meters) return guidoErrBadParameter;
 	delete [] meters;
+	return guidoNoErr;
+}
+
+// --------------------------------------------------------------------------
+// introduced in guido 1.67 [DF Jul. 24 2019]
+GUIDOAPI(int) GuidoGetTempoList (CARHandler inHandleAR, GuidoTempoList& tempi)
+{
+	if ((!inHandleAR) || ( inHandleAR->armusic == 0 ))
+		return guidoErrInvalidHandle;
+
+	tempi = 0;
+	size_t result = inHandleAR->armusic->getTempoList( tempi );
+	return int(result);
+}
+
+// --------------------------------------------------------------------------
+GUIDOAPI(GuidoErrCode) GuidoFreeTempoList (GuidoTempoList tempi)
+{
+	if (!tempi) return guidoErrBadParameter;
+	delete [] tempi;
 	return guidoNoErr;
 }
 
@@ -801,6 +822,37 @@ GUIDOAPI(GuidoErrCode) GuidoGR2SVG( const GRHandler handle, int page, std::ostre
 	desc.sizey = int(pf.height/SVGDevice::kSVGSizeDivider);
 	dev->NotifySize(desc.sizex, desc.sizey);
 	dev->SelectPenColor(VGColor(0,0,0));
+	dev->SelectFillColor(VGColor(0,0,0));
+
+	GuidoErrCode error = GuidoOnDraw (&desc);
+
+	delete dev;
+	return error;
+}
+
+GUIDOAPI(GuidoErrCode) GuidoGR2SVGColored( const GRHandler handle, int page, std::ostream& out, const VGColor& color, bool embedFont )
+{
+	const char * fontUsed = embedFont ? ______src_guido2_svg : 0;
+
+	SVGSystem sys(fontUsed);
+	VGDevice    *dev    = sys.CreateDisplayDevice(out, 0);
+
+	GuidoOnDrawDesc desc;              // declare a data structure for drawing
+	desc.handle = handle;
+
+	GuidoPageFormat	pf;
+	GuidoResizePageToMusic (handle);
+	GuidoGetPageFormat (handle, page, &pf);
+
+	desc.hdc = dev;                    // we'll draw on the svg device
+	desc.page = page;
+	desc.updateRegion.erase = true;     // and draw everything
+	desc.scrollx = desc.scrolly = 0;    // from the upper left page corner
+	desc.sizex = int(pf.width/SVGDevice::kSVGSizeDivider);
+	desc.sizey = int(pf.height/SVGDevice::kSVGSizeDivider);
+	dev->NotifySize(desc.sizex, desc.sizey);
+	dev->SelectPenColor(color);
+	dev->SelectFillColor(color);
 
 	GuidoErrCode error = GuidoOnDraw (&desc);
 

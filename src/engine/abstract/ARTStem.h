@@ -20,6 +20,60 @@
 
 class TagParameterFloat;
 
+
+/*@mkdoc
+
+@group:Notes
+
+@tagname:\stemsOff
+@tagalias:
+@tagtype:P
+@tagnotation:disable stems drawing
+@tagdesc
+See the [notes](@EXAMPLES/notes/) example.
+@tagend
+
+@tagname:\stemsAuto
+@tagalias:
+@tagtype:P
+@tagnotation:cancel \stemsOff and enable automatic stems direction
+@tagdesc
+@tagend
+@params:
+@param:length:unit:the stem length:7.0:true
+@paramdesc
+See the [notes](@EXAMPLES/notes/) example.
+@paramend
+
+@tagname:\stemsDown
+@tagalias:
+@tagtype:P
+@tagnotation:force stem direction to down
+@tagdesc
+@tagend
+@params:
+@param:length:unit:the stem length:7.0:true
+@paramdesc
+See the [4 voices](@EXAMPLES/4voices/) example. <br />
+See the [notes](@EXAMPLES/notes/) example.
+@paramend
+
+@tagname:\stemsUp
+@tagalias:
+@tagtype:P
+@tagnotation:force stem direction to up
+@tagdesc
+@tagend
+@params:
+@param:length:unit:the stem length:7.0:true
+@paramdesc
+See the [4 voices](@EXAMPLES/4voices/) example. <br />
+See the [notes](@EXAMPLES/notes/) example.
+@paramend
+
+*/
+
+
 /** \brief not yet documented
 */
 

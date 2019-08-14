@@ -22,7 +22,7 @@ const char* kARFontAbleParams	= "S,textformat,rc,o;S,font,Times,o;U,fsize,9pt,o;
 
 //---------------------------------------------
 // specific tags parameters strings
-const char* kARAutoParams		= "S,endBar,on,o;S,pageBreak,on,o;S,systemBreak,on,o;S,clefKeyMeterOrder,on,o;S,stretchLastLine,off,o;S,stretchFirstLine,off,o;S,lyricsAutoPos,off,o;S,instrAutoPos,off,o;S,intensAutoPos,off,o;S,autoEndBar,on,o;S,autoPageBreak,on,o;S,autoSystemBreak,on,o;S,autoClefKeyMeterOrder,on,o;S,autoStretchLastLine,off,o;S,autoStretchFirstLine,off,o;S,autoInstrPos,off,o;S,autoLyricsPos,off,o;S,autoIntensPos,off,o";
+const char* kARAutoParams		= "S,endBar,on,o;S,pageBreak,on,o;S,systemBreak,on,o;S,clefKeyMeterOrder,on,o;S,stretchLastLine,off,o;S,stretchFirstLine,off,o;S,lyricsAutoPos,off,o;S,instrAutoPos,off,o;S,intensAutoPos,off,o;S,autoEndBar,on,o;S,autoPageBreak,on,o;S,autoSystemBreak,on,o;S,autoClefKeyMeterOrder,on,o;S,autoStretchLastLine,off,o;S,autoStretchFirstLine,off,o;S,autoInstrPos,off,o;S,autoLyricsPos,off,o;S,autoIntensPos,off,o;S,fingeringPos,,o;F,fingeringSize,,o;S,harmonyPos,,o";
 
 const char* kARDrHoosParams		= "I,inverse,0,o";
 const char* kARDrRenzParams		= "I,inverse,0,o";
@@ -44,17 +44,17 @@ const char* kARColorParams		= "F,red,0.0,r;F,green,0.0,r;F,blue,0.0,r;F,alpha,0.
 const char* kARComposerParams	= "S,name,,r;S,pageformat,53,o;S,textformat,rb,o;U,fsize,14pt,o";
 const char* kARCueParams		= "S,name,,o;U,fsize,9pt,o";
 const char* kARDisplayDurationParams ="I,n,,r;I,d,,r;I,ndots,0,o";
-const char* kARDynamicParams	= "U,dx1,0,o;U,dx1,0,o;U,dx2,0,o;U,deltaY,3,o;U,thickness,0.16,o;S,autopos,off,o";
+const char* kARDynamicParams	= "U,dx1,0,o;U,dx2,0,o;U,deltaY,3,o;U,thickness,0.16,o;S,autopos,off,o";
 const char* kARFeatheredBeamParams= "S,durations,,o;S,drawDuration,false,o";
 const char* kARFermataParams	= "S,type,,o;S,position,above,o";
 const char* kARFingeringParams	= "S,position,,o;U,fsize,10pt,o;";
 const char* kARGlissandoParams	= "U,dx1,0,o;U,dy1,0,o;U,dx2,0,o;U,dy2,0,o;S,fill,false,o;U,thickness,0.3,o";
 const char* kARGraceParams		= "I,i,,o";
-const char* kARHarmonyParams	= "S,text,,r;U,dy,-1,o;U,ypos,0hs,o;S,textformat,cc,o;S,font,Arial,o;U,fsize,18pt,o;S,fattrib,,o";
+const char* kARHarmonyParams	= "S,text,,r;S,position,,o;U,dy,0,o;U,ypos,0hs,o;S,textformat,cc,o;S,font,Arial,o;U,fsize,20pt,o;S,fattrib,,o";
 const char* kARInstrumentParams	= "S,name,,r;S,transp,,o;S,autopos,off,o";
 const char* kARIntensParams		= "S,type,,r;S,before,,o;S,after,,o;S,font,Times,o;U,fsize,10pt,o;S,fattrib,i,o;S,autopos,off,o";
 const char* kARJumpParams		= "S,m,,o;I,id,0,o";
-const char* kARKeyParams		= "S,key,,r;S,hideNaturals,false,o";
+const char* kARKeyParams		= "S,key,,r;S,hideNaturals,false,o;S,free,,o";
 const char* kARLyricsParams		= "S,text,,r;U,dy,-3,o;S,textformat,ct,o;U,fsize,12pt,o;S,autopos,off,o";
 const char* kARMarcatoParams	= "S,position,,o";
 const char* kARMarkParams		= "S,text,,r;S,enclosure,none,o;U,dy,0,o";
@@ -135,6 +135,7 @@ const char* kFileStr		= "file";
 const char* kFillStr		= "fill";
 const char* kFontStr		= "font";
 const char* kFormatStr		= "format";
+const char* kFreeStr		= "free";
 const char* kFSizeStr		= "fsize";
 const char* kGreenStr		= "green";
 const char* kGroupStr		= "group";
@@ -200,6 +201,7 @@ const char* kAutoStretchFirstLineStr= "autoStretchFirstLine";
 const char* kAutoInstrPosStr		= "autoInstrPos";
 const char* kAutoLyricsPosStr		= "autoLyricsPos";
 const char* kAutoIntensPosStr		= "autoIntensPos";
+const char* kHarmonyPosStr			= "harmonyPos";
 const char* kFingeringPosStr		= "fingeringPos";
 const char* kFingeringSizeStr		= "fingeringSize";
 

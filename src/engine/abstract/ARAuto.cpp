@@ -30,12 +30,13 @@ ARAuto::ARAuto()
 	fPageBreakState         = kOn;
 	fSystemBreakState       = kOn;
 	fClefKeyMeterOrderState = kOn;
-	fStretchLastLineState   = kOff;
-	fStretchFirstLineState  = kOff;
+//	fStretchLastLineState   = kOff;
+//	fStretchFirstLineState  = kOff;
 	fLyricsAutoPos		    = kOff;
 	fInstrAutoPos		    = kOff;
 	fIntensAutoPos		    = kOff;
 	fFingeringPos			= kDefault;
+	fHarmonyPos				= kDefault;
 	fFingeringSize			= 0;
 }
 
@@ -55,11 +56,11 @@ void ARAuto::setTagParameters (const TagParameterMap& params)
 	p = getParameter<TagParameterString>(kAutoClefKeyMeterOrderStr, kClefKeyMeterOrderStr);
 	if (p && (off == p->getValue())) fClefKeyMeterOrderState = kOff;
 
-	p = getParameter<TagParameterString>(kAutoStretchLastLineStr, kStretchLastLineStr);
-	if (p && (on == p->getValue())) fStretchLastLineState = kOn;
-
-	p = getParameter<TagParameterString>(kAutoStretchFirstLineStr, kStretchFirstLineStr);
-	if (p && (on == p->getValue())) fStretchFirstLineState = kOn;
+//	p = getParameter<TagParameterString>(kAutoStretchLastLineStr, kStretchLastLineStr);
+//	if (p && (on == p->getValue())) fStretchLastLineState = kOn;
+//
+//	p = getParameter<TagParameterString>(kAutoStretchFirstLineStr, kStretchFirstLineStr);
+//	if (p && (on == p->getValue())) fStretchFirstLineState = kOn;
 
 	p = getParameter<TagParameterString>(kAutoInstrPosStr, kInstrAutoPosStr);
 	if (p && (on == p->getValue())) fInstrAutoPos = kOn;
@@ -75,6 +76,13 @@ void ARAuto::setTagParameters (const TagParameterMap& params)
 		if (p->getString() == kAboveStr) 	 fFingeringPos = kAbove;
 		else if (p->getString() == kBelowStr) fFingeringPos = kBelow;
 		fHasFingeringPos = true;
+	}
+
+	p = getParameter<TagParameterString>(kHarmonyPosStr);
+	if (p) {
+		if (p->getString() == kAboveStr) 	  fHarmonyPos = kAbove;
+		else if (p->getString() == kBelowStr) fHarmonyPos = kBelow;
+		fHasHarmonyPos = true;
 	}
 
 	const TagParameterFloat * f = getParameter<TagParameterFloat>(kFingeringSizeStr);

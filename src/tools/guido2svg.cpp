@@ -45,8 +45,9 @@ static void usage (char* name)
 	cerr << "           	-voicemap  boolean : enables or not event mapping draw (default is false)" << endl;
     cerr << "           	-staffmap  boolean : enables or not staff mapping draw (default is false)" << endl;
     cerr << "           	-systemmap boolean : enables or not system mapping draw (default is false)" << endl;
-    cerr << "           	-checkLyrics	   : enables lyrics collisions detection" << endl;
-    cerr << "           	-viewport	       : add viewport information (in addition to viewBox)" << endl;
+    cerr << "           	-checkLyrics       : enables lyrics collisions detection" << endl;
+    cerr << "           	-optimalPageFill   : enables optimal page filling" << endl;
+    cerr << "           	-viewport          : add viewport information (in addition to viewBox)" << endl;
 	exit(1);
 }
 
@@ -223,7 +224,7 @@ int main(int argc, char **argv)
 	VGDevice *dev = sys.CreateDisplayDevice();
     GuidoInitDesc gd = { dev, 0, musicfont, 0 };
     GuidoInit(&gd);                    // Initialise the Guido Engine first
-
+	
 	GuidoErrCode err;
     ARHandler arh;
 
@@ -255,9 +256,8 @@ int main(int argc, char **argv)
     GRHandler grh;
 	GuidoLayoutSettings settings;
 	GuidoGetDefaultLayoutSettings (&settings);
-	if (getBoolOption(argc, argv, "-checkLyrics")) {
-		settings.checkLyricsCollisions = true;
-	}
+	settings.checkLyricsCollisions 	= getBoolOption(argc, argv, "-checkLyrics");
+	settings.optimalPageFill 		= getBoolOption(argc, argv, "-optimalPageFill");
 	err = GuidoAR2GR (arh, &settings, &grh);
     if (err != guidoNoErr)
         error(err);
