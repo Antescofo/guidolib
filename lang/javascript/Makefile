@@ -42,7 +42,7 @@ all: $(library).js
 # building the library as wasm library
 ##############################################################
 $(library).js : $(objects) 
-	emcc $(OPT1) $(objects) -o $(library).js $(OPTIONS) -s WASM=1
+	emcc $(OPT1) $(objects) -o $(library).js $(OPTIONS) -s WASM=0 -s ASM_JS=1
 
 clean:
 	rm -f $(objects) $(target) $(library).wasm.*
