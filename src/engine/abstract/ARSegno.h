@@ -17,6 +17,20 @@
 #include "ARJump.h"
 #include "TimeUnwrap.h"
 
+/*@mkdoc
+
+@group:Repeat Signs
+
+@tagname:\segno
+@tagalias:
+@tagtype:P
+@tagnotation:Segno
+@tagdesc
+See the [Repeat Signs](@EXAMPLES/repeats/) example.
+@tagend
+
+*/
+
 /** \brief Signa
 */
 class ARSegno : public ARJump

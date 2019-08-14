@@ -18,6 +18,30 @@
 
 #include "ARDynamic.h"
 
+/*@mkdoc
+
+@group:Dynamics
+
+@tagname:\crescendo
+@tagalias:\cresc<br />\crescBegin \crescEnd
+@tagtype:R
+@tagnotation:crescendo sign
+@tagdesc
+@tagend
+
+
+@params:
+@param:dx1:unit:start position displacement:0:true
+@param:dx2:unit:end position displacement:0:true
+@param:deltaY:unit:control the open end of the hairpins:3:true
+@param:thickness:unit:the line thickness:0.16:true
+@param:autopos:string:when 'on', try to automatically avoid collisions:off:true
+@paramdesc
+See the [Dynamics](@EXAMPLES/dynamics/) example.
+@paramend
+
+*/
+
 /** \brief not yet documented
 */
 class ARCrescendo : public ARDynamic

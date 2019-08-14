@@ -17,6 +17,21 @@
 
 #include "ARMusicalTag.h"
 
+/*@mkdoc
+
+@group:Layout
+
+@tagname:\newPage
+@tagalias:\newSystem
+@tagtype:P
+@tagnotation:force a page break
+@tagdesc
+See the [Bach](@EXAMPLES/bach/) example.
+@tagend
+
+*/
+
+
 /** \brief not yet documented
 */
 class ARNewPage : public ARMusicalTag

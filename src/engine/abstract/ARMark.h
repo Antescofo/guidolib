@@ -20,6 +20,30 @@
 
 #include "ARText.h"
 
+/*@mkdoc
+
+@group:Text
+
+@tagname:\mark
+@tagalias:
+@tagtype:P
+@tagnotation:marks
+@tagdesc
+The **\text** tag is both a range and a position tag. When a range is specified, the text doesn't take place: it is placed over the range.
+With no range, the text is inserted at its position.
+@tagend
+
+@params:
+@param:text:string:the mark:*none*:false
+@param:enclosure:string:none, square, rectangle, bracket, triangle, diamond:none:true
+@fontparams:
+@paramdesc
+
+See the [Tempo](@EXAMPLES/tempo/) example.
+@paramend
+
+*/
+
 /** \brief not yet documented
 */
 class ARMark : public ARText // public ARMusicalObject,

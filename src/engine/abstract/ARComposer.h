@@ -17,6 +17,29 @@
 
 #include "ARText.h"
 
+/*@mkdoc
+
+@group:Header
+
+@tagname:\composer
+@tagalias:
+@tagtype:P
+@tagnotation:the composer name
+@tagdesc
+@tagend
+
+The composer name is displayed on top of the first page, right aligned to the score first system.
+
+@params:
+@param:name:string:the composer name:*none*:false
+# @param:pageformat:string:a page format:c2:true   ????
+@fontparams:
+@paramdesc
+See the [Mozart](@EXAMPLES/mozart581/) or [Fauré](@EXAMPLES/faure/) examples.
+@paramend
+
+*/
+
 /** \brief not yet documented
 */
 class ARComposer : public ARText

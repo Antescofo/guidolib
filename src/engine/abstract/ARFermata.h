@@ -17,6 +17,26 @@
 
 #include "ARArticulation.h"
 
+/*@mkdoc
+
+@group:Articulations
+
+@tagname:\fermata
+@tagalias:
+@tagtype:RP
+@tagnotation:fermata signs
+@tagdesc
+@tagend
+
+@params:
+@param:type:string:short, regular or long:regular:true
+@param:position:string:above or below:above:true
+@paramdesc
+See the [Articulations](@EXAMPLES/articulations/) example.
+@paramend
+
+*/
+
 /* \brief Class ARFermata : abstract representation of a fermata. 
 
 	A fermata is linked to an object (then event is set) or it is 

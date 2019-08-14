@@ -20,6 +20,44 @@
 #include "ARMTParameter.h"
 #include "Fraction.h"
 
+/*@mkdoc
+
+@group:Clef Key Meter
+
+@tagname:\meter
+@tagalias:
+@tagtype:P
+@tagnotation:time signatures
+@tagdesc
+The **\meter** tag displays a time signature.
+@tagend
+
+
+@params:
+@param:type:string:C, c, C/, c/<br />a rational string<br />a complex time signature string:4/4:false
+@param:autoBarlines:boolean:control automatic barlines:on:true
+@param:autoMeasuresNum:string:on, off, system, page:off:true
+@param:group:boolean:control complex meter appearance:off:true
+@paramdesc
+- C, c, C/, c/ : a C or a crossed C meter.
+- complex time strings are in on of the following forms:
+	- a) "a+b+...+n/d" a rational with a sum as numerator
+	- b) "a/b + c/d" a sum of rationals
+	- c) a combination of a) and b)
+- **autoMeasuresNum** activates automatic measures numbering and supports 3 modes:
+	- on: the measure number is displayed at every bar
+	- system: the measure number is displayed on every system only
+	- page: the measure number is displayed on every page only
+- **group** applies to complex time signatures and control how the a) form encountered in a c) form is displayed: when **group** if off, the a) form is transformed in a b) form
+
+See the [Meter](@EXAMPLES/clefkeymeter/) example.
+
+See also the [Sonata](@EXAMPLES/cpebach/) example for measure numbers at system level.
+@paramend
+
+*/
+
+
 /** \brief not yet documented
 */
 class ARMeter : public ARMTParameter

@@ -17,6 +17,25 @@
 
 #include "ARMTParameter.h"
 
+
+/*@mkdoc
+
+@group:Layout
+
+@tagname:\staffOff
+@tagalias:
+@tagtype:P
+@tagnotation:hides the staff
+@tagdesc
+The **\staffOff** tag effect is to hide the staff and all the staff elements up to the next **\staffOn** tag.
+
+The **\staffOn** and **\staffOff** tags are still experimental and may not provide the expected result depending on the context.
+
+See the [Layout](@EXAMPLES/layout/) example.
+@tagend
+
+*/
+
 /** \brief not yet documented
 */
 class ARStaffOff : public ARMTParameter
