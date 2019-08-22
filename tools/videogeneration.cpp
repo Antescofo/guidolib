@@ -2,6 +2,7 @@
 #include <sstream>
 #include <fstream>
 #include <cstdio>
+#include <map>
 #include <libmusicxml/libmusicxml.h>
 #include <fluidsynth.h>
 
@@ -88,6 +89,8 @@ int convert_score_to_png(GuidoOnDrawDesc* desc, png_stream_t& fBuffer, FloatRect
   GuidoErrCode err = guidoNoErr;
   CairoDevice* cairo_device = (CairoDevice*)desc->hdc;
   fBuffer.reset();
+  guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.margintop = GuidoCM2Unit(4);
+
   if (r && other_device) {
     cairo_device->CopyPixels(other_device);
     cairo_device->SelectPenColor(VGColor(0, 0, 255, 100));
@@ -127,12 +130,47 @@ struct Element {
     }
 };
 
+struct PageInfo {
+  float min_y;
+  float max_y;
+
+  PageInfo() :
+    min_y(999999999),
+    max_y(0)
+    {
+    }
+  PageInfo(const PageInfo& b) :
+    min_y(b.min_y),
+    max_y(b.max_y)
+    {
+    }
+
+  PageInfo(float min_y_,
+           float max_y_) :
+    min_y(min_y_),
+    max_y(max_y_)
+    {
+    }
+
+};
+
 class MyMapCollector : public MapCollector, public std::vector<Element> {
 public:
   int page = 1;
+  std::map<int, PageInfo> page_infos;
 
   virtual void Graph2TimeMap( const FloatRect& box, const TimeSegment& dates, const GuidoElementInfos& infos ) {
-    if ((infos.type == kNote) || (infos.type == kRest)) {
+    PageInfo inf;
+    if (page_infos.count(this->page) > 0) {
+      inf = page_infos[this->page];
+    }
+    else {
+      page_infos.emplace(this->page, PageInfo());
+    }
+    inf.min_y = std::min(inf.min_y, box.top);
+    inf.max_y = std::max(inf.max_y, box.bottom);
+    page_infos[this->page] = PageInfo(inf.min_y, inf.max_y);
+    if (((infos.type == kNote) || (infos.type == kRest)) && (infos.staffNum == 1)) {
       this->push_back(Element(box, dates, infos, this->page));
     }
   }
@@ -205,7 +243,7 @@ bool erase_tag(std::string& guidostr, std::string tag) {
   size_t start_pos = guidostr.find("\\" + tag + "<\"");
   if (start_pos != string::npos) {
     size_t end_pos = guidostr.find(">", start_pos);
-    std::cout << start_pos << " " << end_pos << std::endl;
+    // std::cout << start_pos << " " << end_pos << std::endl;
     guidostr.erase(start_pos, 1 + end_pos - start_pos);
     return true;
   }
@@ -241,7 +279,7 @@ bool parse_asco(std::string& asco_file, std::vector<std::pair<GuidoDate*, float>
     }
     Fraction out;
     parse_guido_date(content, off, out);
-    std::cout << out.getNumerator() << " " << out.getDenominator() << std::endl;
+    // std::cout << out.getNumerator() << " " << out.getDenominator() << std::endl;
     cumul += out;
     float time = parse_float(content, off);
     GuidoDate* date = new GuidoDate();
@@ -249,9 +287,9 @@ bool parse_asco(std::string& asco_file, std::vector<std::pair<GuidoDate*, float>
     date->denom = cumul.getDenominator();
 
     date_to_time.push_back(std::pair<GuidoDate*, float>(date, time));
-    std::cout << "Time:" << time
-              << " @" << cumul.getNumerator() << "/" << cumul.getDenominator()
-              << std::endl;
+    //std::cout << "Time:" << time
+    //<< " @" << cumul.getNumerator() << "/" << cumul.getDenominator()
+    //        << std::endl;
   }
 }
 
@@ -311,24 +349,24 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
         if (sec_duration > 0) {
           bps = beat_duration / sec_duration;
           // step = sec_duration / beat_duration;
-          std::cout << std::endl << "BPS IS:" << bps
-                    << " = " << beat_duration
-                    << " / " << sec_duration
-                    << std::endl;
+          //std::cout << std::endl << "BPS IS:" << bps
+          //<< " = " << beat_duration
+          //<< " / " << sec_duration
+          //<< std::endl;
         }
       }
       // timeoffset = (to_float(*itrecording->first) - bdate) / bps;
       timeoffset = (bdate - to_float(*itrecording->first)) / bps;
 
-      std::cout << "INIT OFFSET DATE:" << to_float(*itrecording->first) << " " << bdate << std::endl;
+      //std::cout << "INIT OFFSET DATE:" << to_float(*itrecording->first) << " " << bdate << std::endl;
 
-      std::cout << "INIT OFFSET:" << timeoffset << std::endl;
+      //std::cout << "INIT OFFSET:" << timeoffset << std::endl;
     }
     // it->time = itrecording->second;
-    std::cout << it->dates << std::endl;
+    //std::cout << it->dates << std::endl;
     it->time = itrecording->second + timeoffset;
-    std::cout << it->time << " = "
-              << itrecording->second << " + " << timeoffset << std::endl;
+    //std::cout << it->time << " = "
+    //<< itrecording->second << " + " << timeoffset << std::endl;
     if (lasttime > it->time) {
       std::cout << "ERROR:"
                 << lasttime << " " << it->time
@@ -341,7 +379,7 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
     if ((next_note != map_collector.end()) && (next_note->dates.first.num != it->dates.first.num) || (next_note->dates.first.denom != it->dates.first.denom)) {
       timeoffset += (edate - bdate) / bps;
     }
-    std::cout << bdate << " => " << edate << std::endl << std::endl;
+    //std::cout << bdate << " => " << edate << std::endl << std::endl;
   }
 }
 
@@ -385,13 +423,13 @@ int main(int argc, char* argv[]) {
   */
 
   layoutSettings.systemsDistance = 320;
-  layoutSettings.systemsDistribution = kAutoDistrib;
+  layoutSettings.systemsDistribution = kAlwaysDistrib;
   layoutSettings.systemsDistribLimit = 0.25;
   layoutSettings.force = 750;
   layoutSettings.spring = 1.11;
   layoutSettings.neighborhoodSpacing = 0;
   layoutSettings.optimalPageFill = 1;
-  layoutSettings.resizePage2Music = 0;
+  layoutSettings.resizePage2Music = 1;
   layoutSettings.proportionalRenderingForceMultiplicator = 0;
   layoutSettings.checkLyricsCollisions = true;
 
@@ -476,7 +514,6 @@ int main(int argc, char* argv[]) {
   }
   std::sort(map_collector.begin(), map_collector.end(), sort_by_date);
   interpolate(date_to_time, map_collector);
-  // return 1; // to remove todo
   int last_page = 0;
   bool last_tied = false;
   for (auto it = map_collector.begin(); it != map_collector.end(); ++it) {
@@ -490,10 +527,18 @@ int main(int argc, char* argv[]) {
                   << std::endl;
         break;
       }
+      PageInfo page_info = map_collector.page_infos[current_page];
+      // HERE COMPUTE MARGIN
+      std::cout << "CURRENT PAGE:" << current_page << std::endl;
+      float page_height = page_info.max_y - page_info.min_y;
+      guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.margintop = (height / 2.0 - page_height / 2.0);
+      std::cout << "MARGIN TOP:" << height - page_info.max_y << std::endl;
+      // guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.marginbottom = GuidoCM2Unit(2);
+      currentSession->updateGRH(guidohttpd::guidosession::sDefaultScoreParameters);
+
       main_desc = get_on_draw_desc(currentSession, scoreParameters);
       main_device = (CairoDevice*)main_desc->hdc;
 
-      std::cout << "CURRENT PAGE:" << current_page << std::endl;
       main_desc->page = desc->page = current_page;
       err = convert_score_to_png(main_desc, fBuffer);
       if (err != 0) {
@@ -525,7 +570,7 @@ int main(int argc, char* argv[]) {
       long naudio_frame = target_audio_frame - audio_nframe;
 
       int midiPitch = it->infos.midiPitch;
-      std::cout << midiPitch << " " << it->infos.isTied << " " << it->infos.intensity << std::endl;
+      //std::cout << midiPitch << " " << it->infos.isTied << " " << it->infos.intensity << std::endl;
       bool should_play = (midiPitch > 0);
 
       if (it->infos.isTied && last_tied) {
@@ -558,54 +603,6 @@ int main(int argc, char* argv[]) {
       return 1;
     }
   }
-
-  return 0;
-  /*
-    for (int current_page = 1; current_page <= pageCount; ++current_page) {
-    std::cout << "CURRENT PAGE:" << current_page << std::endl;
-    MyMapCollector map_collector;
-    GuidoGetMap(gr, current_page, width, height, kGuidoEvent, map_collector);
-    //GuidoGetMap(gr, current_page, width, height, kGuidoSystem, map_collector);
-
-    GuidoOnDrawDesc* main_desc = get_on_draw_desc(currentSession, scoreParameters);
-    GuidoOnDrawDesc* desc = get_on_draw_desc(currentSession, scoreParameters);
-    Time2GraphicMap systemMap;
-    GuidoGetSystemMap(gr, current_page, width, height, systemMap);
-    main_desc->page = desc->page = current_page;
-    err = convert_score_to_png(main_desc, fBuffer);
-    CairoDevice* main_device = (CairoDevice*)main_desc->hdc;
-    if (err != 0) {
-    std::cerr << "An error occured" << std::endl;
-    return 1;
-    }
-    for (std::vector<Element>::iterator it = map_collector.begin(); it != map_collector.end(); it++) {
-    FloatRect r;
-    TimeSegment t;
-    bool result = GuidoGetTime(it->dates.first, systemMap, t, r);
-    std::cout << t.first << std::endl;
-    // return 1;
-    if (!result) {
-    std::cerr << "Beat not found" << std::endl;
-    return 1;
-    }
-    //FloatRect& r = it->box;
-    err = convert_score_to_png(desc, fBuffer, &r, main_device, sizex, sizey);
-    if (err == 0) {
-    ofstream myfile;
-    std::string output_file_path = "output" + std::to_string(nframe++) + ".png";
-    myfile.open (output_file_path.c_str());
-    myfile.write(fBuffer.start_, fBuffer.size_);
-    myfile.close();
-    std::cout << "Output image in " << output_file_path << std::endl;
-    // break;
-    }
-    else {
-    std::cerr << "An error occured" << std::endl;
-    return 1;
-    }
-    }
-    }
-  */
   std::cout << "ALL DONE" << std::endl;
   fclose(pFile);
   return 0;

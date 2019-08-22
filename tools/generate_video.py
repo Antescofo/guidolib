@@ -7,13 +7,14 @@ import json
 import requests
 
 DEBUG = True
+GENERATE_VIDEO = (not DEBUG) or True
 
 def info_to_branch_item(video_title, piece_id):
     item = {
           "type": 2,
           "data": {
                 "$marketing_title": video_title,
-                "~campaign": "youtube",
+                "~campaign": "video_generator",
                 "~feature": "marketing",
                 "~channel": "youtube",
                 # "~campaign": "catalogue en ligne",
@@ -36,7 +37,6 @@ def generate_piece_link(video_title, piece_id):
 
     if DEBUG:
         BRANCH_KEY = 'key_test_cjxOmmYxusb419wyK9L3phamBBmMdqxW'
-        return "https://apps.apple.com/us/app/metronaut-musical-companion/id1202148484"
     branch_create_bulk_url = BRANCH_BULK_URL + '/' + BRANCH_KEY
 
     branch_data = [info_to_branch_item(video_title, piece_id)]
@@ -217,8 +217,9 @@ if instruments_pk:
 keywords = [str(piece_title), str(author_title)]
 video_keywords = ','.join(keywords)
 video_category = "10"  # Music, see https://gist.github.com/dgp/1b24bf2961521bd75d6c
-# video_privacy = "public"
-video_privacy = "unlisted"  # For testing only
+video_privacy = "public"
+if DEBUG:
+    video_privacy = "unlisted"  # For testing only
 video_file = None
 print(video_title)
 print(video_keywords)
@@ -241,7 +242,7 @@ assert mp3_file, 'No mp3 file could be found'
 
 print('Process video for', piece_pk, accomp_pk)
 output_file = '/app/tools/final_output.mp4'
-if False:
+if GENERATE_VIDEO:
     try:
         os.remove(output_file)
     except:
@@ -266,7 +267,6 @@ Download the App for free: {}
 {}
 {}""".format(video_title, deep_link_url, deep_link_url, website_link, facebook_link)
 print(video_description)
-sys.exit(0)
 # We upload the video here
 subprocess.run(['python', './upload_video.py',
                 '--title=' + str(video_title)+ '',
@@ -276,6 +276,8 @@ subprocess.run(['python', './upload_video.py',
                 '--privacyStatus=' + video_privacy + '',
                 '--file=' + video_file])
 
+if DEBUG:
+    sys.exit(0)
 processing_store['processed_pieces'].append(piece_pk)
 processing_store['processed_accompaniments'].append(accomp_pk)
 
