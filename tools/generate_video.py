@@ -6,6 +6,46 @@ import os
 import json
 import requests
 
+DEBUG = True
+
+def info_to_branch_item(video_title, piece_id):
+    item = {
+          "type": 2,
+          "data": {
+                "$marketing_title": video_title,
+                "~campaign": "youtube",
+                "~feature": "marketing",
+                "~channel": "youtube",
+                # "~campaign": "catalogue en ligne",
+                # "~feature": "marketing",
+                # "~channel": "website",
+                "pieceID": str(piece_id),
+                "$one_time_use": "false"
+                # not necessary for now…
+                # "$og_title": f"{composer} - {piece_title}",
+                # "$og_description":"",
+                # "$og_image_url": ""
+            }
+        }
+    return item
+
+
+def generate_piece_link(video_title, piece_id):
+    BRANCH_BULK_URL = 'https://api.branch.io/v1/url/bulk'
+    BRANCH_KEY = 'key_live_ljuUpe9CBveYY3FvP2O1agcmtxjUeuFN'
+
+    if DEBUG:
+        BRANCH_KEY = 'key_test_cjxOmmYxusb419wyK9L3phamBBmMdqxW'
+        return "https://apps.apple.com/us/app/metronaut-musical-companion/id1202148484"
+    branch_create_bulk_url = BRANCH_BULK_URL + '/' + BRANCH_KEY
+
+    branch_data = [info_to_branch_item(video_title, piece_id)]
+
+    answer = requests.request("POST", branch_create_bulk_url, data=json.dumps(branch_data))
+    if answer.status_code != requests.codes.ok:
+        raise Exception('Error fetching branch urls')
+    print(answer.json())
+    return answer.json()[0]['url']
 
 def download_file(url, output=None):
     if not output:
@@ -59,6 +99,10 @@ for piece in v2_all['piece']:
     for accomp in piece['accompaniments']:
         accomp_pk_to_piece_pk[accomp['pk']] = piece_pk
         piece_pk_to_accomp_pk[piece_pk].append(accomp['pk'])
+
+instrument_map = {}
+for instrument in v2_all['instrument']:
+    instrument_map[instrument['pk']] = instrument['title']
 
 accomp_pk = None
 piece_pk = None
@@ -162,16 +206,21 @@ piece_title = opus_detail['full_title']
 author_title = author_detail['first_name'] + ' ' + author_detail['last_name']
 
 video_title = str(author_title) + ' - ' + str(piece_title)
-video_description = 'Learn to play ' + video_title + '.\nCheck out our Metronaut app https://apps.apple.com/us/app/metronaut-musical-companion/id1202148484'
+instruments_pk = selected_accomp.get('instruments', [])
+if instruments_pk:
+    instruments = []
+    for instrument_pk in instruments_pk:
+        if (instrument_pk in instrument_map) and (instrument_map[instrument_pk].lower() not in video_title.lower()):
+            instruments.append(instrument_map[instrument_pk])
+    if instruments:
+        video_title = ', '.join(instruments) + ' - ' + video_title
 keywords = [str(piece_title), str(author_title)]
 video_keywords = ','.join(keywords)
 video_category = "10"  # Music, see https://gist.github.com/dgp/1b24bf2961521bd75d6c
 # video_privacy = "public"
 video_privacy = "unlisted"  # For testing only
 video_file = None
-
 print(video_title)
-print(video_description)
 print(video_keywords)
 
 musicxml_url = selected_accomp['musicxml_file'] or selected_accomp['solo_musicxml_file']
@@ -192,7 +241,7 @@ assert mp3_file, 'No mp3 file could be found'
 
 print('Process video for', piece_pk, accomp_pk)
 output_file = '/app/tools/final_output.mp4'
-if True:
+if False:
     try:
         os.remove(output_file)
     except:
@@ -204,7 +253,20 @@ if True:
     print('Done processing video in', output_file)
 
 video_file = output_file
-
+deep_link_url = generate_piece_link(piece_pk, video_title)
+print('generate piece link:', deep_link_url)
+website_link = "https://www.antescofo.com"
+facebook_link = "https://www.facebook.com/Metronautapp/"
+video_description = """Play {} with accompaniment on Metronaut app: {}\n
+Discover Metronaut, the tailor made musical accompaniment app for classical musicians and play masterpieces the way they were meant to be played: with professional musicians to accompany you.\n
+Enjoy our growing catalog of music sheets and accompaniments for every instrument and level. Metronaut's accompanists are among the best orchestras and pianists and each accompaniment offers fully acoustic and high quality studio recordings.\n
+You're in full control of the digital music sheet: Play or sing hard or previously inaccessible pieces by choosing the speed of the accompaniment and discover pieces not written for your instrument thanks to automatic and quality preserving transposition.\n
+Personalize your performance using our speed adaptation feature. Get empowered to play at your own rhythm throughout the piece: Metronaut adapts accompaniment tempo to your interpretation in real-time.\n
+Download the App for free: {}
+{}
+{}""".format(video_title, deep_link_url, deep_link_url, website_link, facebook_link)
+print(video_description)
+sys.exit(0)
 # We upload the video here
 subprocess.run(['python', './upload_video.py',
                 '--title=' + str(video_title)+ '',
