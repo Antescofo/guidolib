@@ -206,6 +206,8 @@ piece_title = opus_detail['full_title']
 author_title = author_detail['first_name'] + ' ' + author_detail['last_name']
 
 video_title = str(author_title) + ' - ' + str(piece_title)
+keywords = [str(piece_title), str(author_title), 'sheet music', 'accompaniment', 'metronaut', 'antescofo', 'play along', 'app']
+
 instruments_pk = selected_accomp.get('instruments', [])
 if instruments_pk:
     instruments = []
@@ -213,8 +215,8 @@ if instruments_pk:
         if (instrument_pk in instrument_map) and (instrument_map[instrument_pk].lower() not in video_title.lower()):
             instruments.append(instrument_map[instrument_pk])
     if instruments:
+        keywords += instruments
         video_title = ', '.join(instruments) + ' - ' + video_title
-keywords = [str(piece_title), str(author_title)]
 video_keywords = ','.join(keywords)
 video_category = "10"  # Music, see https://gist.github.com/dgp/1b24bf2961521bd75d6c
 video_privacy = "public"

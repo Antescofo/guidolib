@@ -516,12 +516,14 @@ int main(int argc, char* argv[]) {
   interpolate(date_to_time, map_collector);
   int last_page = 0;
   bool last_tied = false;
+  int current_page = 1;
   for (auto it = map_collector.begin(); it != map_collector.end(); ++it) {
-    int current_page = it->page;
+    // int current_page = it->page;
 
+  new_page:
     if (current_page != last_page) {
       last_page = current_page;
-      if (current_page > pageCount) {
+      if (current_page > pageCount * 2) {
         std::cout << "Aborted, no more page @"
                   << it->time << "s"
                   << std::endl;
@@ -554,8 +556,10 @@ int main(int argc, char* argv[]) {
 
     result = GuidoGetTime(it->dates.first, systemMap, t, r);
     if (!result) {
-      std::cerr << "Beat not found" << std::endl;
-      return 1;
+      std::cerr << "Beat not found changing page" << std::endl;
+      ++current_page;
+      goto new_page;
+      // return 1;
     }
     err = convert_score_to_png(desc, fBuffer, &r, main_device, sizex, sizey);
     if (err == 0) {
