@@ -115,16 +115,19 @@ int convert_score_to_png(GuidoOnDrawDesc* desc, png_stream_t& fBuffer, FloatRect
 
 struct Element {
   FloatRect box;
-  TimeSegment dates;
+  GuidoDate date;
+  // TimeSegment dates;
   GuidoElementInfos infos;
+  int event_type; // 0 for rest, 1 for note on, 2 for note off
   int page;
   float time;
 
-  Element(const FloatRect& box_, const TimeSegment& dates_, const GuidoElementInfos& infos_, int page_) :
+  Element(const FloatRect& box_, const GuidoDate& date_, const GuidoElementInfos& infos_, int page_, int event_type_) :
     box(box_),
-    dates(dates_),
+    date(date_),
     infos(infos_),
     page(page_),
+    event_type(event_type_),
     time(0)
     {
     }
@@ -170,8 +173,16 @@ public:
     inf.min_y = std::min(inf.min_y, box.top);
     inf.max_y = std::max(inf.max_y, box.bottom);
     page_infos[this->page] = PageInfo(inf.min_y, inf.max_y);
-    if (((infos.type == kNote) || (infos.type == kRest)) && (infos.staffNum == 1)) {
-      this->push_back(Element(box, dates, infos, this->page));
+    if (infos.type == kNote) {
+      // we only play the first staff
+      if (infos.staffNum != 1) {
+        infos.midiPitch = 0;
+      }
+      this->push_back(Element(box, dates.first, infos, this->page, 1)); // note on
+      this->push_back(Element(box, dates.second, infos, this->page, 2)); // note off
+    }
+    else if (infos.type == kRest) {
+      this->push_back(Element(box, dates.first, infos, this->page, 0));
     }
   }
 };
@@ -300,8 +311,8 @@ float to_float(GuidoDate& a) {
 
 bool sort_by_date(Element& a, Element& b)
 {
-  float af = to_float(a.dates.first);
-  float bf = to_float(b.dates.first);
+  float af = to_float(a.date);
+  float bf = to_float(b.date);
   return (af < bf);
 }
 
@@ -324,17 +335,13 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
   double timeoffset = 0;
   bool first = true;
 
-  float lasttime = -0.1;
   for (auto it = map_collector.begin(); it != map_collector.end(); ++it) {
-    float bdate = to_float(it->dates.first);
-    float edate = to_float(it->dates.second);
-    float beat_duration = edate - bdate;
-
+    float bdate = to_float(it->date);
     float duration_recording = 2;
 
     // update itrecording
     auto lnext = itrecording + 1;
-
+    float last = 0;
     if (first || (bdate > to_float(*lnext->first))) {
       first = false;
       while ((lnext != date_to_time.end()) && (bdate > to_float(*lnext->first))) {
@@ -345,41 +352,12 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
         float beat_duration = to_float(*lnext->first) - to_float(*itrecording->first);
         float sec_duration = lnext->second - itrecording->second;
 
-        // if (beat_duration > 0) {
         if (sec_duration > 0) {
           bps = beat_duration / sec_duration;
-          // step = sec_duration / beat_duration;
-          //std::cout << std::endl << "BPS IS:" << bps
-          //<< " = " << beat_duration
-          //<< " / " << sec_duration
-          //<< std::endl;
         }
       }
-      // timeoffset = (to_float(*itrecording->first) - bdate) / bps;
-      timeoffset = (bdate - to_float(*itrecording->first)) / bps;
-
-      //std::cout << "INIT OFFSET DATE:" << to_float(*itrecording->first) << " " << bdate << std::endl;
-
-      //std::cout << "INIT OFFSET:" << timeoffset << std::endl;
     }
-    // it->time = itrecording->second;
-    //std::cout << it->dates << std::endl;
-    it->time = itrecording->second + timeoffset;
-    //std::cout << it->time << " = "
-    //<< itrecording->second << " + " << timeoffset << std::endl;
-    if (lasttime > it->time) {
-      std::cout << "ERROR:"
-                << lasttime << " " << it->time
-                << std::endl;
-    }
-    lasttime = it->time;
-
-    auto next_note = it + 1;
-
-    if ((next_note != map_collector.end()) && (next_note->dates.first.num != it->dates.first.num) || (next_note->dates.first.denom != it->dates.first.denom)) {
-      timeoffset += (edate - bdate) / bps;
-    }
-    //std::cout << bdate << " => " << edate << std::endl << std::endl;
+    it->time = itrecording->second + (bdate - to_float(*itrecording->first)) / bps;
   }
 }
 
@@ -515,11 +493,13 @@ int main(int argc, char* argv[]) {
   std::sort(map_collector.begin(), map_collector.end(), sort_by_date);
   interpolate(date_to_time, map_collector);
   int last_page = 0;
-  bool last_tied = false;
   int current_page = 1;
+  bool last_tied = false;
+
+  // Loop to generate the video
   for (auto it = map_collector.begin(); it != map_collector.end(); ++it) {
     // int current_page = it->page;
-
+    // We ignore note off events (no need to highlight)
   new_page:
     if (current_page != last_page) {
       last_page = current_page;
@@ -544,69 +524,67 @@ int main(int argc, char* argv[]) {
       main_desc->page = desc->page = current_page;
       err = convert_score_to_png(main_desc, fBuffer);
       if (err != 0) {
-        std::cerr << "An error occured" << std::endl;
+        std::cerr << "An error occured 1" << std::endl;
         return 1;
       }
       err = GuidoGetSystemMap(gr, current_page, width, height, systemMap);
       if (err != 0) {
-        std::cerr << "An error occured" << std::endl;
+        std::cerr << "An error occured 2" << std::endl;
         return 1;
       }
     }
 
-    result = GuidoGetTime(it->dates.first, systemMap, t, r);
-    if (!result) {
-      std::cerr << "Beat not found changing page" << std::endl;
-      ++current_page;
-      goto new_page;
-      // return 1;
+    // We ignore note off to highlight
+    int target_frame = round(it->time * fps);
+    int nframe_todraw = target_frame - nframe;
+    for (int k = 0; k < nframe_todraw; ++k) {
+      ofstream myfile;
+      std::string output_file_path = "output" + std::to_string(nframe++) + ".png";
+      myfile.open (output_file_path.c_str());
+      myfile.write(fBuffer.start_, fBuffer.size_);
+      myfile.close();
     }
-    err = convert_score_to_png(desc, fBuffer, &r, main_device, sizex, sizey);
-    if (err == 0) {
-      float duration = 2;
-      auto next = it + 1;
-      if (next != map_collector.end()) {
-        duration = next->time - it->time;
+    if (it->event_type != 2) {
+      result = GuidoGetTime(it->date, systemMap, t, r);
+      if (!result) {
+        std::cerr << "Beat not found changing page" << std::endl;
+        ++current_page;
+        goto new_page;
+        // return 1;
       }
-      int target_frame = round((it->time + duration) * fps);
-      int nframe_todraw = target_frame - nframe;
-      long target_audio_frame = round((it->time + duration) * sample_rate);
-      long naudio_frame = target_audio_frame - audio_nframe;
-
-      int midiPitch = it->infos.midiPitch;
-      //std::cout << midiPitch << " " << it->infos.isTied << " " << it->infos.intensity << std::endl;
-      bool should_play = (midiPitch > 0);
-
-      if (it->infos.isTied && last_tied) {
-        should_play = false;
+      else {
+        err = convert_score_to_png(desc, fBuffer, &r, main_device, sizex, sizey);
+        if (err != 0) {
+          std::cerr << "An error occured 3" << std::endl;
+          return 1;
+        }
       }
+    }
+    // we ignore rests in player
+    int midiPitch = it->infos.midiPitch;
+    bool should_play = (midiPitch > 0);
+    long target_audio_frame = round(it->time * sample_rate);
+    long naudio_frame = target_audio_frame - audio_nframe;
+
+    if (it->infos.isTied && last_tied) {
+      should_play = false;
+    }
+    if (it->event_type == 1)
       last_tied = it->infos.isTied;
-      if (should_play) {
-        fluid_synth_noteon(synth, 1, midiPitch, 127);
-      }
-        // fluid_synth_noteon (fluid_synth_t *synth, int chan, int key, int vel)
+    if (naudio_frame > 0) {
       fluid_synth_write_float(synth, naudio_frame, lout, 0, 1, lout, 0, 1);
       fwrite(lout, 1, naudio_frame * sizeof(float), pFile);
-      // fluid_synth_noteoff (fluid_synth_t *synth, int chan, int key)
-      if (should_play) {
+    }
+    if (should_play) {
+      if (it->event_type == 1)
+        fluid_synth_noteon(synth, 1, midiPitch, 127);
+      else if (it->event_type == 2)
         fluid_synth_noteoff(synth, 1, midiPitch);
-      }
-
-      audio_nframe = target_audio_frame;
-      for (int k = 0; k < nframe_todraw; ++k) {
-        ofstream myfile;
-        std::string output_file_path = "output" + std::to_string(nframe++) + ".png";
-        myfile.open (output_file_path.c_str());
-        myfile.write(fBuffer.start_, fBuffer.size_);
-        myfile.close();
-      }
-      // break;
     }
-    else {
-      std::cerr << "An error occured" << std::endl;
-      return 1;
-    }
+    audio_nframe = target_audio_frame;
   }
+
+  // we have to generate 2sec of the last image / sounds.
   std::cout << "ALL DONE" << std::endl;
   fclose(pFile);
   return 0;
