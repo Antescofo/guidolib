@@ -7,10 +7,10 @@ import json
 import requests
 
 DEBUG = True
-DEBUG_UPLOAD = False
-DEBUG_GENERATE = True
+DEBUG_UPLOAD = True
+DEBUG_GENERATE = False
 UPLOAD_VIDEO = (not DEBUG) or DEBUG_UPLOAD
-GENERATE_VIDEO = UPLOAD_VIDEO or DEBUG_GENERATE
+GENERATE_VIDEO = ((not DEBUG) and UPLOAD_VIDEO) or DEBUG_GENERATE
 
 def info_to_branch_item(video_title, piece_id):
     item = {
@@ -265,13 +265,13 @@ if UPLOAD_VIDEO:
     website_link = "https://www.antescofo.com"
     facebook_link = "https://www.facebook.com/Metronautapp/"
     video_description = """Play {} with accompaniment on Metronaut app: {}\n
-    Discover Metronaut, the tailor made musical accompaniment app for classical musicians and play masterpieces the way they were meant to be played: with professional musicians to accompany you.\n
-    Enjoy our growing catalog of music sheets and accompaniments for every instrument and level. Metronaut's accompanists are among the best orchestras and pianists and each accompaniment offers fully acoustic and high quality studio recordings.\n
-    You're in full control of the digital music sheet: Play or sing hard or previously inaccessible pieces by choosing the speed of the accompaniment and discover pieces not written for your instrument thanks to automatic and quality preserving transposition.\n
-    Personalize your performance using our speed adaptation feature. Get empowered to play at your own rhythm throughout the piece: Metronaut adapts accompaniment tempo to your interpretation in real-time.\n
-    Download the App for free: {}
-    {}
-    {}""".format(video_title, deep_link_url, deep_link_url, website_link, facebook_link)
+Discover Metronaut, the tailor made musical accompaniment app for classical musicians and play masterpieces the way they were meant to be played: with professional musicians to accompany you.\n
+Enjoy our growing catalog of music sheets and accompaniments for every instrument and level. Metronaut's accompanists are among the best orchestras and pianists and each accompaniment offers fully acoustic and high quality studio recordings.\n
+You're in full control of the digital music sheet: Play or sing hard or previously inaccessible pieces by choosing the speed of the accompaniment and discover pieces not written for your instrument thanks to automatic and quality preserving transposition.\n
+Personalize your performance using our speed adaptation feature. Get empowered to play at your own rhythm throughout the piece: Metronaut adapts accompaniment tempo to your interpretation in real-time.\n
+Download the App for free: {}
+{}
+{}""".format(video_title, deep_link_url, deep_link_url, website_link, facebook_link)
     print(video_description)
     print('Uploading video')
     # We upload the video here
