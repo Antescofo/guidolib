@@ -175,11 +175,19 @@ public:
     page_infos[this->page] = PageInfo(inf.min_y, inf.max_y);
     if (infos.type == kNote) {
       // we only play the first staff
-      if (infos.staffNum != 1) {
-        infos.midiPitch = 0;
+      GuidoElementInfos ninfos;
+      ninfos.type = infos.type;
+      ninfos.staffNum = infos.staffNum;
+      ninfos.voiceNum = infos.voiceNum;
+      ninfos.midiPitch = infos.midiPitch;
+      ninfos.isTied = infos.isTied;
+      ninfos.intensity = infos.intensity;
+
+      if (ninfos.staffNum != 1) {
+        ninfos.midiPitch = 0;
       }
-      this->push_back(Element(box, dates.first, infos, this->page, 1)); // note on
-      this->push_back(Element(box, dates.second, infos, this->page, 2)); // note off
+      this->push_back(Element(box, dates.first, ninfos, this->page, 1)); // note on
+      this->push_back(Element(box, dates.second, ninfos, this->page, 2)); // note off
     }
     else if (infos.type == kRest) {
       this->push_back(Element(box, dates.first, infos, this->page, 0));
@@ -569,7 +577,7 @@ int main(int argc, char* argv[]) {
     if (it->infos.isTied && last_tied) {
       should_play = false;
     }
-    if (it->event_type == 1)
+    if ((it->event_type == 1) && ((midiPitch > 0)))
       last_tied = it->infos.isTied;
     if (naudio_frame > 0) {
       fluid_synth_write_float(synth, naudio_frame, lout, 0, 1, lout, 0, 1);
