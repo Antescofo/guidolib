@@ -1,14 +1,17 @@
 #! /usr/bin/python3
 
 import subprocess
+import re
 import sys
 import os
 import json
 import requests
 
+VIDEO_GENERATOR_VERSION = 1
+
 DEBUG = True
 DEBUG_UPLOAD = True
-DEBUG_GENERATE = False
+DEBUG_GENERATE = True
 UPLOAD_VIDEO = (not DEBUG) or DEBUG_UPLOAD
 GENERATE_VIDEO = ((not DEBUG) and UPLOAD_VIDEO) or DEBUG_GENERATE
 
@@ -86,7 +89,7 @@ with open(v2_all_store, 'rb') as handle:
     v2_all = handle.read().decode('ascii', 'ignore')
     v2_all = json.loads(v2_all)
 
-processing_store = {'processed_pieces': [], 'processed_accompaniments': []}
+processing_store = {'processed_pieces': [], 'processed_accompaniments': [], 'accompaniments': {}}
 
 if os.path.exists(processing_store_file):
     with open(processing_store_file, 'r') as handle:
@@ -275,21 +278,32 @@ Download the App for free: {}
     print(video_description)
     print('Uploading video')
     # We upload the video here
-    subprocess.run(['python', './upload_video.py',
-                    '--title=' + str(video_title)+ '',
-                    '--description=' + str(video_description) + '',
-                    '--keywords=' + str(video_keywords) + '',
-                    '--category=' + str(video_category) + '',
-                    '--privacyStatus=' + video_privacy + '',
-                    '--file=' + video_file])
-
-    print('Done')
-if DEBUG:
-    sys.exit(0)
-
-print('Updating store')
-processing_store['processed_pieces'].append(piece_pk)
-processing_store['processed_accompaniments'].append(accomp_pk)
-
-with open(processing_store_file, 'w') as handle:
-    json.dump(processing_store, handle)
+    complete_process = subprocess.run(['python', './upload_video.py',
+                                       '--title=' + str(video_title)+ '',
+                                       '--description=' + str(video_description) + '',
+                                       '--keywords=' + str(video_keywords) + '',
+                                       '--category=' + str(video_category) + '',
+                                       '--privacyStatus=' + video_privacy + '',
+                                       '--file=' + video_file],
+                                      stdout=subprocess.PIPE)
+    if complete_process.returncode != 0:
+        print('Something went wrong during the upload')
+        sys.exit(1)
+    stdout = complete_process.stdout
+    match = re.match(b".*Video id '(.*)'.*.*", stdout.replace(b"\n", b" "))
+    if not match:
+        print('No video id could be found')
+        sys.exit(1)
+    groups = match.groups()
+    if not groups:
+        print('No video id could be found 2')
+        sys.exit(1)
+    video_id = groups[0].decode('ascii')
+    print('VIDEO ID:', video_id)
+    if not DEBUG:
+        print('Updating store')
+        processing_store['processed_pieces'].append(piece_pk)
+        processing_store['processed_accompaniments'].append(accomp_pk)
+        processing_store['accompaniments'][accomp_pk] = {"version": VIDEO_GENERATOR_VERSION, "video_id": video_id}
+        with open(processing_store_file, 'w') as handle:
+            json.dump(processing_store, handle)

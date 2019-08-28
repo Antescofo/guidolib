@@ -438,7 +438,12 @@ int main(int argc, char* argv[]) {
   // guidohttpd::guidosession::sDefaultScoreParameters.format = guidohttpd::GUIDO_WEB_API_SVG;
 
   std::stringstream guido;
-  MusicXML2::musicxmlfile2guido(musicxml_file.c_str(), false, guido);
+  std::ifstream ifs(musicxml_file.c_str());
+  std::string content_xml;
+  getline(ifs, content_xml, '\0');
+
+  MusicXML2::musicxmlstring2guidoOnPart(content_xml.c_str(), false, 1, guido);
+  // MusicXML2::musicxmlfile2guido(musicxml_file.c_str(), false, guido);
   std::string guidostr = guido.str();
   erase_tag(guidostr, "title");
   erase_tag(guidostr, "composer");
