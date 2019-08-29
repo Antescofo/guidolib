@@ -472,8 +472,7 @@ int main(int argc, char* argv[]) {
   std::ifstream ifs(musicxml_file.c_str());
   std::string content_xml;
   getline(ifs, content_xml, '\0');
-
-  MusicXML2::musicxmlstring2guidoOnPart(content_xml.c_str(), false, 1, guido);
+  MusicXML2::musicxmlstring2guidoOnPart(content_xml.c_str(), true, 1, guido);
   int transpo = extract_transpo(content_xml);
   std::cout << "TRANSPO:" << transpo << std::endl;
   int instru = extract_instrument(content_xml);
