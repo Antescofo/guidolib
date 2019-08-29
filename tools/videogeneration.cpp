@@ -616,9 +616,10 @@ int main(int argc, char* argv[]) {
     if (should_play) {
       if (it->event_type == 1)
         fluid_synth_noteon(synth, 1, midiPitch + transpo, 127);
-      else if (it->event_type == 2)
-        fluid_synth_noteoff(synth, 1, midiPitch + transpo);
     }
+    if (it->event_type == 2)
+      fluid_synth_noteoff(synth, 1, midiPitch + transpo);
+
     audio_nframe = target_audio_frame;
   }
 
