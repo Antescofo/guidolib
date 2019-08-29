@@ -135,6 +135,7 @@ extern const char* kFileStr;
 extern const char* kFillStr;
 extern const char* kFontStr;
 extern const char* kFormatStr;
+extern const char* kFreeStr;
 extern const char* kFSizeStr;
 extern const char* kGreenStr;
 extern const char* kGroupStr;
@@ -201,8 +202,10 @@ extern const char* kAutoStretchFirstLineStr;
 extern const char* kAutoInstrPosStr; 
 extern const char* kAutoLyricsPosStr;
 extern const char* kAutoIntensPosStr;
+extern const char* kHarmonyPosStr;
 extern const char* kFingeringPosStr;
 extern const char* kFingeringSizeStr;
+extern const char* kAutoHideTiedAccidentals;
 
 #endif
 

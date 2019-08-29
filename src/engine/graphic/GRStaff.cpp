@@ -687,7 +687,6 @@ void GRStaff::setNoteParameters(const GRNote * inNote)
 	const ARNote * arnote = inNote->getARNote();
 	const int tmppitch = arnote->getPitch() - NOTE_C;
 	const int acc = arnote->getAccidentals() - (int)mStaffState.instrKeyArray[tmppitch];
-//	mStaffState.MeasureAccidentals[tmppitch] = acc + arnote->getDetune();
 	mStaffState.fMeasureAccidentals.setAccidental(tmppitch, arnote->getOctave(), acc + arnote->getDetune());
 }
 
@@ -871,7 +870,7 @@ void GRStaff::checkSystemBar(const TYPE_TIMEPOSITION & pos)
 	GRSystemSlice * systemslice = getGRSystemSlice();
 	if (systemslice && systemslice->hasSystemBars()) {
 		GRBar* bar = systemslice->getBarAt(pos);
-		if (bar) {
+		if (bar && !bar->isFinishBar()) {
 			mStaffState.reset2key ();
 		}
 	}
@@ -959,12 +958,6 @@ void GRStaff::DebugPrintState(const char * info) const
 */
 void GRStaff::newMeasure(const TYPE_TIMEPOSITION & tp)
 {
-staff_debug("newMeasure");
-	if (mStaffState.meterset)
-	{
-		//mStaffState.nextmeasuretime = tp + mStaffState.measurelength;
-	}
-
 	// reset of accidentals
 	// quick-hack-implementation -> encode which accidentals are already set
 	// and which must be deleted in the next measure etc.
@@ -1256,8 +1249,6 @@ staff_debug("AddBar");
 	// depending on current bar Format, we have to tell the staffmanager (or the system) 
 	if (mStaffState.curbarfrmt && (mStaffState.curbarfrmt->getStyle() == ARBarFormat::kStyleSystem))
 		mGrSystemSlice->addBar(bar, mStaffState.curbarfrmt->getRanges(), this);
-	// change of  Measuretime ...
-	mStaffState.reset2key ();
 	addNotationElement(bar);
 	return bar;
 }

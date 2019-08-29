@@ -17,6 +17,29 @@
 
 #include "ARMTParameter.h"
 
+/*@mkdoc
+
+@group:Layout
+
+@tagname:\systemFormat
+@tagalias:
+@tagtype:P
+@tagnotation:sets the system format
+@tagdesc
+@tagend
+
+The **\systemFormat** tag is mainly used for indentation of the first system.
+
+@params:
+@param:dx:unit:set an horizontal offset to the first system:0hs:true
+@paramdesc
+Note: the **\systemFormat** tag supports common parameters but only dx has an effect.
+
+See the [Mozart](@EXAMPLES/mozart581/) example.
+@paramend
+
+*/
+
 /** \brief not yet documented
 */
 class ARSystemFormat : public ARMTParameter

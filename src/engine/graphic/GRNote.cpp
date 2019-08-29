@@ -13,6 +13,7 @@
 */
 
 #include "ARNote.h"
+#include "GRAccidental.h"
 #include "GRNote.h"
 #include "GRSingleNote.h"
 #include "GRStaff.h"
@@ -62,27 +63,25 @@ GRNote::~GRNote()
 	if (fOwnCluster) delete fCluster;
 }
 
-const ARNote * GRNote::getARNote() const
-{
-	return /*dynamic*/static_cast<const ARNote*>(getAbstractRepresentation());
-}
+const ARNote * GRNote::getARNote() const 	{ return static_cast<const ARNote*>(getAbstractRepresentation()); }
+bool GRNote::isSplit()						{ return (getARNote()->getRelativeTimePosition() != getRelativeTimePosition()); }
+void GRNote::setNoteFormat(const ARNoteFormat * frmt)	{}
 
-bool GRNote::isSplit()
+void GRNote::hideAccidentals()
 {
-	return (getARNote()->getRelativeTimePosition() != getRelativeTimePosition());
-}
-
-void GRNote::setNoteFormat(const ARNoteFormat * frmt)
-{
-
+	NEPointerList& sub = GetCompositeElements();
+	GuidoPos pos = sub.GetHeadPosition();
+	while (pos) {
+		GRNotationElement * el = sub.GetNext(pos);
+		GRAccidental* acc = dynamic_cast<GRAccidental*>(el);
+		if (acc && ! acc->isCautionary()) acc->setDrawOnOff (false);
+	}
 }
 
 /*
 	outAccidental will be negative if note has flats and positive if note has sharps
 */
-void GRNote::getPitchAndOctave( int * outPitch,
-								int * outOctave,
-								int * outAccidentals ) const
+void GRNote::getPitchAndOctave( int * outPitch, int * outOctave, int * outAccidentals ) const
 {
 	const ARNote * ar = getARNote();
 
@@ -92,8 +91,7 @@ void GRNote::getPitchAndOctave( int * outPitch,
 }
 
 // -----------------------------------------------------------------------------
-GDirection
-GRNote::getDefaultThroatDirection() const
+GDirection GRNote::getDefaultThroatDirection() const
 {
 	if( mGrStaff == 0 ) return dirOFF;
 
@@ -112,8 +110,7 @@ GRNote::getDefaultThroatDirection() const
 
 	on return: -1: downward, 1 : upward.
 */
-GDirection
-GRNote::getThroatDirection() const
+GDirection GRNote::getThroatDirection() const
 {
 	GDirection dir = getStemDirection();
 	if(( dir != dirUP ) && ( dir != dirDOWN ))

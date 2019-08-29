@@ -19,20 +19,25 @@
 
 using namespace std;
 
-
-ARTextHarmony::ARTextHarmony()
+ARTextHarmony::ARTextHarmony(int position)
 {
 	setupTagParameters (gMaps->sARTextHarmonyMap);
 	
 	relativeTimePosition = TYPE_TIMEPOSITION(-1,1);
     setDuration( DURATION_0 );
-    text                 = NULL;
     rangesetting         = RANGEDC;
+    fPosition = position;
 }
 
 void ARTextHarmony::setTagParameters (const TagParameterMap& params)
 {
 	ARFontAble::setTagParameters(params);
-	text		= getParameter<TagParameterString>(kTextStr);
+	fText		= getParameter<TagParameterString>(kTextStr);
+	const TagParameterString * pos = getParameter<TagParameterString>(kPositionStr);
+	if (pos) {
+		string posstr = pos->getValue();
+		if (posstr == kBelowStr) 		fPosition = kBelow;
+		else if (posstr == kAboveStr) 	fPosition = kAbove;
+	}
 }
 

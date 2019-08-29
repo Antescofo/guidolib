@@ -19,6 +19,36 @@
 
 #include "ARMTParameter.h"
 
+/*@mkdoc
+
+@group:Clef Key Meter
+
+@tagname:\key
+@tagalias:
+@tagtype:P
+@tagnotation:key signatures
+@tagdesc
+The **\key** tag displays a key signature specified as tonality or as a number of sharps or flats. It supports also arbitrary keys and micro-tonality.
+@tagend
+
+
+@params:
+@param:key:string\|integer:F, C, G, D, A, E, B, H or a signed integer<br />a free key string:*none*:false
+@param:hideNaturals:string:a boolean value to prevent naturals on key change:false:true
+@param:free:string:a free key string:*none*:true
+@paramdesc
+- when specified with a signed integer, positive values are for sharps and negative values for flat
+- F is equivalent to -1
+- C, G, D, A, E are respectively equivalent to 0, 1, 2, 3 and 4
+- B and H are equivalent to 5
+- a **free key** string is an arbitrary list of notes with accidentals separated by spaces. When not indicated, an accidental takes the previous value, Accidentals support micro-tonality using signed floating point numbers inside brackets. Example: "g#d&" denotes a key signature with a 'g' sharp and a 'd' flat; "f[0.5]c" denotes a key with a quarter tone sharp on 'f' and 'c'.
+
+See the [Key](@EXAMPLES/clefkeymeter/) example.
+@paramend
+
+*/
+
+
 /** \brief Key signature
 */
 class ARKey : public ARMTParameter

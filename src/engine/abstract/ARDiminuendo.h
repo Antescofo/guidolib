@@ -17,6 +17,25 @@
 
 #include "ARDynamic.h"
 
+/*@mkdoc
+
+@group:Dynamics
+
+@tagname:\decrescendo
+@tagalias:\decresc<br />\dimnuendo <br />\dim<br />\crescBegin \crescEnd<br />\diminuendoBegin \diminuendoEnd <br />\dimBegin \dimEnd
+@tagtype:R
+@tagnotation:crescendo sign
+@tagdesc
+@tagend
+
+@paramdesc
+Parameters for decrescendo are the same as for crescendo
+
+See the [Dynamics](@EXAMPLES/dynamics/) example.
+@paramend
+
+*/
+
 
 /** \brief not yet documented
 */

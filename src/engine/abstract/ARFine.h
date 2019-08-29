@@ -17,6 +17,22 @@
 #include "ARJump.h"
 #include "TimeUnwrap.h"
 
+/*@mkdoc
+
+@group:Repeat Signs
+
+@tagname:\fine
+@tagalias:
+@tagtype:P
+@tagnotation:Fine
+@tagdesc
+See the [Repeat Signs](@EXAMPLES/repeats/) example.<br/>
+See the [Brown](@EXAMPLES/brown/) example.
+@tagend
+
+*/
+
+
 /** \brief Fine
 */
 class ARFine : public ARJump

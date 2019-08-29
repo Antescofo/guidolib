@@ -19,6 +19,31 @@
 
 #include "ARMTParameter.h"
 
+/*@mkdoc
+
+@group:Barlines
+
+@tagname:\bar
+@tagalias:\|
+@tagtype:P
+@tagnotation:a simple bar line
+@tagdesc
+@tagend
+
+@params:
+@param:displayMeasNum:boolean:displays measure number:false:true
+@param:numDx:unit:measure number displacement:0:true
+@param:numDy:unit:measure number displacement:0:true
+@paramdesc
+Measure numbering is attached to barlines. The **displayMeasNum** parameter activates or inhibits measures numbering.
+
+Measure numbering may also be activated at [\meter](../ClefKeyMeter) level.
+
+See the [Barlines](@EXAMPLES/barlines/) example.
+@paramend
+
+*/
+
 /** \brief Bar tag
 */
 class ARBar : public ARMTParameter
@@ -36,11 +61,11 @@ class ARBar : public ARMTParameter
 
 		virtual void setTagParameters (const TagParameterMap& params);
 
-		void  setMeasureNumber(int inMeasureNumber)   { measureNumber = inMeasureNumber; }
-		int   getMeasureNumber()          const       { return measureNumber; }
-        int   getMeasureNumberDisplayed() const       { return measureNumberDisplayed; }
-        void  setMeasureNumberDisplayed(int mode)	  { measureNumberDisplayed = mode; }
-        bool  isMeasureNumberDisplayedSet() const     { return measureNumberDisplayedIsSet; }
+		void  setMeasureNumber(int inMeasureNumber)   { fMeasureNumber = inMeasureNumber; }
+		int   getMeasureNumber()          const       { return fMeasureNumber; }
+        int   getMeasureNumberDisplayed() const       { return fMeasureNumberDisplayed; }
+        void  setMeasureNumberDisplayed(int mode)	  { fMeasureNumberDisplayed = mode; }
+        bool  isMeasureNumberDisplayedSet() const     { return fMeasureNumberDisplayedIsSet; }
 
         bool isMeasureNumSkipped() const                       { return fSkippedMeasureNum; }
      
@@ -57,14 +82,14 @@ class ARBar : public ARMTParameter
   private:
 		TRanges	fRanges;
 
-		int   measureNumber;
-        int   measureNumberDisplayed;
+		int   fMeasureNumber;
+        int   fMeasureNumberDisplayed;
         bool  fSkippedMeasureNum;
 		float numDx;
 		float numDy;
 		const ARBar*	fLastBar;
 
-        bool measureNumberDisplayedIsSet;
+        bool fMeasureNumberDisplayedIsSet;
 };
 
 #endif

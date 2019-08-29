@@ -17,6 +17,29 @@
 
 #include "ARText.h"
 
+/*@mkdoc
+
+@group:Header
+
+@tagname:\title
+@tagalias:
+@tagtype:P
+@tagnotation:the score title
+@tagdesc
+@tagend
+
+The piece title is displayed centered on top of the first page.
+
+@params:
+@param:name:string:the title of the piece:*none*:false
+# @param:pageformat:string:a page format:c2:true ???
+@fontparams:
+@paramdesc
+See the [Mozart](@EXAMPLES/mozart581/) or [Fauré](@EXAMPLES/faure/) examples.
+@paramend
+
+*/
+
 /** \brief not yet documented
 */
 class ARTitle : public ARText

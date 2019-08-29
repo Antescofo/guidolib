@@ -19,6 +19,27 @@
 #include "ARMTParameter.h"
 #include "ARPositionTag.h"
 
+/*@mkdoc
+
+@group:Notes
+
+@tagname:\cluster
+@tagalias:
+@tagtype:R
+@tagnotation:transform 2 notes chords into clusters
+@tagdesc
+The **\cluster** should be applied to a 2 notes chord and transforms the corresponding range into a cluster
+@tagend
+
+@params:
+@param:hdx:unit:displacement relative to the chord:0hs:true
+@param:hdy:unit:displacement relative to the chord:0hs:true
+@paramdesc
+See the [notes](@EXAMPLES/notes/) example.
+@paramend
+
+*/
+
 class ARNote;
 
 /** \brief not yet documented

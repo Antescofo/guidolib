@@ -17,6 +17,21 @@
 
 #include "ARMTParameter.h"
 
+/*@mkdoc
+
+@group:Layout
+
+@tagname:\newLine
+@tagalias:\newSystem
+@tagtype:P
+@tagnotation:force a line break
+@tagdesc
+See the [notes](@EXAMPLES/notes/) example. <br />
+See the [Bartok](@EXAMPLES/bartok/) example.
+@tagend
+
+*/
+
 /** \brief not yet documented
 */
 

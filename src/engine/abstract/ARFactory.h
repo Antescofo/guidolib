@@ -169,7 +169,9 @@ protected:
 	bool				mAutoLyricsPos;
 	bool				mAutoInstrPos;
 	bool				mAutoIntensPos;
+	bool				mAutoHideTiedAccidentals;
 	ARAuto::position 	mFingeringPos;
+	ARAuto::position 	mHarmonyPos;
 	float				mFingeringSize;
 
     NVstring mFilePath;

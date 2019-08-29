@@ -70,13 +70,13 @@ help :
 	@echo "   tools        : build guido tools"	
 	@echo "   Qt           : build the Guido Qt library, applications and tools"	
 	@echo "   java         : build the jni and java libraries"	
-	@echo "   js           : build the javascript library (requires emscripten)"	
 	@echo "   wasm         : build the web assembly library (requires emscripten)"	
 	@echo "   ios          : build the GUIDOEngine static library for iOS"	
 	@echo "   android      : build the GUIDOEngine static library for Android"	
 	@echo "   install      : install the Guido library and public headers"
 	@echo "   uninstall    : undo what install did"
 	@echo "   localinstall : install the Guido tools to $$HOME/bin"
+	@echo "   tags         : extract the current tags list"
 	@echo 
 	@echo "Options:"
 	@echo "   BUILDDIR     : the output folder (currently $(BUILDDIR))"
@@ -92,10 +92,8 @@ help :
 #===============================================================
 # building the javascript engine
 #===============================================================
-js: emcc
-	$(MAKE) -C ../lang/javascript
 wasm: emcc
-	$(MAKE) -C ../lang/javascript WASM=yes
+	$(MAKE) -C ../lang/javascript
 
 emcc:
 	which emcc || echo emcc compiler must be available crom the command line
@@ -140,6 +138,12 @@ ios : iosdir/guidolib.xcodeproj
 iosdir/guidolib.xcodeproj:
 	@[ -d iosdir ] || mkdir iosdir
 	cd iosdir && cmake -DIOS=yes -DMIDIEXPORT=no .. -G Xcode
+
+#===============================================================
+# extract the current tags list
+#===============================================================
+tags:
+	grep "kTag" ../src/engine/abstract/Tags.cpp | cut -d'=' -f2 | sed -e 's/ *"\([^"]*\)";/\1/'
 
 #===============================================================
 # install targets

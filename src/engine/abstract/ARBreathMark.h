@@ -16,6 +16,21 @@
 
 #include "ARMTParameter.h"
 
+/*@mkdoc
+
+@group:Articulations
+
+@tagname:\breathMark
+@tagalias:
+@tagtype:P
+@tagnotation:a breath mark
+@tagdesc
+See the [Articulations](@EXAMPLES/articulations/) example.<br />
+See the [Lutkin](@EXAMPLES/lutkin/) example.
+@tagend
+
+*/
+
 /** \brief not yet documented
 */
 class ARBreathMark : public ARMTParameter
