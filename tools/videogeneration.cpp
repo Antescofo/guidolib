@@ -551,10 +551,9 @@ int main(int argc, char* argv[]) {
       // HERE COMPUTE MARGIN
       std::cout << "CURRENT PAGE:" << current_page << std::endl;
       float page_height = page_info.max_y - page_info.min_y;
-      guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.margintop = (height / 2.0 - page_height / 2.0);
-      std::cout << "MARGIN TOP:" << height - page_info.max_y << std::endl;
-      // guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.marginbottom = GuidoCM2Unit(2);
-      currentSession->updateGRH(guidohttpd::guidosession::sDefaultScoreParameters);
+      // guidohttpd::guidosession::sDefaultScoreParameters.guidoParameters.pageFormat.margintop = (height / 2.0 - page_height / 2.0);
+      // std::cout << "MARGIN TOP:" << height - page_info.max_y << std::endl;
+      // currentSession->updateGRH(guidohttpd::guidosession::sDefaultScoreParameters);
 
       main_desc = get_on_draw_desc(currentSession, scoreParameters);
       main_device = (CairoDevice*)main_desc->hdc;
