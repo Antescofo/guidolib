@@ -46,6 +46,7 @@ set (CMAKE_CXX_STANDARD 11)
 if(UNIX)
 	set (DEFS -DGCC)
 endif()
+# set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -ggdb -std=c++11 -fpermissive")
 
 #########################################
 # mac os specific part

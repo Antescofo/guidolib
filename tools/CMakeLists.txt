@@ -149,6 +149,8 @@ else()
   LINK_DIRECTORIES(${ROOT}/build/linux/)
 endif(APPLE)
 set(CMAKE_CXX_FLAGS "-O3 -fpermissive -std=c++11")
+# set(CMAKE_CXX_FLAGS "-g -ggdb -std=c++11 -fpermissive")
+
 add_executable(${target} ${LOCAL_CPP_SOURCES} ${REMOTE_CPP_SOURCES} ${SERVER_CPP_SOURCES} ${SERVER_C_SOURCES} ${CAIRO_CPP_SOURCES} ${JSON_CPP_SOURCES})
 add_executable(${target_audioselector} ${AUDIOSELECTOR_CPP_SOURCES})
 

@@ -60,3 +60,4 @@ tmpSrc
 validate/*.exe
 validate/GUIDOEngine.dll
 *.raw
+vgcore*
