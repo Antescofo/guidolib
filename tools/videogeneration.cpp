@@ -345,14 +345,12 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
 
   for (auto it = map_collector.begin(); it != map_collector.end(); ++it) {
     float bdate = to_float(it->date);
-    float duration_recording = 2;
 
     // update itrecording
     auto lnext = itrecording + 1;
-    float last = 0;
-    if (first || (bdate > to_float(*lnext->first))) {
+    if (first || (bdate >= to_float(*lnext->first))) {
       first = false;
-      while ((lnext != date_to_time.end()) && (bdate > to_float(*lnext->first))) {
+      while ((lnext != date_to_time.end()) && (bdate >= to_float(*lnext->first))) {
         ++itrecording;
         lnext = itrecording + 1;
       }
@@ -366,6 +364,8 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
       }
     }
     it->time = itrecording->second + (bdate - to_float(*itrecording->first)) / bps;
+    // it->time = lnext->second + (bdate - to_float(*lnext->first)) / bps;
+
   }
 }
 
@@ -517,7 +517,7 @@ int main(int argc, char* argv[]) {
   float sample_rate = 48000;
   float* lout = new float[(int)sample_rate * 180];
   fluid_synth_set_sample_rate(synth, sample_rate);
-  fluid_synth_set_gain(synth, 0.2);
+  fluid_synth_set_gain(synth, 0.25);
   loadsoundfont(synth);
   fluid_synth_program_change(synth, 1, instru - 1);
 
