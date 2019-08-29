@@ -40,7 +40,10 @@ RUN make -j 4 && make install
 
 COPY tools /app/tools
 WORKDIR /app/tools
-RUN make -j 4 && make install
+RUN cmake .
+RUN make -j 4
+RUN cp /app/tools/videogeneration /usr/bin/videogeneration
+RUN cp /app/tools/audioselector /usr/bin/audioselector
 
 RUN ln -s /app/tools/videogen.sh /usr/bin/videogen.sh
 RUN ln -s /app/tools/generate_video.py /usr/bin/generate_video

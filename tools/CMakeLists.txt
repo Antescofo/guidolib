@@ -1,19 +1,21 @@
 cmake_minimum_required (VERSION 2.6)
 project (videogeneration)
 set (target videogeneration)
+set (target_audioselector audioselector)
 
 # LibFindMacros
 include(LibFindMacros.cmake)
 
 set (ROOT  ${CMAKE_CURRENT_SOURCE_DIR}/..)
 set (GUIDO  ${ROOT}/src)
-
 FILE(GLOB SERVER_CPP_SOURCES ${ROOT}/server/*.cpp)
 
 list(REMOVE_ITEM SERVER_CPP_SOURCES "/app/tools/../server/main.cpp")
 FILE(GLOB SERVER_C_SOURCES   ${ROOT}/server/*.c)
 FILE(GLOB CAIRO_CPP_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/../platforms/linux/src/Cairo*.cpp)
 FILE(GLOB LOCAL_CPP_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/videogeneration.cpp)
+FILE(GLOB AUDIOSELECTOR_CPP_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/audioselector.cc)
+
 FILE(GLOB REMOTE_CPP_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/../platforms/linux/server/*.cpp)
 
 FILE(GLOB JSON_CPP_SOURCES   ${ROOT}/lang/javascript/src/json/*.cpp)
@@ -148,5 +150,6 @@ else()
 endif(APPLE)
 set(CMAKE_CXX_FLAGS "-O3 -fpermissive -std=c++11")
 add_executable(${target} ${LOCAL_CPP_SOURCES} ${REMOTE_CPP_SOURCES} ${SERVER_CPP_SOURCES} ${SERVER_C_SOURCES} ${CAIRO_CPP_SOURCES} ${JSON_CPP_SOURCES})
+add_executable(${target_audioselector} ${AUDIOSELECTOR_CPP_SOURCES})
 
 target_link_libraries(${target} ${LINK})

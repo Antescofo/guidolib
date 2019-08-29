@@ -376,6 +376,37 @@ int loadsoundfont(fluid_synth_t* synth)
 }
 
 
+std::string extract_tag(std::string& content_xml, std::string tag_name) {
+  int si_tag = tag_name.size();
+  size_t start_pos = content_xml.find("<" + tag_name + ">");
+  if(start_pos == std::string::npos)
+    return "none";
+  size_t end_pos = content_xml.find("</" + tag_name + ">");
+  if(end_pos == std::string::npos)
+    return "none";
+  int si_tag_with_chev = si_tag + 2;
+  int beg = start_pos + si_tag_with_chev;
+  std::string tag = content_xml.substr(beg, end_pos - beg);
+  return tag;
+}
+
+int extract_instrument(std::string& content_xml) {
+  auto tag = extract_tag(content_xml, "midi-program");
+  if (tag == "none")
+    return 1;
+  return std::atoi(tag.c_str());
+}
+
+int extract_transpo(std::string& content_xml) {
+  replace(content_xml, "\n", "");
+  auto tag = extract_tag(content_xml, "transpose");
+  if (tag == "none") return 0;
+  auto chromatic = extract_tag(tag, "chromatic");
+  if (chromatic == "none") return 0;
+  return std::atoi(chromatic.c_str());
+}
+
+
 int main(int argc, char* argv[]) {
   if (argc < 3) {
     cerr << "Usage: "
@@ -443,8 +474,13 @@ int main(int argc, char* argv[]) {
   getline(ifs, content_xml, '\0');
 
   MusicXML2::musicxmlstring2guidoOnPart(content_xml.c_str(), false, 1, guido);
+  int transpo = extract_transpo(content_xml);
+  std::cout << "TRANSPO:" << transpo << std::endl;
+  int instru = extract_instrument(content_xml);
+  std::cout << "INSTRU:" << instru << std::endl;
   // MusicXML2::musicxmlfile2guido(musicxml_file.c_str(), false, guido);
   std::string guidostr = guido.str();
+  erase_tag(guidostr, "instr");
   erase_tag(guidostr, "title");
   erase_tag(guidostr, "composer");
   std::string svg_font_file = "/app/src/guido2.svg";
@@ -484,18 +520,7 @@ int main(int argc, char* argv[]) {
   fluid_synth_set_sample_rate(synth, sample_rate);
   fluid_synth_set_gain(synth, 0.25);
   loadsoundfont(synth);
-
-  /*
-    FLUIDSYNTH_API int fluid_synth_write_float  (       fluid_synth_t *         synth,
-    int         len,
-    void *      lout,
-    int         loff,
-    int         lincr,
-    void *      rout,
-    int         roff,
-    int         rincr
-    )
-  */
+  fluid_synth_program_change(synth, 1, instru - 1);
 
   auto pFile = fopen("audio.raw", "wb");
 
@@ -590,9 +615,9 @@ int main(int argc, char* argv[]) {
     }
     if (should_play) {
       if (it->event_type == 1)
-        fluid_synth_noteon(synth, 1, midiPitch, 127);
+        fluid_synth_noteon(synth, 1, midiPitch + transpo, 127);
       else if (it->event_type == 2)
-        fluid_synth_noteoff(synth, 1, midiPitch);
+        fluid_synth_noteoff(synth, 1, midiPitch + transpo);
     }
     audio_nframe = target_audio_frame;
   }

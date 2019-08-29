@@ -6,4 +6,7 @@ build
 *.wav
 v2_all_store.json
 cached_*
-
+Makefile
+sizedebug
+videogeneration
+audioselector
