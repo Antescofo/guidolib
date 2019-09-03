@@ -12,9 +12,11 @@ VIDEO_GENERATOR_VERSION = 1
 SEMI_SUPERVISED = True
 DEBUG = True
 DEBUG_UPLOAD = True
-DEBUG_GENERATE = True
+DEBUG_GENERATE = False
 UPLOAD_VIDEO = (not DEBUG) or DEBUG_UPLOAD
 GENERATE_VIDEO = ((not DEBUG) and UPLOAD_VIDEO) or DEBUG_GENERATE
+
+BLACKLIST_PIECE_PK = [433]
 def info_to_branch_item(video_title, piece_id):
     item = {
           "type": 2,
@@ -128,6 +130,8 @@ else:
         if piece['pk'] in processing_store['processed_pieces']:
             continue
         if not piece['accompaniments']:
+            continue
+        if int(piece['pk']) in BLACKLIST_PIECE_PK:
             continue
         piece_pk = piece['pk']
         break
@@ -280,7 +284,7 @@ Download the App for free: {}
     print(video_description)
     print('Uploading video')
     # We upload the video here
-    complete_process = subprocess.run(['python', './upload_video.py',
+    complete_process = subprocess.run(['python3', './upload_video.py',
                                        '--title=' + str(video_title)+ '',
                                        '--description=' + str(video_description) + '',
                                        '--keywords=' + str(video_keywords) + '',

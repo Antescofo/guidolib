@@ -1,9 +1,11 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
 WORKDIR /
-RUN apt-get update && apt-get install -y git make g++ libcairo2-dev openjdk-8-jdk default-jdk cmake libmagick++-dev libmicrohttpd-dev libcurl4-openssl-dev libssl-dev valgrind ffmpeg fluid-soundfont-gm libfluidsynth-dev sox python3-pip python-pip
+RUN apt-get update && apt-get install -y git make g++ libcairo2-dev openjdk-8-jdk default-jdk cmake libmagick++-dev libmicrohttpd-dev libcurl4-openssl-dev libssl-dev valgrind ffmpeg fluid-soundfont-gm libfluidsynth-dev sox python3-pip
+RUN ln -s /usr/bin/pip3 /usr/bin/pip
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 
