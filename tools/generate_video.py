@@ -9,12 +9,12 @@ import requests
 
 VIDEO_GENERATOR_VERSION = 1
 
+SEMI_SUPERVISED = True
 DEBUG = True
 DEBUG_UPLOAD = True
 DEBUG_GENERATE = True
 UPLOAD_VIDEO = (not DEBUG) or DEBUG_UPLOAD
 GENERATE_VIDEO = ((not DEBUG) and UPLOAD_VIDEO) or DEBUG_GENERATE
-
 def info_to_branch_item(video_title, piece_id):
     item = {
           "type": 2,
@@ -226,6 +226,8 @@ if instruments_pk:
 video_keywords = ','.join(keywords)
 video_category = "10"  # Music, see https://gist.github.com/dgp/1b24bf2961521bd75d6c
 video_privacy = "public"
+if SEMI_SUPERVISED:
+    video_privacy = "unlisted"  # We Check the quality before putting it online
 if DEBUG:
     video_privacy = "unlisted"  # For testing only
 video_file = None
