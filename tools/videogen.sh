@@ -4,7 +4,7 @@ rm -f output* $4 *.raw *.wav merged.mp4 almost_done.mp4 final_audio.mp3
 
 echo -e "\n\e[32mGenerating Images with guidolib\e[39m\n" && videogeneration $1 $2 && \
     echo -e "\n\e[32mMerging images into video\e[39m\n" && ffmpeg -framerate 24 -i output%01d.png output.mp4 && \
-    echo -e "\n\e[32mAdding watermark on video\e[39m\n" && ffmpeg -i output.mp4 -i watermark_10a.png -filter_complex "overlay=0:0" output_watermarked.mp4 && \
+    echo -e "\n\e[32mAdding watermark on video\e[39m\n" && ffmpeg -i output.mp4 -i watermark_16a.png -filter_complex "overlay=0:0" output_watermarked.mp4 && \
     echo -e "\n\e[32mDeleting generated images\e[39m\n" && rm -f output*.png && \
     echo -e "\n\e[32mConverting raw audio midi solo to wav\e[39m\n" && sox -t f32 -r 48000 -c 1 audio.raw audio.wav && \
     echo -e "\n\e[32mMerging solo wav and accompaniment mp3\e[39m\n" && ffmpeg -i audio.wav -i $3 -filter_complex amix=inputs=2:duration=longest final_audio.mp3 && \

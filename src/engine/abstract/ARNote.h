@@ -101,12 +101,15 @@ class ARNote : public ARMusicalEvent
 		virtual bool			isEmptyNote() const		{ return getName() == "empty"; }
 		bool		isAuto() const						{ return fAuto; }
 
+                bool            isOriginTied() const { return fIsOriginTied; }
                 bool            isTied() const { return fIsTied; }
                 void            setTied(bool tied) { fIsTied = tied; }
+                void            setOriginTied(bool tied) { fIsOriginTied = tied; }
 
                 int             getIntensity() const { return fIntensity; }
 	private:
 		ARNoteName fName;
+                bool       fIsOriginTied = false;
                 bool       fIsTied = false;
 		int		   fPitch;
 		int		   fOctave;

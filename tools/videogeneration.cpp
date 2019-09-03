@@ -181,13 +181,17 @@ public:
       ninfos.voiceNum = infos.voiceNum;
       ninfos.midiPitch = infos.midiPitch;
       ninfos.isTied = infos.isTied;
+      ninfos.isOriginTied = infos.isOriginTied;
       ninfos.intensity = infos.intensity;
 
       if (ninfos.staffNum != 1) {
         ninfos.midiPitch = 0;
       }
       this->push_back(Element(box, dates.first, ninfos, this->page, 1)); // note on
-      this->push_back(Element(box, dates.second, ninfos, this->page, 2)); // note off
+      bool noteoff = ((!ninfos.isTied) || (!ninfos.isOriginTied));
+      if (noteoff) {
+        this->push_back(Element(box, dates.second, ninfos, this->page, 2)); // note off
+      }
     }
     else if (infos.type == kRest) {
       this->push_back(Element(box, dates.first, infos, this->page, 0));
@@ -614,6 +618,9 @@ int main(int argc, char* argv[]) {
     if (naudio_frame > 0) {
       fluid_synth_write_float(synth, naudio_frame, lout, 0, 1, lout, 0, 1);
       fwrite(lout, 1, naudio_frame * sizeof(float), pFile);
+    }
+    if ((it->event_type == 1) && (midiPitch > 0)) {
+      std::cout << "NOTEON " << midiPitch << " " << it->infos.isTied << std::endl;
     }
     if (should_play) {
       if (it->event_type == 1)

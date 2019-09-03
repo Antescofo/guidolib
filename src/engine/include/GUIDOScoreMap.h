@@ -52,6 +52,7 @@ typedef struct {
 	int			     voiceNum;	///< the element voice number or 0 when na
     int              midiPitch; ///< the element midi pitch, or -1 when na
   bool               isTied;
+  bool               isOriginTied;
     int intensity;
 } GuidoElementInfos;
 
