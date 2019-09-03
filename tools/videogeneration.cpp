@@ -321,6 +321,10 @@ bool sort_by_date(Element& a, Element& b)
 {
   float af = to_float(a.date);
   float bf = to_float(b.date);
+  if (abs(af - bf) < 0.00001) {
+    if (a.event_type == 2) return 1;
+    return 0;
+  }
   return (af < bf);
 }
 
