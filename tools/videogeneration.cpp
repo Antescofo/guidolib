@@ -619,9 +619,6 @@ int main(int argc, char* argv[]) {
       fluid_synth_write_float(synth, naudio_frame, lout, 0, 1, lout, 0, 1);
       fwrite(lout, 1, naudio_frame * sizeof(float), pFile);
     }
-    if ((it->event_type == 1) && (midiPitch > 0)) {
-      std::cout << "NOTEON " << midiPitch << " " << it->infos.isTied << std::endl;
-    }
     if (should_play) {
       if (it->event_type == 1)
         fluid_synth_noteon(synth, 1, midiPitch + transpo, 127);
