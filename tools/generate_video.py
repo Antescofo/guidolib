@@ -15,7 +15,7 @@ VIDEO_GENERATOR_VERSION = 1
 SEMI_SUPERVISED = True
 DEBUG = True
 DEBUG_UPLOAD = False
-DEBUG_GENERATE = False
+DEBUG_GENERATE = True
 UPLOAD_VIDEO = (not DEBUG) or DEBUG_UPLOAD
 GENERATE_VIDEO = ((not DEBUG) and UPLOAD_VIDEO) or DEBUG_GENERATE
 
@@ -92,7 +92,6 @@ if not os.path.exists(v2_all_store):
 v2_all = None
 with open(v2_all_store, 'r', encoding='utf-8') as handle:
     v2_all = json.load(handle)
-print(v2_all)
 
 processing_store = {'processed_pieces': [], 'processed_accompaniments': [], 'accompaniments': {}}
 

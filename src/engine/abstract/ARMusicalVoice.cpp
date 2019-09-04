@@ -4278,11 +4278,11 @@ void ARMusicalVoice::doAutoTies()
 					ARTieStruct * tiestruct = new ARTieStruct();
 					tiestruct->tie = tie;
 					tiestruct->curchordtag = vst.curchordtag;
-                    tiestruct->startnote = static_cast<ARNote *>(o->isARNote());
-                    if (tiestruct->startnote) {
-                      tiestruct->startnote->setOriginTied(true);
-                      tiestruct->startnote->setTied(true);
-                    }
+          tiestruct->startnote = static_cast<ARNote *>(o->isARNote());
+          if (tiestruct->startnote) {
+            tiestruct->startnote->setOriginTied(true);
+            tiestruct->startnote->setTied(true);
+          }
 					tiestructlist.AddTail(tiestruct);
 				}
 			}
@@ -4355,9 +4355,13 @@ void ARMusicalVoice::doAutoTies()
 					// this is needed so that the tie can remove this autotie when it is closed...
 					atstruct->origtie     = tiestruct->tie;
 					atstruct->curchordtag = vst.curchordtag;
-                    atstruct->startnote = static_cast<ARNote *>(o->isARNote());
-                    if (atstruct->startnote != NULL)
-                      atstruct->startnote->setTied(true);
+          atstruct->startnote = static_cast<ARNote *>(o->isARNote());
+          if (atstruct->startnote != NULL) {
+            if (atstruct->origtie == atstruct->tie) {
+              atstruct->startnote->setOriginTied(true);
+            }
+            atstruct->startnote->setTied(true);
+          }
 					autotiestructlist.AddTail(atstruct);
 				}
 			// check the first element...

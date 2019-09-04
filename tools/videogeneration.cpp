@@ -402,7 +402,18 @@ int extract_instrument(std::string& content_xml) {
   auto tag = extract_tag(content_xml, "midi-program");
   if (tag == "none")
     return 1;
-  return std::atoi(tag.c_str());
+  int ins = std::atoi(tag.c_str());
+  if (ins == 1) {
+    tag = extract_tag(content_xml, "instrument-sound");
+    if (tag == "none")
+      return 1;
+    if (tag.find("violin") != std::string::npos) return 41;
+    if (tag.find("flute") != std::string::npos) return 74;
+    if (tag.find("guitar") != std::string::npos) return 25;
+    if (tag.find("trumpet") != std::string::npos) return 57;
+    if (tag.find("clarinet") != std::string::npos) return 72;
+  }
+  return ins;
 }
 
 int extract_transpo(std::string& content_xml) {
@@ -531,6 +542,7 @@ int main(int argc, char* argv[]) {
 
   auto pFile = fopen("audio.raw", "wb");
 
+  std::map<int, bool> last_tieds;
   for (int npage = 1; npage <= pageCount; ++npage) {
     map_collector.page = npage;
     GuidoGetMap(gr, npage, width, height, kGuidoEvent, map_collector);
@@ -539,7 +551,6 @@ int main(int argc, char* argv[]) {
   interpolate(date_to_time, map_collector);
   int last_page = 0;
   int current_page = 1;
-  bool last_tied = false;
 
   // Loop to generate the video
   for (auto it = map_collector.begin(); it != map_collector.end(); ++it) {
@@ -609,12 +620,16 @@ int main(int argc, char* argv[]) {
     bool should_play = (midiPitch > 0);
     long target_audio_frame = round(it->time * sample_rate);
     long naudio_frame = target_audio_frame - audio_nframe;
+    bool last_tied = false;
 
-    if (it->infos.isTied && last_tied) {
-      should_play = false;
+    if (it->event_type == 1) {
+      if (last_tieds.count(midiPitch) > 0)
+        last_tied = last_tieds[midiPitch];
+      if (it->infos.isTied && last_tied) {
+        should_play = false;
+      }
+      last_tieds[midiPitch] = it->infos.isTied;
     }
-    if ((it->event_type == 1) && ((midiPitch > 0)))
-      last_tied = it->infos.isTied;
     if (naudio_frame > 0) {
       fluid_synth_write_float(synth, naudio_frame, lout, 0, 1, lout, 0, 1);
       fwrite(lout, 1, naudio_frame * sizeof(float), pFile);
