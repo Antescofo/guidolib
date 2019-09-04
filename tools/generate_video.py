@@ -1,5 +1,8 @@
 #! /usr/bin/python3
 
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import subprocess
 import re
 import sys
@@ -11,7 +14,7 @@ VIDEO_GENERATOR_VERSION = 1
 
 SEMI_SUPERVISED = True
 DEBUG = True
-DEBUG_UPLOAD = True
+DEBUG_UPLOAD = False
 DEBUG_GENERATE = False
 UPLOAD_VIDEO = (not DEBUG) or DEBUG_UPLOAD
 GENERATE_VIDEO = ((not DEBUG) and UPLOAD_VIDEO) or DEBUG_GENERATE
@@ -82,14 +85,14 @@ if not os.path.exists(v2_all_store):
     if r.status_code != 200:
         print('Error while fetching v2 all', r.status_code)
         sys.exit(1)
-    with open(v2_all_store, 'wb') as handle:
-        handle.write(r.text.encode('utf-8'))
+    with open(v2_all_store, 'w', encoding='utf-8') as handle:
+        handle.write(r.text)
 
 # Load local v2 all
 v2_all = None
-with open(v2_all_store, 'rb') as handle:
-    v2_all = handle.read().decode('ascii', 'ignore')
-    v2_all = json.loads(v2_all)
+with open(v2_all_store, 'r', encoding='utf-8') as handle:
+    v2_all = json.load(handle)
+print(v2_all)
 
 processing_store = {'processed_pieces': [], 'processed_accompaniments': [], 'accompaniments': {}}
 
@@ -154,16 +157,15 @@ cache_path = 'cached_piece_' + str(piece_pk) + '.json'
 piece_detail = None
 
 if os.path.exists(cache_path):
-    with open(cache_path, 'rb') as handle:
-        piece_detail = handle.read().decode('ascii', 'ignore')
-        piece_detail = json.loads(piece_detail)
+    with open(cache_path, 'r', encoding='utf-8') as handle:
+        piece_detail = json.load(handle)
 else:
     r = requests.get(url_api_piece + str(piece_pk), headers={'Authorization': b'Basic YXBwOm1ldHJvbmF1dDE5MjU='})
     if r.status_code != 200:
         print('Error while fetching piece', r.status_code)
         sys.exit(1)
-    with open(cache_path, 'wb') as handle:
-        handle.write(r.text.encode('utf-8'))
+    with open(cache_path, 'w', encoding='utf-8') as handle:
+        handle.write(r.text)
     piece_detail = r.json()
 
 if accomp_pk is None:
@@ -211,12 +213,11 @@ for author in v2_all['author']:
     if author['pk'] == author_pk:
         author_detail = author
         break
-
+print(author_detail['last_name'])
 piece_title = opus_detail['full_title']
 author_title = author_detail['first_name'] + ' ' + author_detail['last_name']
-
-video_title = str(author_title) + ' - ' + str(piece_title)
-keywords = [str(piece_title), str(author_title), 'sheet music', 'accompaniment', 'metronaut', 'antescofo', 'play along', 'app']
+video_title = author_title + ' - ' + piece_title
+keywords = [piece_title, author_title, 'sheet music', 'accompaniment', 'metronaut', 'antescofo', 'play along', 'app']
 
 instruments_pk = selected_accomp.get('instruments', [])
 if instruments_pk:
@@ -285,11 +286,11 @@ Download the App for free: {}
     print('Uploading video')
     # We upload the video here
     complete_process = subprocess.run(['python3', './upload_video.py',
-                                       '--title=' + str(video_title)+ '',
-                                       '--description=' + str(video_description) + '',
-                                       '--keywords=' + str(video_keywords) + '',
-                                       '--category=' + str(video_category) + '',
-                                       '--privacyStatus=' + video_privacy + '',
+                                       '--title=' + video_title,
+                                       '--description=' + video_description ,
+                                       '--keywords=' + video_keywords,
+                                       '--category=' + video_category,
+                                       '--privacyStatus=' + video_privacy,
                                        '--file=' + video_file],
                                       stdout=subprocess.PIPE)
     if complete_process.returncode != 0:

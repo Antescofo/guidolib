@@ -50,3 +50,4 @@ RUN cp /app/tools/audioselector /usr/bin/audioselector
 RUN ln -s /app/tools/videogen.sh /usr/bin/videogen.sh
 RUN ln -s /app/tools/generate_video.py /usr/bin/generate_video
 RUN ln -s /app/tools/upload_video.py /usr/bin/upload_video.py
+ENV LANG=C.UTF-8
