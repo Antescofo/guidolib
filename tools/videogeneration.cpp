@@ -459,13 +459,13 @@ int main(int argc, char* argv[]) {
   */
 
   layoutSettings.systemsDistance = 320;
-  layoutSettings.systemsDistribution = kAlwaysDistrib;
+  layoutSettings.systemsDistribution = kAutoDistrib;
   layoutSettings.systemsDistribLimit = 0.25;
   layoutSettings.force = 750;
-  layoutSettings.spring = 1.11;
+  layoutSettings.spring = 1.13;
   layoutSettings.neighborhoodSpacing = 0;
-  layoutSettings.optimalPageFill = 1;
-  layoutSettings.resizePage2Music = 1;
+  layoutSettings.optimalPageFill = 0;
+  layoutSettings.resizePage2Music = 0;
   layoutSettings.proportionalRenderingForceMultiplicator = 0;
   layoutSettings.checkLyricsCollisions = true;
 
