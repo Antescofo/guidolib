@@ -10,7 +10,7 @@ import os
 import json
 import requests
 
-VIDEO_GENERATOR_VERSION = 1
+VIDEO_GENERATOR_VERSION = 2
 
 SEMI_SUPERVISED = True
 DEBUG = True
