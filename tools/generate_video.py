@@ -139,13 +139,14 @@ else:
         break
 
 # We can remove this security later
-if piece_pk in processing_store['processed_pieces']:
-    print('Piece', piece_pk, 'is already processed')
-    sys.exit(1)
+if not DEBUG:
+  if piece_pk in processing_store['processed_pieces']:
+      print('Piece', piece_pk, 'is already processed')
+      sys.exit(1)
 
-if accomp_pk in processing_store['processed_accompaniments']:
-    print('Accompaniment', accomp_pk, 'is already processed')
-    sys.exit(1)
+  if accomp_pk in processing_store['processed_accompaniments']:
+      print('Accompaniment', accomp_pk, 'is already processed')
+      sys.exit(1)
 
 if not piece_pk:
     print('No piece_pk could be found. Abort')
@@ -175,10 +176,10 @@ if accomp_pk is None:
 if not accomp_pk:
     print('No accomp_pk could be found. Abort')
     sys.exit(1)
-
-if accomp_pk in processing_store['processed_accompaniments']:
-    print('Accompaniment', accomp_pk, 'is already processed')
-    sys.exit(1)
+if not DEBUG:
+  if accomp_pk in processing_store['processed_accompaniments']:
+      print('Accompaniment', accomp_pk, 'is already processed')
+      sys.exit(1)
 
 selected_accomp = None
 for accomp in piece_detail['accompaniments']:
@@ -212,8 +213,7 @@ for author in v2_all['author']:
     if author['pk'] == author_pk:
         author_detail = author
         break
-print(author_detail['last_name'])
-piece_title = opus_detail['full_title']
+piece_title = opus_detail['full_title'] + ' - ' + piece_detail['full_title']
 author_title = author_detail['first_name'] + ' ' + author_detail['last_name']
 video_title = author_title + ' - ' + piece_title
 keywords = [piece_title, author_title, 'sheet music', 'accompaniment', 'metronaut', 'antescofo', 'play along', 'app']
