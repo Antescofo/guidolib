@@ -12,14 +12,14 @@ import requests
 
 VIDEO_GENERATOR_VERSION = 2
 
-SEMI_SUPERVISED = True
+SEMI_SUPERVISED = False
 DEBUG = True
 DEBUG_UPLOAD = False
 DEBUG_GENERATE = True
 UPLOAD_VIDEO = (not DEBUG) or DEBUG_UPLOAD
 GENERATE_VIDEO = ((not DEBUG) and UPLOAD_VIDEO) or DEBUG_GENERATE
 
-BLACKLIST_PIECE_PK = [433]
+BLACKLIST_PIECE_PK = []
 def info_to_branch_item(video_title, piece_id):
     item = {
           "type": 2,
