@@ -356,7 +356,7 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
 
     // update itrecording
     auto lnext = itrecording + 1;
-    if (first || (bdate >= to_float(*lnext->first))) {
+    if (first || ((lnext != date_to_time.end()) && (bdate >= to_float(*lnext->first)))) {
       first = false;
       while ((lnext != date_to_time.end()) && (bdate >= to_float(*lnext->first))) {
         ++itrecording;
