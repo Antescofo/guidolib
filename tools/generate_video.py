@@ -18,6 +18,7 @@ DEBUG_UPLOAD = False
 DEBUG_GENERATE = True
 UPLOAD_VIDEO = (not DEBUG) or DEBUG_UPLOAD
 GENERATE_VIDEO = ((not DEBUG) and UPLOAD_VIDEO) or DEBUG_GENERATE
+# GENERATE_VIDEO = False
 
 BLACKLIST_PIECE_PK = []
 def info_to_branch_item(video_title, piece_id):
