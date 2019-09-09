@@ -184,9 +184,6 @@ public:
       ninfos.isOriginTied = infos.isOriginTied;
       ninfos.intensity = infos.intensity;
 
-      if (ninfos.staffNum != 1) {
-        ninfos.midiPitch = 0;
-      }
       this->push_back(Element(box, dates.first, ninfos, this->page, 1)); // note on
       bool noteoff = ((!ninfos.isTied) || (!ninfos.isOriginTied));
       if (noteoff) {
@@ -399,6 +396,7 @@ std::string extract_tag(std::string& content_xml, std::string tag_name) {
 }
 
 int extract_instrument(std::string& content_xml) {
+  // return 1;
   auto tag = extract_tag(content_xml, "midi-program");
   if (tag == "none")
     return 1;
