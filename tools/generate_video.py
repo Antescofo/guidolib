@@ -20,7 +20,9 @@ UPLOAD_VIDEO = (not DEBUG) or DEBUG_UPLOAD
 GENERATE_VIDEO = ((not DEBUG) and UPLOAD_VIDEO) or DEBUG_GENERATE
 # GENERATE_VIDEO = False
 
-BLACKLIST_PIECE_PK = []
+# This one are buggy, and should be fixed when i have time
+BLACKLIST_PIECE_PK = [478, 495, 498, 499, 500, 501, 502]
+
 def info_to_branch_item(video_title, piece_id):
     item = {
           "type": 2,
@@ -236,6 +238,8 @@ if SEMI_SUPERVISED:
 if DEBUG:
     video_privacy = "unlisted"  # For testing only
 video_file = None
+print('PIECE_PK:', piece_pk)
+print('ACCOMP_PK:', accomp_pk)
 print(video_title)
 print(video_keywords)
 
