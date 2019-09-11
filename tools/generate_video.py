@@ -18,10 +18,15 @@ DEBUG_UPLOAD = False
 DEBUG_GENERATE = True
 UPLOAD_VIDEO = (not DEBUG) or DEBUG_UPLOAD
 GENERATE_VIDEO = ((not DEBUG) and UPLOAD_VIDEO) or DEBUG_GENERATE
-# GENERATE_VIDEO = False
+
+if not DEBUG:
+    GENERATE_VIDEO = False
 
 # This one are buggy, and should be fixed when i have time
-BLACKLIST_PIECE_PK = [478, 495, 498, 499, 500, 501, 502]
+BLACKLIST_PIECE_PK = []
+BLACKLIST_PIECE_PK += [478]  # 2 staffs issue, missing highlight
+BLACKLIST_PIECE_PK += [495, 498, 499, 500, 501, 502, 521]  # too fast oO
+BLACKLIST_PIECE_PK += [543] # ugly?
 
 def info_to_branch_item(video_title, piece_id):
     item = {
@@ -274,7 +279,7 @@ if GENERATE_VIDEO:
 
 video_file = output_file
 if UPLOAD_VIDEO:
-    deep_link_url = generate_piece_link(piece_pk, video_title)
+    deep_link_url = generate_piece_link(video_title, piece_pk)
     print('generate piece link:', deep_link_url)
     website_link = "https://www.antescofo.com"
     facebook_link = "https://www.facebook.com/Metronautapp/"
