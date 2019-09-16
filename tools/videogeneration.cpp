@@ -411,6 +411,10 @@ int extract_instrument(std::string& content_xml) {
     if (tag.find("trumpet") != std::string::npos) return 57;
     if (tag.find("clarinet") != std::string::npos) return 72;
   }
+  // voices are ugly =)
+  if ((ins >= 53) && (ins <= 55)) {
+    return 1;
+  }
   return ins;
 }
 
