@@ -3,6 +3,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from datetime import datetime
 import subprocess
 import re
 import sys
@@ -86,6 +87,23 @@ data_folder = '/app/tools/'
 v2_all_store = os.path.join(data_folder, 'v2_all_store.json')
 processing_store_file = os.path.join(data_folder, 'processing_store.json')
 
+processing_store = {'processed_pieces': [], 'processed_accompaniments': [], 'accompaniments': {}}
+
+if os.path.exists(processing_store_file):
+    with open(processing_store_file, 'r') as handle:
+        processing_store = json.load(handle)
+
+last_reset = processing_store.get('last_reset')
+now = datetime.now()
+current_day = f'{now.year}-{now.month}-{now.day}'
+if last_reset != current_day:
+    print('Calling reset data of the day')
+    subprocess.run(['bash', './reset_data.sh'])
+    processing_store['last_reset'] = current_day
+    with open(processing_store_file, 'w') as handle:
+        json.dump(processing_store, handle)
+
+
 # We fetch v2 all if it doesnt already exists locally
 if not os.path.exists(v2_all_store):
     print('Fetching v2 all')
@@ -100,13 +118,6 @@ if not os.path.exists(v2_all_store):
 v2_all = None
 with open(v2_all_store, 'r', encoding='utf-8') as handle:
     v2_all = json.load(handle)
-
-processing_store = {'processed_pieces': [], 'processed_accompaniments': [], 'accompaniments': {}}
-
-if os.path.exists(processing_store_file):
-    with open(processing_store_file, 'r') as handle:
-        processing_store = json.load(handle)
-
 
 accomp_pk_to_piece_pk = {}
 piece_pk_to_accomp_pk = {}
@@ -134,18 +145,24 @@ if len(sys.argv) >= 2:
         print('No piece could be found for this accompaniment pk')
         sys.exit(1)
 else:
-    for piece in v2_all['piece']:
+    for piece in reversed(v2_all['piece']):
         if piece['status'] != 'Ready':
             continue
         if piece['pk'] in processing_store['processed_pieces']:
             continue
-        if not piece['accompaniments']:
-            continue
         if int(piece['pk']) in BLACKLIST_PIECE_PK:
             continue
-        piece_pk = piece['pk']
-        break
-
+        if not piece['accompaniments']:
+            continue
+        valid = False
+        for accomp in piece['accompaniments']:
+            if accomp.get('status') == 'Done':
+                valid = True
+                accomp_pk = accomp['pk']
+                break
+        if valid:
+            piece_pk = piece['pk']
+            break
 # We can remove this security later
 if not DEBUG:
   if piece_pk in processing_store['processed_pieces']:
@@ -178,6 +195,8 @@ else:
 
 if accomp_pk is None:
     for accomp in piece_detail['accompaniments']:
+        if accomp.get('status') != 'Done':
+            continue
         accomp_pk = accomp['pk']
         break
 
@@ -221,7 +240,11 @@ for author in v2_all['author']:
     if author['pk'] == author_pk:
         author_detail = author
         break
-piece_title = opus_detail['full_title'] + ' - ' + piece_detail['full_title']
+
+piece_title = opus_detail['full_title'].strip()
+piece_full_title = piece_detail['full_title'].strip()
+if piece_full_title:
+    piece_title += ' - ' + piece_full_title
 author_title = author_detail['first_name'] + ' ' + author_detail['last_name']
 video_title = author_title + ' - ' + piece_title
 keywords = [piece_title, author_title, 'sheet music', 'accompaniment', 'metronaut', 'antescofo', 'play along', 'app']
