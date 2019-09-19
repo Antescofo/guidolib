@@ -331,6 +331,7 @@ Download the App for free: {}
     stdout = complete_process.stdout
     match = re.match(b".*Video id '(.*)'.*.*", stdout.replace(b"\n", b" "))
     if not match:
+        print(stdout)
         print('No video id could be found')
         sys.exit(1)
     groups = match.groups()
