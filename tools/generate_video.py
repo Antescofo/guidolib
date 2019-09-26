@@ -255,9 +255,13 @@ if instruments_pk:
     for instrument_pk in instruments_pk:
         if (instrument_pk in instrument_map) and (instrument_map[instrument_pk].lower() not in video_title.lower()):
             instruments.append(instrument_map[instrument_pk])
+    last_video_title = video_title
     if instruments:
         keywords += instruments
         video_title = ', '.join(instruments) + ' - ' + video_title
+        if len(video_title) >= 100:
+            video_title = last_video_title
+video_title = video_title[:99]  # youtube limit the video title to 100 chars    
 video_keywords = ','.join(keywords)
 video_category = "10"  # Music, see https://gist.github.com/dgp/1b24bf2961521bd75d6c
 video_privacy = "public"
