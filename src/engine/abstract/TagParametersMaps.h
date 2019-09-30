@@ -29,6 +29,7 @@ typedef struct TagParametersMaps {
 	const TagParameterMap sARBarFormatMap;
 	const TagParameterMap sARBeamMap;
 	const TagParameterMap sARBembelMap;
+	const TagParameterMap sARBowMap;
 	const TagParameterMap sARBowingMap;
 	const TagParameterMap sARClefMap;
 	const TagParameterMap sARClusterMap;
@@ -43,14 +44,15 @@ typedef struct TagParametersMaps {
 	const TagParameterMap sARFermataMap;
 	const TagParameterMap sARFingeringMap;
 	const TagParameterMap sARFontAbleMap;
+	const TagParameterMap sARFooterMap;
 	const TagParameterMap sARGlissandoMap;
 	const TagParameterMap sARGraceMap;
+	const TagParameterMap sARHarmonyMap;
 	const TagParameterMap sARInstrumentMap;
 	const TagParameterMap sARIntensMap;
 	const TagParameterMap sARJumpMap;
 	const TagParameterMap sARKeyMap;
 	const TagParameterMap sARLyricsMap;
-	const TagParameterMap sARMarcatoMap;
 	const TagParameterMap sARMarkMap;
 	const TagParameterMap sARMeterMap;
 	const TagParameterMap sARMusicalTagMap;
@@ -68,7 +70,6 @@ typedef struct TagParametersMaps {
 	const TagParameterMap sARTStemMap;
 	const TagParameterMap sARTempoMap;
 	const TagParameterMap sARTextMap;
-	const TagParameterMap sARTextHarmonyMap;
 	const TagParameterMap sARTitleMap;
 	const TagParameterMap sARTremoloMap;
 	const TagParameterMap sARTrillMap;
@@ -88,6 +89,7 @@ typedef struct TagParametersMaps {
 			sARBarFormatMap (kARBarFormatParams),
 			sARBeamMap (kARBeamParams),
 			sARBembelMap (kARBembelParams),
+			sARBowMap (kARBowParams),
 			sARBowingMap (kARBowingParams),
 			sARClefMap (kARClefParams),
 			sARClusterMap (kARClusterParams),
@@ -102,14 +104,16 @@ typedef struct TagParametersMaps {
 			sARFermataMap (kARFermataParams),
 			sARFingeringMap (kARFingeringParams),
 			sARFontAbleMap (kARFontAbleParams),
+			sARFooterMap (kARFooterParams),
 			sARGlissandoMap (kARGlissandoParams),
 			sARGraceMap (kARGraceParams),
+			sARHarmonyMap (kARHarmonyParams),
 			sARInstrumentMap (kARInstrumentParams),
 			sARIntensMap (kARIntensParams),
 			sARJumpMap (kARJumpParams),
 			sARKeyMap (kARKeyParams),
 			sARLyricsMap (kARLyricsParams),
-			sARMarcatoMap (kARMarcatoParams),
+//			sARMarcatoMap (kARMarcatoParams),
 			sARMarkMap (kARMarkParams),
 			sARMeterMap (kARMeterParams),
 			sARMusicalTagMap (kCommonParams),
@@ -127,7 +131,6 @@ typedef struct TagParametersMaps {
 			sARTStemMap (kARTStemParams),
 			sARTempoMap (kARTempoParams),
 			sARTextMap (kARTextParams),
-			sARTextHarmonyMap (kARTextHarmonyParams),
 			sARTitleMap (kARTitleParams),
 			sARTremoloMap (kARTremoloParams),
 			sARTrillMap (kARTrillParams),

@@ -12,7 +12,7 @@ get_filename_component(ROOT ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
 
 #######################################
 # versions management
-set (VERSION 1.6.7)
+set (VERSION 1.6.8.0)
 macro (get_major_minor_patch version)
 	string( REGEX REPLACE "([0-9]*)\\.([0-9]*)\\.([0-9]*)" "\\1"  VERSION_MAJOR ${version} )
 	string( REGEX REPLACE "([0-9]*)\\.([0-9]*)\\.([0-9]*)" "\\2"  VERSION_MINOR ${version} )
@@ -296,6 +296,10 @@ install (
     FILES     ${PDF} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/guidolib/doc
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
 )
+install (
+    FILES     ${DOC}/readme.md DESTINATION ${CMAKE_INSTALL_PREFIX}/share/guidolib/doc
+    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+)
 
 ####################################
 # install guido font
@@ -303,6 +307,15 @@ file (GLOB PDF RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${DOC}/*.pdf  ${DOC}/refard/
 install (
     FILES     ${ROOT}/src/guido2.ttf  ${ROOT}/src/guido2.svg  DESTINATION ${CMAKE_INSTALL_PREFIX}/share/fonts/guido/guido2.ttf
     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+)
+
+####################################
+# install python interface
+set (PYTHON ${ROOT}/lang/python)
+install (
+    DIRECTORY ${PYTHON} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/guidolib
+    FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+    DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 )
 
 ####################################

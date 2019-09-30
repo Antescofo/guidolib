@@ -2,7 +2,18 @@ GUIDO Engine history
 
 
 ----------------------------------------------------------------
+  version 1.6.8
+- new \bow tag
+- Guido font extension - version 3.8 - bow up / down glyphs
+- fix svg export issue with '&' character
+- partial fix for incorrect slurs (issue #90)
+- autoHideTiedAccidentals global setting is now 'on' by default
+
+----------------------------------------------------------------
   version 1.6.7
+- \accel and \rit tags revised: support now format strings (as \tempo do)
+- new \footer tag
+- tempo support text parameters (issue #23)
 - new global setting (\auto) to hide accidentals on tied notes (issue #78)
 - correctly handle harmony string in harmony tag
 - add position attribute to harmony tag
