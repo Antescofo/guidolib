@@ -13,10 +13,13 @@
 */
 
 #include <iostream>
+#include <string.h>
 
+#include "GuidoDefs.h"	// for gGlobalSettings.gDevice
 #include "GUIDOInternal.h"	// for gGlobalSettings.gDevice
 #include "VGFont.h"
 #include "FontManager.h"
+#include "ARFontAble.h"
 
 using namespace std;
 
@@ -41,7 +44,6 @@ FontInfo::FontInfo( const VGFont * inFontRef, int size, const string& name, cons
 		mName = FontManager::kDefaultMusicFont;	
 	mAttrib = attributes;
 }
-//FontInfo::~FontInfo() {}
 FontInfo::~FontInfo() 	{ delete mFontRef; }
 
 
@@ -61,6 +63,40 @@ static FontManager gFontManager;
 // --------------------------------------------------------------------------
 FontManager::~FontManager()	{ ReleaseAllFonts(); }
 
+
+// --------------------------------------------------------------------------
+const VGFont * FontManager::GetTextFont( const ARFontAble* ar, float lspace, unsigned int& textalign)
+{
+	const VGFont * font = gFontText;
+	if (ar) {
+		int size = int(ar->getFSize() * lspace / LSPACE);
+		if (size == 0)
+			size = (int)(1.5f * lspace);
+		string name = ar->getFont();
+		const char* attr = ar->getTextAttributes();
+		const char* tf = ar->getTextFormat();
+		if (tf && (strlen(tf) == 2)) {
+			unsigned int align = 0;
+			switch (tf[0]) {
+				case 'l':	align = VGDevice::kAlignLeft; break;
+				case 'c':	align = VGDevice::kAlignCenter; break;
+				case 'r':	align = VGDevice::kAlignRight; break;
+			}
+
+			switch (tf[1]) {
+				case 't':	align += VGDevice::kAlignTop; break;
+				case 'c':	align += VGDevice::kAlignBase; break;
+				case 'b':	align += VGDevice::kAlignBottom; break;
+			}
+			textalign = align;
+		}
+		
+		font= FontManager::FindOrCreateFont( size, (name.empty() ? kDefaultTextFont : name).c_str(), attr );
+	}
+	return font;
+}
+
+
 // --------------------------------------------------------------------------
 // TODO: currently, only text fonts can have different attributes (bold, underline, italic).
 // Many text and musical fonts with different sizes can exists.
@@ -70,63 +106,45 @@ FontManager::~FontManager()	{ ReleaseAllFonts(); }
 /** \brief Looks for a font in the font list, and returns it. If the font does not exist, it 
 	is created and added to the font list.
 */
-const VGFont* FontManager::FindOrCreateFont(VGSystem* sys, int size, const string * name, const string * attributesStr )
+const VGFont* FontManager::FindOrCreateFont(VGSystem* sys, int size, const char* name, const char * attributes )
 {
 	// - First, we look if a similar font is already in our font list.
-	const char * fontNameCStr = name ? name->c_str() : kDefaultMusicFont.c_str();
-	const char * fontAttribCStr = attributesStr ? attributesStr->c_str() : "";
+	const char * fontName = name ? name : kDefaultMusicFont.c_str();
+	const char * fontAttributes = attributes ? attributes : "";
 	
 	// - First, we look if a similar font is already in our font list.
-	FontInfoList::const_iterator ptr;
-	for( ptr = sFontList.begin(); ptr != sFontList.end(); ++ ptr )
-	{
-		const FontInfo * infos = *ptr;
-		if( infos->Compare( size, fontNameCStr, fontAttribCStr ))
+	for( auto infos: sFontList ) {
+		if( infos->Compare( size, fontName, fontAttributes ))
 			return infos->mFontRef;
 	}
-	
+
 	// - The font does not exist, we create it.
-	int attributes = VGFont::kFontNone;
-	if( attributesStr ) {
-		if( attributesStr->find("b") != string::npos )	attributes |= VGFont::kFontBold;
-		if( attributesStr->find("i") != string::npos )	attributes |= VGFont::kFontItalic;
-		if( attributesStr->find("u") != string::npos )	attributes |= VGFont::kFontUnderline;
-	}
+	int attrib = VGFont::kFontNone;
+	string attStr (fontAttributes);
+	if( attStr.find("b") != string::npos )	attrib |= VGFont::kFontBold;
+	if( attStr.find("i") != string::npos )	attrib |= VGFont::kFontItalic;
+	if( attStr.find("u") != string::npos )	attrib |= VGFont::kFontUnderline;
 
 	const VGFont* fontRef = 0;
-	if (sys)
-		fontRef = sys->CreateVGFont( fontNameCStr, size, attributes );
-
-	if( fontRef )
-		sFontList.push_back( new FontInfo( fontRef, size, fontNameCStr, attributesStr ? *attributesStr : "" ) );
-	else
-		cerr << "Guido error: \"" <<  fontNameCStr << "\" font creation failed !" << endl;
+	if (sys) 		fontRef = sys->CreateVGFont( fontName, size, attrib );
+	if( fontRef ) 	sFontList.push_back( new FontInfo( fontRef, size, fontName, fontAttributes ) );
+	else 			cerr << "Guido error: \"" <<  fontName << "\" font creation failed !" << endl;
 	return fontRef;
 }
-// --------------------------------------------------------------------------
-// TODO: currently, only text fonts can have different attributes (bold, underline, italic).
-// Many text and musical fonts with different sizes can exists.
-// In the futur, we could have only one musical font at one size, and scale the context to
-// draw musical symbols at any size.
 
-/** \brief Looks for a font in the font list, and returns it. If the font does not exist, it 
+// --------------------------------------------------------------------------
+/** \brief Looks for a font in the font list, and returns it. If the font does not exist, it
 	is created and added to the font list.
 */
-#ifndef WIN32
-#warning("change the ugly FindOrCreateFont interface")
-#endif
-const VGFont* FontManager::FindOrCreateFont( int size, const string * name, const string * attributesStr )
+const VGFont* FontManager::FindOrCreateFont( int size, const char* name, const char* attributes )
 {
 	VGSystem * sys = 0;
 	if( gGlobalSettings.gDevice)
 		sys = gGlobalSettings.gDevice->getVGSystem();
-//cerr << "FontManager::FindOrCreateFont " << *name << " " << size << endl;
-	const VGFont* font = FindOrCreateFont (sys, size, name, attributesStr);
+	const VGFont* font = FindOrCreateFont (sys, size, name, attributes);
 	if (!font) {											// font not found
-		if (*name != kMusicFontStr) { //  && (*name != "guido2")) {	// if not the guido font
-			string deffont(kDefaultTextFont);				// try to use the default text font
-			font = FindOrCreateFont (sys, size, &deffont, attributesStr);
-		}
+		if (kMusicFontStr != name) 							// if not the music font
+			font = FindOrCreateFont (sys, size, kDefaultTextFont.c_str(), attributes);
 	}
 	return font;
 }
