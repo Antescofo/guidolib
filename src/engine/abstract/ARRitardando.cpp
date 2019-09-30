@@ -24,15 +24,6 @@ ARRitardando::ARRitardando()
 {
 	setupTagParameters (gMaps->sARRitardandoMap);
 	rangesetting = ONLY;
-    tempo    = 0;
-    abstempo = 0;
-}
-
-void ARRitardando::setTagParameters (const TagParameterMap& params)
-{
-	ARFontAble::setupTagParameters(params);
-	tempo = getParameter<TagParameterString>(kTempoStr, true);
-	abstempo = getParameter<TagParameterString>(kAbsTempoStr, true);
 }
 
 bool ARRitardando::MatchEndTag(const char *s)

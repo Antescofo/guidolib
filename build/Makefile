@@ -3,7 +3,7 @@
 #
 #
 
-VERSION = 1.6.6
+VERSION := $(shell cat ../version.txt)
 
 system	:= $(shell uname -s)
 # normalizes MINGW versions
@@ -39,7 +39,6 @@ basic : $(PROJ)
 all : $(PROJ)
 	$(MAKE) basic
 	$(MAKE) Qt
-	$(MAKE) js
 	$(MAKE) wasm
 	
 $(PROJ) : $(BUILDDIR)
@@ -140,6 +139,14 @@ iosdir/guidolib.xcodeproj:
 	cd iosdir && cmake -DIOS=yes -DMIDIEXPORT=no .. -G Xcode
 
 #===============================================================
+# build the embedded svg font
+#===============================================================
+guido2: ../src/engine/lib/guido2.cpp
+
+../src/engine/lib/guido2.cpp : ../src/guido2.svg
+	cd ../src && makecppfont guido2.svg > engine/lib/guido2.cpp
+
+#===============================================================
 # extract the current tags list
 #===============================================================
 tags:
@@ -165,7 +172,11 @@ localinstall:
 # packaging
 #===============================================================
 package: PACK:=GuidoLib-$(VERSION)
-package: 
+package: ../gmn-examples/examples
+	cd ../gmn-examples/examples && svn up
 	make install PREFIX=../$(PACK)
 	hdiutil create $(PACK).dmg -fs HFS+ -srcfolder $(PACK) -format UDBZ -ov
+	rm -rf
 
+../gmn-examples/examples:
+	cd ../gmn-examples && svn checkout https://github.com/grame-cncm/guidodoc/trunk/examples/mkdocs/examples

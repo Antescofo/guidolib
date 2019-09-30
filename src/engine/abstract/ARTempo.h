@@ -16,7 +16,7 @@
 */
 
 #include "ARMTParameter.h"
-//#include "ARFontAble.h"
+#include "ARFontAble.h"
 #include "FormatStringParser.h"
 
 /*@mkdoc
@@ -33,6 +33,7 @@
 @params:
 @param:tempo:string:a tempo string:*none*:false
 @param:bpm:string::*none*:true
+@fontparams:
 @paramdesc
 - **tempo** is an arbitrary string that may contain a marker for note duration in the form "[n/d]" where 'n' and 'd' are integers.
 The corresponding mark is decoded as a note duration and replaced with the corresponding note symbol. <br/>Example: "Andante [1/4] = 80"
@@ -68,7 +69,7 @@ See the [Lutkin](@EXAMPLES/lutkin/) example.
 	\\tempo<"Moderato [1/4]=120">
 
 */
-class ARTempo : public ARMTParameter //, public ARFontAble
+class ARTempo : /* public ARMTParameter, */ public ARFontAble
 {
 	public:
 				 ARTempo();
@@ -82,9 +83,6 @@ class ARTempo : public ARMTParameter //, public ARFontAble
 
 		//! Gives the tempo information strings vector.
 		const FormatStringParserResult& getTempoMark() const { return mTempoMark; }		
-
-		//! Converts a string in the form "a/b" into a duration
-		TYPE_DURATION getDuration (const char * str) const;
 	
 		//! Tells if the optional bpm informations have been specified.
 		bool hasBpmInfos() const { return mHasBpmInfos; }
@@ -117,8 +115,11 @@ class ARTempo : public ARMTParameter //, public ARFontAble
 		virtual void browse(TimeUnwrap& mapper) const;
 		virtual ARTempo	*isARTempo()		  { return this; }
 
+	//! Converts a string in the form "a/b" into a duration
+	static TYPE_DURATION string2Duration (const char * str);
+
 	private:
-		void		ParseBpm(const TagParameterString * inTag );
+		void		ParseBpm(const char* str );
 
 		FormatStringParserResult	mTempoMark;
 

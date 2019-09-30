@@ -15,10 +15,11 @@
 
 */
 
-#include "ARFontAble.h"
-#include "ARPositionTag.h"
+//#include "ARFontAble.h"
+//#include "ARPositionTag.h"
+#include "TempoChange.h"
 
-class TagParameterString;
+//class TagParameterString;
 
 /*@mkdoc
 
@@ -29,19 +30,28 @@ class TagParameterString;
 @tagtype:R
 @tagnotation:ritardando marks
 @tagdesc
-Supports the same parameters and the same note than [\accelerando](#accelerando)
+Works similarly to [\accelerando](#accelerando)
+@tagend
+
+@params:
+@param:before:string:a string placed before 'accel.':*none*:true
+@param:after:string:a string placed after the accel range:*none*:true
+@param:dx2:unit:displacement of the right anchor point:0:true
+@fontparams:
+@paramdesc
+- **before** and **after** ara arbitrary strings that may contain a marker for note duration in the form "[n/d]" where 'n' and 'd' are integers.
+The corresponding mark is decoded as a note duration and replaced with the corresponding note symbol. <br/>Example: *before="[1/4] = 80"*
 
 See the [Tempo](@EXAMPLES/tempo/) example. <br />
 See the [Lutkin](@EXAMPLES/lutkin/) example.
-@tagend
+@paramend
 
 */
 
 /** \brief Ritardando tag
 */
-
-class ARRitardando : public ARFontAble,  public ARPositionTag
-{		
+class ARRitardando : public TempoChange
+{
 	public:			
 
 		virtual bool MatchEndTag(const char * s);
@@ -49,18 +59,9 @@ class ARRitardando : public ARFontAble,  public ARPositionTag
 						 ARRitardando();
 		virtual 		~ARRitardando() {}
 
-		virtual void setTagParameters (const TagParameterMap& params);
-
 		virtual const char*	getParamsStr() const	{ return kARRitardandoParams; };
 		virtual const char*	getTagName() const		{ return "ARRitardando"; };
 		virtual std::string getGMNName() const		{ return "\\ritardando"; };
-
-		const TagParameterString * getTempo() const       { return tempo; }
-		const TagParameterString * getAbsTempo() const    { return abstempo; }
-
-	protected:
-		const TagParameterString *tempo;
-		const TagParameterString *abstempo;
 };
 
 #endif

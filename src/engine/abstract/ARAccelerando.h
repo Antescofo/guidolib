@@ -1,5 +1,4 @@
-#ifndef ARAccelerando_H
-#define ARAccelerando_H
+#pragma once
 
 /*
   GUIDO Library
@@ -16,13 +15,7 @@
 */
 
 
-#include "ARFontAble.h"
-#include "ARPositionTag.h"
-#include "TagParameterStrings.h"
-#include "TagParameterString.h"
-#include "TagParameterFloat.h"
-
-class TagParameterString;
+#include "TempoChange.h"
 
 /*@mkdoc
 
@@ -36,14 +29,13 @@ class TagParameterString;
 @tagend
 
 @params:
-@param:tempo:string:the tempo at the beginning:*none*:true
-@param:abstempo:string:the tempo at the end:*none*:true
+@param:before:string:a string placed before 'accel.':*none*:true
+@param:after:string:a string placed after the accel range:*none*:true
+@param:dx2:unit:displacement of the right anchor point:0:true
 @fontparams:
 @paramdesc
-- **tempo** and **abstempo** are intended to be tempo values. A quarter note is inserted before these strings.
-
-**Note**: the implementation of the parameters is not satisfactory, in particular because the value of the time unit is hard coded.
-It will be revised in the future to integrate the encoding of the time unit into the tempo string.
+- **before** and **after** ara arbitrary strings that may contain a marker for note duration in the form "[n/d]" where 'n' and 'd' are integers.
+The corresponding mark is decoded as a note duration and replaced with the corresponding note symbol. <br/>Example: *before="[1/4] = 80"*
 
 See the [Tempo](@EXAMPLES/tempo/) example.
 @paramend
@@ -52,8 +44,9 @@ See the [Tempo](@EXAMPLES/tempo/) example.
 
 /** \brief The Accelerando position tag
 */
-class ARAccelerando :  public ARFontAble,  public ARPositionTag
-{		
+//class ARAccelerando :  public ARFontAble,  public ARPositionTag
+class ARAccelerando :  public TempoChange
+{
 	public:			
 
 		virtual bool MatchEndTag(const char * s);
@@ -65,8 +58,4 @@ class ARAccelerando :  public ARFontAble,  public ARPositionTag
 		virtual const char*	getTagName () const		{ return "ARAccelerando"; };
 		virtual std::string getGMNName () const		{ return "\\accelerando"; };
 
-		const TagParameterString * getTempo() const      { return getParameter<TagParameterString>(kTempoStr, true); }
-		const TagParameterString * getAbsTempo() const   { return getParameter<TagParameterString>(kAbsTempoStr, true);}
 };
-
-#endif
