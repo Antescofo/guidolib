@@ -28,6 +28,7 @@ BLACKLIST_PIECE_PK = []
 BLACKLIST_PIECE_PK += [478]  # 2 staffs issue, missing highlight
 BLACKLIST_PIECE_PK += [495, 498, 499, 500, 501, 502, 521]  # too fast oO
 BLACKLIST_PIECE_PK += [543] # ugly?
+BLACKLIST_PIECE_PK += [1544] # hella long
 
 def info_to_branch_item(video_title, piece_id):
     item = {
