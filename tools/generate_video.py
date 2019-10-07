@@ -165,14 +165,10 @@ else:
             piece_pk = piece['pk']
             break
 # We can remove this security later
-if not DEBUG:
-  if piece_pk in processing_store['processed_pieces']:
-      print('Piece', piece_pk, 'is already processed')
-      sys.exit(1)
-
-  if accomp_pk in processing_store['processed_accompaniments']:
-      print('Accompaniment', accomp_pk, 'is already processed')
-      sys.exit(1)
+if accomp_pk in processing_store['processed_accompaniments']:
+  print('Accompaniment', accomp_pk, 'is already processed')
+  print(processing_store['accompaniments'][str(accomp_pk)])
+  sys.exit(1)
 
 if not piece_pk:
     print('No piece_pk could be found. Abort')
