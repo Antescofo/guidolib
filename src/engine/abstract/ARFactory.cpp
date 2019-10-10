@@ -30,6 +30,7 @@
 #include "ARBarFormat.h"
 #include "ARBeam.h"
 #include "ARBeamState.h"
+#include "ARBow.h"
 #include "ARBreathMark.h"
 #include "ARChordTag.h"
 #include "ARClef.h"
@@ -55,6 +56,7 @@
 #include "ARFine.h"
 #include "ARFingering.h"
 #include "ARFinishBar.h"
+#include "ARFooter.h"
 #include "ARGlissando.h"
 #include "ARGrace.h"
 #include "ARHarmonic.h"
@@ -99,7 +101,7 @@
 #include "ARTempo.h"
 #include "ARTenuto.h"
 #include "ARText.h"
-#include "ARTextHarmony.h"
+#include "ARHarmony.h"
 #include "ARTHead.h"
 #include "ARTie.h"
 #include "ARTitle.h"
@@ -146,7 +148,7 @@ ARFactory::ARFactory()
 	mAutoLyricsPos(false),
 	mAutoInstrPos(false),
 	mAutoIntensPos(false),
-	mAutoHideTiedAccidentals(false),
+	mAutoHideTiedAccidentals(true),
 	mFingeringPos(ARAuto::kDefault),
 	mHarmonyPos(ARAuto::kDefault),
 	mFingeringSize(0),
@@ -245,7 +247,7 @@ void ARFactory::createVoice()
 	mAutoLyricsPos = false;
 	mAutoInstrPos = false;
 	mAutoIntensPos= false;
-	mAutoHideTiedAccidentals = false;
+	mAutoHideTiedAccidentals = true;
 	mFingeringPos = ARAuto::kDefault;
 	mHarmonyPos = ARAuto::kDefault;
 	mFingeringSize = 0;
@@ -755,11 +757,17 @@ void ARFactory::createTag( const char * name, int no )
 				mTags.AddHead(tmp);
 				mCurrentVoice->AddTail(tmp);
 			}
-			else if(!strcmp(name, kTagBreathMark ))	
+			else if(!strcmp(name, kTagBreathMark ))
 			{
 				ARBreathMark * tmp = new ARBreathMark;
 				mTags.AddHead(tmp);
 				mCurrentVoice->AddTail(tmp);
+			}
+			else if(!strcmp(name, kTagBow ))
+			{
+				ARBow * tmp = new ARBow() ;
+				mTags.AddHead(tmp);
+				mCurrentVoice->AddPositionTag(tmp);
 			}
 			break;
 
@@ -985,7 +993,12 @@ void ARFactory::createTag( const char * name, int no )
 				mCurrentVoice->setPositionTagEndPos(no, tmp);
 				mTags.AddHead(tmp);
 			}
-			break;
+			else if(!strcmp(name, kTagFooter ))
+			{
+				ARFooter * tmp = new ARFooter;
+				mTags.AddHead(tmp);
+				mCurrentVoice->AddTail(tmp);
+			}
 
 		case 'g':
 			if (!strcmp(name, kTagGrace ))
@@ -1044,7 +1057,7 @@ void ARFactory::createTag( const char * name, int no )
 				mCurrentVoice->AddPositionTag(tmp);
 			}
             if (!strcmp(name,  kTagHarmony )) {
-                ARTextHarmony * tmp = new ARTextHarmony(mHarmonyPos);
+                ARHarmony * tmp = new ARHarmony(mHarmonyPos);
                 mTags.AddHead(tmp);
                 mCurrentVoice->AddPositionTag(tmp);
             }
@@ -1569,7 +1582,6 @@ void ARFactory::createTag( const char * name, int no )
 				ARTitle * tmp = new ARTitle;
 				mTags.AddHead(tmp);
 				mCurrentVoice->AddTail(tmp);
-				
 			}
 			break;
 		

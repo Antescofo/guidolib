@@ -15,8 +15,6 @@
 #include <typeinfo>
 #include <iostream>
 
-#include "TagList.h"
-#include "TagParameterFloat.h"
 
 #include "ARAccelerando.h"
 #include "ARAccent.h"
@@ -28,6 +26,7 @@
 #include "ARBarFormat.h"
 #include "ARBase.h"
 #include "ARBeam.h"
+#include "ARBow.h"
 #include "ARBreathMark.h"
 #include "ARChordComma.h"
 #include "ARChordTag.h"
@@ -52,6 +51,7 @@
 #include "ARFine.h"
 #include "ARFingering.h"
 #include "ARFinishBar.h"
+#include "ARFooter.h"
 #include "ARGlissando.h"
 #include "ARGrace.h"
 #include "ARHarmonic.h"
@@ -95,7 +95,7 @@
 #include "ARSystemFormat.h"
 #include "ARTempo.h"
 #include "ARTenuto.h"
-#include "ARTextHarmony.h"
+#include "ARHarmony.h"
 #include "ARTHead.h"
 #include "ARTie.h"
 #include "ARTitle.h"
@@ -107,10 +107,11 @@
 #include "ARUserChordTag.h"
 #include "ARVolta.h"
 
+#include "TagList.h"
+#include "TagParameterFloat.h"
 
-#include "GRAccelerando.h"
-#include "GRArticulation.h"
 #include "GRArpeggio.h"
+#include "GRArticulation.h"
 #include "GRAutoBeam.h"
 #include "GRBar.h"
 #include "GRBeam.h"
@@ -126,8 +127,8 @@
 #include "GRDrRenz.h"
 #include "GRDummy.h"
 #include "GREmpty.h"
-#include "GRFinishBar.h"
 #include "GRFingering.h"
+#include "GRFinishBar.h"
 #include "GRGlissando.h"
 #include "GRGlobalLocation.h"
 #include "GRGlobalStem.h"
@@ -147,7 +148,6 @@
 #include "GRRepeatBegin.h"
 #include "GRRepeatEnd.h"
 #include "GRRest.h"
-#include "GRRitardando.h"
 #include "GRSegno.h"
 #include "GRSimpleBeam.h"
 #include "GRSingleNote.h"
@@ -163,16 +163,16 @@
 #include "GRSystemTag.h"
 #include "GRTag.h"
 #include "GRTempo.h"
+#include "GRTempoChange.h"
 #include "GRText.h"
-#include "GRTextHarmony.h"
+#include "GRHarmony.h"
 #include "GRTie.h"
 #include "GRTremolo.h"
 #include "GRTrill.h"
 #include "GRTuplet.h"
+#include "GRVoiceManager.h"
 #include "GRVolta.h"
 
-
-#include "GRVoiceManager.h"
 
 using namespace std;
 
@@ -912,10 +912,10 @@ GRNotationElement * GRVoiceManager::parseTag(ARMusicalObject * arOfCompleteObjec
 		fMusic->addVoiceElement(arVoice,grtxt);
 		grne = grtxt;
 	}
-    else if (tinf == typeid(ARTextHarmony))
+    else if (tinf == typeid(ARHarmony))
     {
         // this is a No-Range Text-Tag...
-        GRTextHarmony * grtxt = new GRTextHarmony(mCurGrStaff, static_cast<const ARTextHarmony *>(arOfCompleteObject));
+        GRHarmony * grtxt = new GRHarmony(mCurGrStaff, static_cast<const ARHarmony *>(arOfCompleteObject));
 
         grtxt->setNeedsSpring(1);	// needs a Spring
         mCurGrStaff->AddTag(grtxt);
@@ -951,12 +951,12 @@ GRNotationElement * GRVoiceManager::parseTag(ARMusicalObject * arOfCompleteObjec
 	else if (tinf == typeid(ARFermata))
 	{
 		// This is a singular Fermata...  it should appear inbetween the current events...
-		// Create a fermata that is spaced correctly...		
+		// Create a fermata that is spaced correctly...
 		GRArticulation * grarti = new GRArticulation(mytag, LSPACE);
 		grarti->setNeedsSpring(1);
 		mCurGrStaff->addNotationElement(grarti);
 		fMusic->addVoiceElement(arVoice,grarti);
-		grne = grarti;		
+		grne = grarti;
 	}
 	// Space-Tag
 	else if (tinf == typeid(ARSpace))
@@ -1061,22 +1061,18 @@ GRNotationElement * GRVoiceManager::parseTag(ARMusicalObject * arOfCompleteObjec
 	else if (tinf == typeid(ARTitle))
 	{
 		ARTitle * artitle = static_cast<ARTitle *>(arOfCompleteObject);
-		grne = new GRPageText (artitle, NULL, artitle->getName(), artitle->getPageFormat(), artitle->getTextFormat(),
-			artitle->getFont(), (int)artitle->getFSize(), artitle->getTextAttributes());
+		grne = new GRPageText (artitle, NULL, artitle->getName(), artitle->getPageFormat());
 	}
 	else if (tinf == typeid(ARComposer))
 	{
 		ARComposer * arcomp = static_cast<ARComposer *>(arOfCompleteObject);
-		GRPageText * tmp = new GRPageText(
-			arcomp,
-			NULL,
-			arcomp->getName(),
-			arcomp->getPageFormat(),
-			arcomp->getTextFormat(),
-			arcomp->getFont(),
-			(int)arcomp->getFSize(),
-			arcomp->getTextAttributes());
-
+		GRPageText * tmp = new GRPageText (arcomp, NULL, arcomp->getName(), arcomp->getPageFormat());
+		grne = tmp;
+	}
+	else if (tinf == typeid(ARFooter))
+	{
+		ARFooter * footer = static_cast<ARFooter *>(arOfCompleteObject);
+		GRPageText * tmp = new GRPageText (footer, NULL, footer->getName(), footer->getPageFormat());
 		grne = tmp;
 	}
 	else if (tinf == typeid(AROctava))
@@ -1402,14 +1398,6 @@ void GRVoiceManager::parsePositionTag (ARPositionTag *apt)
 		mCurGrStaff->AddTag(range);
 		fMusic->addVoiceElement(arVoice,range);
 	}
-	/*else if (tinf == typeid(ARShortFermata))
-	{
-		// this is a short fermata position tag, when it is active every event gets a short fermata tag.
-		GRRange * range = new GRRange(mCurGrStaff, static_cast<ARShortFermata *>(apt));
-		addGRTag(range);
-		mCurGrStaff->AddTag(range);
-		fMusic->addVoiceElement(arVoice,range);
-	}*/
 	else if (tinf == typeid(ARTremolo))
 	{
 		GRTremolo * tmp = new GRTremolo(mCurGrStaff, static_cast<const ARTremolo *>(apt));
@@ -1419,14 +1407,14 @@ void GRVoiceManager::parsePositionTag (ARPositionTag *apt)
 	}
 	else if (tinf == typeid(ARRitardando))
 	{
-		GRRitardando * tmp = new GRRitardando(mCurGrStaff, static_cast<const ARRitardando *>(apt));
+		GRTempoChange * tmp = new GRTempoChange(mCurGrStaff, static_cast<const ARAccelerando *>(apt), "rit.");
 		addGRTag(tmp);
 		mCurGrStaff->AddTag(tmp);
 		fMusic->addVoiceElement(arVoice,tmp);
 	}
 	else if (tinf == typeid(ARAccelerando))
 	{
-		GRAccelerando * tmp = new GRAccelerando(mCurGrStaff, static_cast<const ARAccelerando *>(apt));
+		GRTempoChange * tmp = new GRTempoChange(mCurGrStaff, static_cast<const ARAccelerando *>(apt), "accel.");
 		addGRTag(tmp);
 		mCurGrStaff->AddTag(tmp);
 		fMusic->addVoiceElement(arVoice,tmp);
@@ -1465,6 +1453,13 @@ void GRVoiceManager::parsePositionTag (ARPositionTag *apt)
 	else if (tinf == typeid(ARMarcato))
 	{
 		GRRange * range = new GRRange(mCurGrStaff, static_cast<const ARMarcato *>(apt));
+		addGRTag(range);
+		mCurGrStaff->AddTag(range);
+		fMusic->addVoiceElement(arVoice,range);
+	}
+	else if (tinf == typeid(ARBow))
+	{
+		GRRange * range = new GRRange(mCurGrStaff, static_cast<const ARBow *>(apt));
 		addGRTag(range);
 		mCurGrStaff->AddTag(range);
 		fMusic->addVoiceElement(arVoice,range);

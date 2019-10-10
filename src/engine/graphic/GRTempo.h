@@ -40,11 +40,20 @@ class GRTempo : public GRTagARNotationElement
 	private:
 		TYPE_TIMEPOSITION fDate;
 
-		TYPE_DURATION getDuration (const char * str) const;
-		float	DrawNote( VGDevice & hdc, const TYPE_DURATION & noteDur, float xOffset, float yOffset ) const;
-		void	DrawText( VGDevice & hdc,  const char * cp, float xOffset, float yOffset, float * outWidth = 0 ) const;
+		float	DrawText( VGDevice & hdc,  const char * cp, float xOffset, float yOffset) const;
+	
+		float 			getXPos		() const;
+		float 			getYAlign	(float fsize) const;
+		float 			getXAlign	() const;
+	
+		const VGFont* fFont = 0;
+		const VGFont* fMusicFont = 0;
+		std::string   fFormat;
+		float   	  fNoteScale = 1.f;		// used to scale the note according to the font size
+		float   	  fYAlign = 0.f;		// used as note Y offset acording to text vertical align
+		float   	  fXAlign = 0.f;		// used as note X offset acording to text horizontal align
 
-		static const VGFont* mFont;
+		unsigned int  fTextAlign;
 };
 
 #endif

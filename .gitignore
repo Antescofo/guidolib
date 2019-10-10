@@ -62,3 +62,4 @@ validate/GUIDOEngine.dll
 *.raw
 vgcore*
 GuidoEditor
+gmn-examples/examples/

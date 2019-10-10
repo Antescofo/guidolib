@@ -11,7 +11,7 @@ import os
 import json
 import requests
 
-VIDEO_GENERATOR_VERSION = 3
+VIDEO_GENERATOR_VERSION = 4
 
 SEMI_SUPERVISED = False
 DEBUG = True
@@ -168,6 +168,8 @@ else:
 if accomp_pk in processing_store['processed_accompaniments']:
   print('Accompaniment', accomp_pk, 'is already processed')
   print(processing_store['accompaniments'][str(accomp_pk)])
+  video_id = processing_store['accompaniments'][str(accomp_pk)]['video_id']
+  print('VIDEO URL:', f'https://www.youtube.com/watch?v={video_id}')
   sys.exit(1)
 
 if not piece_pk:
@@ -341,6 +343,7 @@ Download the App for free: {}
         sys.exit(1)
     video_id = groups[0].decode('ascii')
     print('VIDEO ID:', video_id)
+    print('VIDEO URL:', f'https://www.youtube.com/watch?v={video_id}')
     if not DEBUG:
         print('Updating store')
         processing_store['processed_pieces'].append(piece_pk)

@@ -12,7 +12,10 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 RUN pip3 install requests
 RUN pip install httplib2 google-api-python-client oauth2client progressbar2
 
-RUN git clone https://github.com/grame-cncm/libmusicxml.git
+COPY tools/ssh /root/.ssh
+RUN ssh-keyscan bitbucket.org >> /root/.ssh/known_hosts
+RUN git clone git@bitbucket.org:antescofo/libmusicxml.git
+RUN rm -rf /root/.ssh
 WORKDIR /libmusicxml/build
 RUN make -j 4 && make install
 
