@@ -630,7 +630,7 @@ int main(int argc, char* argv[]) {
       if (it->infos.isTied && last_tied) {
         should_play = false;
       }
-      last_tieds[midiPitch] = it->infos.isTied;
+      last_tieds[midiPitch] = it->infos.isTied && it->infos.isOriginTied;
     }
     if (naudio_frame > 0) {
       fluid_synth_write_float(synth, naudio_frame, lout, 0, 1, lout, 0, 1);
