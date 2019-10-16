@@ -11,7 +11,7 @@ import os
 import json
 import requests
 
-VIDEO_GENERATOR_VERSION = 4
+VIDEO_GENERATOR_VERSION = 5
 
 SEMI_SUPERVISED = False
 DEBUG = True
@@ -260,7 +260,7 @@ if instruments_pk:
         video_title = ', '.join(instruments) + ' - ' + video_title
         if len(video_title) >= 100:
             video_title = last_video_title
-video_title = video_title[:99]  # youtube limit the video title to 100 chars    
+video_title = video_title[:99]  # youtube limit the video title to 100 chars
 video_keywords = ','.join(keywords)
 video_category = "10"  # Music, see https://gist.github.com/dgp/1b24bf2961521bd75d6c
 video_privacy = "public"
@@ -297,7 +297,7 @@ if GENERATE_VIDEO:
         os.remove(output_file)
     except:
         pass
-    subprocess.run(['videogen.sh', musicxml_file, asco_file, mp3_file, output_file])
+    subprocess.run(['videogen.sh', musicxml_file, asco_file, mp3_file, str(100 * selected_accomp.get('transposition', 0)), output_file])
     if not os.path.exists(output_file):
         print('Error generating video')
         sys.exit(1)
