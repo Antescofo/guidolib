@@ -13,6 +13,7 @@ RUN pip3 install requests
 RUN pip install httplib2 google-api-python-client oauth2client progressbar2
 
 COPY tools/ssh /root/.ssh
+RUN chmod 600 /root/.ssh/id_rsa
 RUN ssh-keyscan bitbucket.org >> /root/.ssh/known_hosts
 RUN git clone git@bitbucket.org:antescofo/libmusicxml.git
 RUN rm -rf /root/.ssh
