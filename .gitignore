@@ -27,6 +27,7 @@ Debug-iphoneos
 DerivedData
 doc/doxygen/guidolib-*
 doc/html
+doc/doxygen/html
 doc/refcard
 doc/refcard/latex/*.gz
 doc/server/build
