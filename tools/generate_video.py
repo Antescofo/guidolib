@@ -14,14 +14,14 @@ import requests
 VIDEO_GENERATOR_VERSION = 5
 
 SEMI_SUPERVISED = False
-DEBUG = True
+DEBUG = False
 DEBUG_UPLOAD = False
 DEBUG_GENERATE = True
 UPLOAD_VIDEO = (not DEBUG) or DEBUG_UPLOAD
 GENERATE_VIDEO = ((not DEBUG) and UPLOAD_VIDEO) or DEBUG_GENERATE
 
-if not DEBUG:
-    GENERATE_VIDEO = False
+# if not DEBUG:
+#    GENERATE_VIDEO = False
 
 # This one are buggy, and should be fixed when i have time
 BLACKLIST_PIECE_PK = []
