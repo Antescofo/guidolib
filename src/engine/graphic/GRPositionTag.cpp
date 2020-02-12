@@ -132,9 +132,9 @@ void GRPositionTag::ResumeTag(GRStaff * grstaff,GuidoPos assocpos)
 	GRSaveStruct * st = getNewGRSaveStruct();
 	sse->p = (void *) st;
 
-	mStartEndList.AddTail(sse);
+	addSystemStartEndStruct (sse);
 
-	if (error)
+	if (getError())
 	{
 		setStartElement(grstaff,NULL);
 		setEndElement(grstaff,NULL);
@@ -160,7 +160,7 @@ void GRPositionTag::BreakTag(GRStaff * grstaff, GuidoPos & assocpos)
 	GRSystemStartEndStruct * sse = getSystemStartEndStruct(grstaff->getGRSystem());
 	assert(sse);
 
-	if (error)
+	if (getError())
 	{
 		setStartElement(grstaff,NULL);
 		setEndElement(grstaff,NULL);
@@ -224,7 +224,7 @@ void GRPositionTag::StaffFinished(GRStaff * grstaff)
 
 	assert(sse);
 
-	if (error)
+	if (getError())
 	{
 		setStartElement(grstaff,NULL);
 		setEndElement(grstaff,NULL);
@@ -280,9 +280,9 @@ void GRPositionTag::StaffBegin(GRStaff *grstaff)
 	sse->endElement = lastendElement;
 	sse->endpos = lastendpos;
 	
-	mStartEndList.AddTail(sse);
+	addSystemStartEndStruct (sse);
 
-	if(error)
+	if(getError())
 	{
 		setStartElement(grstaff,NULL);
 		setEndElement(grstaff,NULL);
@@ -299,7 +299,7 @@ void GRPositionTag::RangeEnd(GRStaff * grstaff)
 
 	GRSystemStartEndStruct * sse = getSystemStartEndStruct(grstaff->getGRSystem());
 	assert(sse);
-	if (error)
+	if (getError())
 	{
 		setStartElement(grstaff,NULL);
 		setEndElement(grstaff,NULL);
@@ -342,7 +342,7 @@ void GRPositionTag::setStartElement(const GRStaff * grstaff,
 		sse->startElement->removeAssociation(el);
 	}
 
-	if (!error)
+	if (!getError())
 	{
 		sse->startElement = n_element;
 		if (sse->startElement)
@@ -370,7 +370,7 @@ void GRPositionTag::setEndElement(const GRStaff * grstaff,
 		sse->endElement->removeAssociation(el);
 	}
 
-	if (!error)
+	if (!getError())
 	{
 		sse->endElement = n_element;
 		if (sse->endElement)
@@ -384,7 +384,7 @@ void GRPositionTag::setEndElement(const GRStaff * grstaff,
 
 void GRPositionTag::addAssociation(GRNotationElement * grnot)
 {
-	if (error) return;
+	if (getError()) return;
 
 	const GRStaff * pstaff = grnot->getGRStaff();
 	assert(pstaff);

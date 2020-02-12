@@ -49,7 +49,7 @@ GRDynamics::GRDynamics(GRStaff * grstaff, const ARDynamic* ar) : GRPTagARNotatio
 
 	sse->startflag = GRSystemStartEndStruct::LEFTMOST;
 	sse->endflag = GRSystemStartEndStruct::RIGHTMOST;
-	mStartEndList.AddTail(sse);
+	addSystemStartEndStruct (sse);
 		
 	fThickness = 1.f;
 //	fMarkingSymbol = 0;
@@ -124,13 +124,13 @@ void GRDynamics::tellPosition(GObject *caller, const NVPoint & newPosition)
 //---------------------------------------------------------------------------------
 void GRDynamics::addAssociation(GRNotationElement * grnot)
 {
-	if (error) return;
+	if (getError()) return;
 
 	if ( GREvent::cast(grnot)  && (grnot->isGRNote() || grnot->isRest() || grnot->isEmpty()))
 	  	GRARNotationElement::addAssociation(grnot);
 	else setError(1);
 
-	if (!error)
+	if (!getError())
 		GRPositionTag::addAssociation(grnot);
 }
 
