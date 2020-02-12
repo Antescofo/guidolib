@@ -15,7 +15,10 @@ RUN pip install httplib2 google-api-python-client oauth2client progressbar2
 COPY tools/ssh /root/.ssh
 RUN chmod 600 /root/.ssh/id_rsa
 RUN ssh-keyscan bitbucket.org >> /root/.ssh/known_hosts
+RUN echo checking out fc7bd88170477b9ffc13a5fee902ea68dc8406e5
 RUN git clone git@bitbucket.org:antescofo/libmusicxml.git
+WORKDIR /libmusicxml
+RUN git checkout antescofo-develop
 RUN rm -rf /root/.ssh
 WORKDIR /libmusicxml/build
 RUN make -j 4 && make install
