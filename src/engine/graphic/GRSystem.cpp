@@ -42,7 +42,6 @@
 #include "ARSystemFormat.h"
 #include "ARMusicalVoice.h"	// for template instanciation
 #include "ARMusic.h"
-#include "ARStaff.h"
 #include "TagParameterFloat.h"
 #include "TagParameterString.h"
 #include "TagParameterInt.h"
@@ -52,6 +51,7 @@
 #include "GRBar.h"
 #include "GRBeam.h"
 #include "GRBowing.h"
+#include "GRFingering.h"
 #include "GRGlue.h"
 #include "GRKey.h"
 #include "GRMusic.h"
@@ -102,9 +102,9 @@ void GRFixVisitor::visitStart (GRSingleNote* note)
 	if (assoc) {
 		GuidoPos pos = assoc->GetHeadPosition();
 		while(pos) {
-			GRNotationElement * el = assoc->GetNext(pos);
-			if (el->isGRFingering())
-				el->tellPosition (note, note->getPosition());
+			GRFingering * el = assoc->GetNext(pos)->isGRFingering();
+			if (el)
+				el->tellPositionEnd (note, note->getPosition());
 		}
 	}
 }
