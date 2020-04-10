@@ -132,6 +132,15 @@ GUIDOAPI GuidoErrCode GuidoAR2MIDIFile( const ARHandler ar, const char* filename
 	return guidoErrActionFailed;
 }
 
+// ==========================================================================
+GUIDOAPI GuidoErrCode GuidoAR2MIDI( const ARHandler ar, ostream& out, const Guido2MidiParams* params )
+{
+	if( ar == 0 )		return guidoErrInvalidHandle;
+
+	std::cerr << "GuidoAR2MIDI: stream support not yet implemented." << std::endl;
+	return guidoErrActionFailed;
+}
+
 #else
 
 // ==========================================================================
