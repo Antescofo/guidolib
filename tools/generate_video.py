@@ -75,6 +75,7 @@ def download_file(url, output=None):
     if os.path.exists(output):
         print('Already existing file', output)
         return output
+    print('try getting url:', url)
     r = requests.get(url)
     assert r.status_code == 200, 'Error getting file'
     with open(output, 'wb') as handle:
