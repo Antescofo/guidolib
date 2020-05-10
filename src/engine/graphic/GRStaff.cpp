@@ -109,7 +109,7 @@ int gd_noteName2pc(const char *name);
 #endif
 #define trace1Method(method)		cout << (void*)this << " GRStaff::" << method << endl
 
-//#define EXTENDEDBB
+#define EXTENDEDBB
 
 // ===========================================================================
 //		MeasureAccidentals
@@ -1967,7 +1967,7 @@ void GRStaff::updateBoundingBox()
             tmp = e->getBoundingBox();
             p = getPosition();
             p.y = 0;
-            tmp += e->getPosition() - p;
+            tmp += e->getPosition() + e->getOffset() - p;
             r.Merge (tmp);
         }
     }
@@ -2107,7 +2107,6 @@ void GRStaff::OnDraw( VGDevice & hdc ) const
 
 	if (gBoundingBoxesMap & kStavesBB)
 		DrawBoundingBox(hdc, kStaffBBColor);
-//cerr << "GRStaff::OnDraw bb: " << mBoundingBox << endl;
 }
 
 // ----------------------------------------------------------------------------

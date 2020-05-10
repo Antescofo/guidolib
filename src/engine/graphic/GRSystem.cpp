@@ -460,6 +460,14 @@ void GRSystem::patchTempoIssue()
 	while (pos) {
 		GRNotationElement* elt = sub.GetNext(pos);
 		if (elt->isGRTempo()) {
+            // BoundingBox Extention
+            NVRect tmp;
+            tmp = elt->getBoundingBox() + elt->getPosition() + elt->getOffset();
+            if (mBoundingBox.top > tmp.top)
+                    mBoundingBox.top = tmp.top;
+            if (mBoundingBox.bottom < tmp.bottom)
+                    mBoundingBox.bottom = tmp.bottom;
+            // GRTempo Position Correction
 			float x = elt->getPosition().x;
 			const GRStaff* staff = getStaff(1);
 			if (staff) {
@@ -1010,10 +1018,10 @@ void GRSystem::FinishSystem()
     }
 	setDuration (duration);
 	mBoundingBox.Merge (r);
+    patchTempoIssue ();
 	// bounding box and position should now be ready
 	mMapping = mBoundingBox;				// set the mapping box
 	mMapping += mPosition + getOffset()	;	// and adjust position
-	patchTempoIssue ();
 //	fixTellPositionOrder();
 }
 
