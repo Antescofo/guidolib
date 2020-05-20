@@ -3,7 +3,9 @@ GUIDO Engine history
 
 ----------------------------------------------------------------
   version 1.6.9
+- implement circle with marks
 - new interface to change piano roll voices color, based on html names
+- fix infinite loop issue in the context of small page width
 
 ----------------------------------------------------------------
   version 1.6.8
