@@ -38,6 +38,8 @@ class GROctava : public GRARNotationElement, public GRPositionTag
 		virtual void OnDraw( VGDevice & hdc ) const;
 		virtual void setColRef(const TagParameterString *tps);
 		virtual bool DeleteStaff(GRStaff * grstaff);
+        virtual const GROctava *    isGROctava() const      { return this; }
+
 	
 	private:
 		int		countSegments();
