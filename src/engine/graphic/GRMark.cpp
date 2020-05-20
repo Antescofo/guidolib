@@ -89,7 +89,7 @@ void GRMark::toCircle (const FloatRect& r, VGDevice & hdc) const
 {
 	float w = std::min(r.Width(), r.Height());
 	float inset = 15;
-	hdc.FrameEllipse(r.left + w/2, r.top + w/2, w-inset, w-inset);
+	hdc.FrameEllipse(r.left + w/2, r.top + w/2, w+inset, w+inset);
 }
 
 //----------------------------------------------------------------
