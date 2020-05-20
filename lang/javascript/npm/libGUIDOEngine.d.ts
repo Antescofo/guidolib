@@ -95,9 +95,9 @@ interface GuidoEngineAdapter {
 	freeAR      (ar: ARHandler): void;
 	freeGR      (gr: GRHandler): void;
     
-    getParsingTime  (): number;
-    getAR2GRTime    (): number;
-    getOnDrawTime   (): number;
+    getParsingTime  (ar: ARHandler): number;
+    getAR2GRTime    (gr: GRHandler): number;
+    getOnDrawTime   (gr: GRHandler): number;
 
     getErrorString              (errCode: GuidoErrCode): string;	
 	getDefaultLayoutSettings    (): GuidoLayoutSettings; 
@@ -317,4 +317,24 @@ interface GUIDOPianoRollAdapter {
     onDraw          (pr: PianoRoll, width: number, height: number, dev: VGDevice): GuidoErrCode;
 	svgExport       (pr: PianoRoll, width: number, height: number): string;
     javascriptExport(pr: PianoRoll, width: number, height: number): GuidoErrCode;
+}
+
+interface ReducedProportional {}
+
+interface GUIDOReducedProportionalAdapter {
+	constructor: GUIDOReducedProportionalAdapter;
+		
+    ar2RProportional    (arh: ARHandler): ReducedProportional;
+    destroyRProportional(rp: ReducedProportional): GuidoErrCode;
+    
+    drawDurationLines       (rp: ReducedProportional, status: boolean): GuidoErrCode;
+    enableAutoVoicesColoration  (rp: ReducedProportional, enabled: boolean): GuidoErrCode;
+    setRGBColorToVoice          (rp: ReducedProportional, voiceNum: number, r: number, g: number, b: number, a: number): GuidoErrCode;
+    setHtmlColorToVoice         (rp: ReducedProportional, voiceNum: number, color: string): GuidoErrCode;
+    removeColorToVoice          (rp: ReducedProportional, voiceNum: number): GuidoErrCode;
+    enableMeasureBars           (rp: ReducedProportional, enabled: boolean): GuidoErrCode;
+    setLimits       (rp: ReducedProportional, start: GuidoDate, end: GuidoDate, lowpitch: number, highpitch: number): GuidoErrCode;
+
+    svgExport       (rp: ReducedProportional, width: number, height: number): string;
+    javascriptExport(rp: ReducedProportional, width: number, height: number): GuidoErrCode;
 }
