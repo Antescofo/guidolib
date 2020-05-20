@@ -141,12 +141,29 @@ bool GRPage::addSystem( GRSystem * inSystem, float * ioUsedSystemDistance )
 			*ioUsedSystemDistance = -1;
 		}
 		else {
-			newPos.y = lastSystem->getPosition().y + lastSystem->getBoundingBox().bottom;
+            // AC: make systemDistance a factor between the "middle" (baseline) of staves instead of BB (2020/05)
+//            cerr<<"addSystem this System height="<<newSystemBox.Height();
+//            auto firstStaffIndex = lastSystem->getStaves()->GetMinimum();
+//            auto firstStaff = inSystem->lastSlice()->getStaves()->Get(firstStaffIndex);
+//            cerr<<" 1st Staff height:"<<firstStaff->getBoundingBox().Height()<< " posy="<<firstStaff->getPosition().y;
+//            auto lastStaffIndex = lastSystem->getStaves()->GetMaximum();
+//            auto lastPrevStaff = lastSystem->lastSlice()->getStaves()->Get(lastStaffIndex);
+//            cerr<<"\n\t lastSystemHeight="<<lastSystem->getBoundingBox().Height() <<" prevStaff:"<<lastStaffIndex;
+//            auto lastPrevStaffBB = lastPrevStaff->getBoundingBox();
+//            cerr<<" height="<<lastPrevStaffBB.Height()<<" posY="<<lastPrevStaff->getPosition().y;
+//            cerr<<endl;
+
+            float heightFromBBs = lastSystem->getBoundingBox().bottom - newSystemBox.top + 300;  // 200 = 4*LSPACE
+            float heightToAdd = ( heightFromBBs > settings.systemsDistance ? heightFromBBs : settings.systemsDistance);
+            newPos.y = lastSystem->getPosition().y + heightToAdd;
+			
+            /// Older positioning based on BBs
+            //newPos.y = lastSystem->getPosition().y + lastSystem->getBoundingBox().bottom;
 			// this should be handled by "springs" as well... and there should be a "minimum" distance...
-			newPos.y -= newSystemBox.top;
+			//newPos.y -= newSystemBox.top;
 			// the default distance ...
 			// it is later distributed evenly between mSystems ...
-			newPos.y += settings.systemsDistance;
+			//newPos.y += settings.systemsDistance;
 		}
 		m_totalsystemheight += newSystemBox.Height();
 	}

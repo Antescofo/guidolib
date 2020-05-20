@@ -85,7 +85,7 @@ void GObject::DrawBoundingBox( VGDevice & hdc, const VGColor & inBrushColor ) co
 {
 	hdc.PushPen( inBrushColor, 4);
 	NVRect r(mBoundingBox + mPosition);
-//	r += getOffset();
+	r += getOffset();
 	hdc.Frame(r.left, r.top, r.right, r.bottom);
 	hdc.PopPen();
 }

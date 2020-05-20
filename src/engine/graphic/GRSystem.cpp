@@ -250,6 +250,21 @@ GRStaff * GRSystem::ComputeBoundingBox (GRSliceHeight &sliceheight)
 			}
 		}
 	}
+    // AC: Add Tempo
+    const NEPointerList & sub = GetCompositeElements();
+    GuidoPos pos2 = sub.GetHeadPosition();
+    while (pos2) {
+        GRNotationElement* elt = sub.GetNext(pos2);
+        if (elt->isGRTempo()) {
+            // BoundingBox Extention
+            NVRect tmp;
+            tmp = elt->getBoundingBox() + elt->getPosition() + elt->getOffset();
+            if (mBoundingBox.top > tmp.top)
+                    mBoundingBox.top = tmp.top;
+            if (mBoundingBox.bottom < tmp.bottom)
+                    mBoundingBox.bottom = tmp.bottom;
+        }
+    }
 	return lastStaff;
 }
 
@@ -460,6 +475,7 @@ void GRSystem::patchTempoIssue()
 	while (pos) {
 		GRNotationElement* elt = sub.GetNext(pos);
 		if (elt->isGRTempo()) {
+            // GRTempo Position Correction
 			float x = elt->getPosition().x;
 			const GRStaff* staff = getStaff(1);
 			if (staff) {
@@ -1013,8 +1029,8 @@ void GRSystem::FinishSystem()
 	// bounding box and position should now be ready
 	mMapping = mBoundingBox;				// set the mapping box
 	mMapping += mPosition + getOffset()	;	// and adjust position
-	patchTempoIssue ();
 //	fixTellPositionOrder();
+    patchTempoIssue ();
 }
 
 // ----------------------------------------------------------------------------

@@ -200,6 +200,8 @@ void GROctava::OnDraw( VGDevice & hdc) const
 	}
 	if (endSegment) drawingstate = 0;
 	else drawingstate++;
+    
+    //DrawBoundingBox(hdc, VGColor(250,0,0));
 }
 
 //void GROctava::addAssociation(GRNotationElement * el)

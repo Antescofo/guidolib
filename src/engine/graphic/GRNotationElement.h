@@ -38,6 +38,7 @@ class GRSystemSlice;
 class GRTempo;
 class GRText;
 class GRTrill;
+class GROctava;
 class NEPointerList;
 
 const float kMinNoteSize = 0.001f;	// minimum size of an element, the element is not drawn when the size is smaller
@@ -151,6 +152,7 @@ public:
     virtual 	  GRFingering *	isGRFingering() 		{ return 0; }
     virtual 	  GRSlur *		isGRSlur() 				{ return 0; }
     virtual const GRHarmony *	isGRHarmony() const 	{ return 0; }
+    virtual const GROctava *    isGROctava() const      { return 0; }
 
 protected:
 	
