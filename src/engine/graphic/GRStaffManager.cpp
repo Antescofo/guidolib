@@ -884,6 +884,10 @@ int GRStaffManager::AddPageTag(GRNotationElement * grel, GRStaff * grstaff,int v
 	}
 	// this adds the tag to the page ...
 	mGrPage->AddTail(grel);
+    // AC: Add to pageHeaderHeight if the element is hooked to topMargin
+    // TODO: Do not include Footer tag here!
+    mGrPage->mPageheaderHeight += grel->getBoundingBox().Height(); // AC: Adjust header heigh
+    // END OF AC
 	return 0;
 }
 

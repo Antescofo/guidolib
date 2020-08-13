@@ -75,6 +75,7 @@ GRPage::GRPage(GRMusic * grmusic, GRStaffManager * grstafmgr,
 	// TYPE_TIMEPOSITION starttime= von;
 	m_staffmgr = grstafmgr;
 	mCurMusic = grmusic;
+    mPageheaderHeight = 0.0;
 }
 
 // ----------------------------------------------------------------------------
@@ -531,7 +532,7 @@ void GRPage::finishPage( bool islastpage )
 
 	const size_t systemCount = mSystems.size();
 	float pagesizey = getInnerHeight();
-	float dist = pagesizey - m_totalsystemheight;
+    float dist = pagesizey - m_totalsystemheight - mPageheaderHeight;
 	if (systemCount > 1)
 		dist = dist / (float(systemCount - 1));
 
@@ -567,6 +568,14 @@ void GRPage::finishPage( bool islastpage )
 				}
 				else // So this is the first system. Just get its bottom.
 				{
+                    // AC: Adjust using headerHeight for the first system
+                    if (mPageheaderHeight>0.0) {
+                        NVPoint newpos;
+                        newpos.y = mPageheaderHeight - mTopMargin + 10;
+                        system->setPosition( newpos );
+                        cerr<<"\t Adjust2 First Measure: "<<newpos.y<<endl;
+                    }
+                    // END OF AC
 					cury += system->getPosition().y + system->getBoundingBox().bottom;
 				}				
 				cury += dist;
@@ -577,7 +586,23 @@ void GRPage::finishPage( bool islastpage )
 	}
 	else {
 		SystemPointerList::iterator ptr;
+        // AC: Adjust y position based on Title and Headers
+        float cury = 0; // mPageheaderHeight - mTopMargin + 10;
 		for( ptr = mSystems.begin(); ptr != mSystems.end(); ++ ptr ) {
+            // AC: Adjust y-pos based on page Header (titles, composer)
+            if ((cury == 0.0)&&(mPageheaderHeight>0.0)) {
+                // First system
+                NVPoint newpos;
+                cury = mPageheaderHeight - mTopMargin + 10;
+                newpos.y = cury - (*ptr)->getBoundingBox().top;
+                (*ptr)->setPosition(newpos);
+            }else if (cury>0.0) {
+                NVPoint newpos;
+                newpos.y = cury - (*ptr)->getBoundingBox().top;
+                (*ptr)->setPosition(newpos);
+            }
+            cury += (*ptr)->getBoundingBox().Height() + 50;
+            // END OF AC
 			(*ptr)->FinishSystem();
 			(*ptr)->setGRPage(this);
 		}
