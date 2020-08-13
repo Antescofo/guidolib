@@ -571,9 +571,9 @@ void GRPage::finishPage( bool islastpage )
                     // AC: Adjust using headerHeight for the first system
                     if (mPageheaderHeight>0.0) {
                         NVPoint newpos;
-                        newpos.y = mPageheaderHeight - mTopMargin + 10;
+                        cury = mPageheaderHeight - mTopMargin + 10;
+                        newpos.y = cury - system->getBoundingBox().top;
                         system->setPosition( newpos );
-                        cerr<<"\t Adjust2 First Measure: "<<newpos.y<<endl;
                     }
                     // END OF AC
 					cury += system->getPosition().y + system->getBoundingBox().bottom;
