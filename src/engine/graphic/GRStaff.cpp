@@ -90,6 +90,9 @@ using namespace std;
 #include "GRText.h"
 #include "GRVoice.h"
 
+#include "GRSlur.h"
+#include "GRBowing.h"
+
 #include "kf_ivect.h"
 #include "TCollisions.h"
 
@@ -1932,9 +1935,10 @@ void GRStaff::updateBoundingBox()
         GRNotationElement * e = mCompElements.GetNext(pos);
         if (e) {
 #ifdef EXTENDEDBB
-			if (e->isGRSlur()) {
-				tmp = e->getBoundingBox() + e->getPosition();
-				if (tmp.Height() < 300) {
+            GRBowing * bowTag = dynamic_cast<GRBowing *>(e);
+			if (bowTag) {
+				tmp = bowTag->getBoundingBox() + bowTag->getPosition();
+				if (tmp.Height() < 500 && tmp.Height() > 0) {
 					if (r.top > tmp.top) 		r.top = tmp.top;
 					if (r.bottom < tmp.bottom)	r.bottom = tmp.bottom;
 				}
@@ -1952,7 +1956,7 @@ void GRStaff::updateBoundingBox()
 
 			const GRSingleNote * note = e->isSingleNote();
 			if (note) {
-				NVRect b = note->getEnclosingBox();
+				NVRect b = note->getEnclosingBox(true, true, true);
 				if (b.Height() < 500) {
 					if (r.top > b.top) 			r.top = b.top;
 					if (r.bottom < b.bottom)	r.bottom = b.bottom;

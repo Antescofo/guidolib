@@ -142,29 +142,12 @@ bool GRPage::addSystem( GRSystem * inSystem, float * ioUsedSystemDistance )
 			*ioUsedSystemDistance = -1;
 		}
 		else {
-            // AC: make systemDistance a factor between the "middle" (baseline) of staves instead of BB (2020/05)
-//            cerr<<"addSystem this System height="<<newSystemBox.Height();
-//            auto firstStaffIndex = lastSystem->getStaves()->GetMinimum();
-//            auto firstStaff = inSystem->lastSlice()->getStaves()->Get(firstStaffIndex);
-//            cerr<<" 1st Staff height:"<<firstStaff->getBoundingBox().Height()<< " posy="<<firstStaff->getPosition().y;
-//            auto lastStaffIndex = lastSystem->getStaves()->GetMaximum();
-//            auto lastPrevStaff = lastSystem->lastSlice()->getStaves()->Get(lastStaffIndex);
-//            cerr<<"\n\t lastSystemHeight="<<lastSystem->getBoundingBox().Height() <<" prevStaff:"<<lastStaffIndex;
-//            auto lastPrevStaffBB = lastPrevStaff->getBoundingBox();
-//            cerr<<" height="<<lastPrevStaffBB.Height()<<" posY="<<lastPrevStaff->getPosition().y;
-//            cerr<<endl;
-
-            float heightFromBBs = lastSystem->getBoundingBox().bottom - newSystemBox.top + 300;  // 200 = 4*LSPACE
-            float heightToAdd = ( heightFromBBs > settings.systemsDistance ? heightFromBBs : settings.systemsDistance);
-            newPos.y = lastSystem->getPosition().y + heightToAdd;
-			
-            /// Older positioning based on BBs
-            //newPos.y = lastSystem->getPosition().y + lastSystem->getBoundingBox().bottom;
+            newPos.y = lastSystem->getPosition().y + lastSystem->getBoundingBox().bottom;
 			// this should be handled by "springs" as well... and there should be a "minimum" distance...
-			//newPos.y -= newSystemBox.top;
+			newPos.y -= newSystemBox.top;
 			// the default distance ...
 			// it is later distributed evenly between mSystems ...
-			//newPos.y += settings.systemsDistance;
+			newPos.y += settings.systemsDistance;
 		}
 		m_totalsystemheight += newSystemBox.Height();
 	}
@@ -522,10 +505,36 @@ const ARMusic * GRPage::getARMusic() const
 void GRPage::finishPage( bool islastpage )
 {
 	if (settings.systemsDistribution == kNeverDistrib) {
+        // AC: Adjust y position based on Title and Headers
+        float cury = 0;
+        GRSystem * lastSystem = 0;
 		SystemPointerList::iterator ptr;
 		for( ptr = mSystems.begin(); ptr != mSystems.end(); ++ ptr ) {
-			(*ptr)->FinishSystem();
-			(*ptr)->setGRPage(this);
+            // AC: (1) Adjust y-pos based on page Header (titles, composer)
+            // AC: (2) make systemDistance a factor between the "middle" (baseline) of staves instead of BB (2020/05)
+            GRSystem * system = *ptr;
+            system->FinishSystem();     // This additional FinishSystem attemps to FIX Bounding Boxes before distribution!
+            NVPoint newpos;
+            if (lastSystem) {
+                // We are in system 2+
+                // (2):
+                float heightFromBBs = lastSystem->getBoundingBox().bottom - system->getBoundingBox().top + 300;  // 200 = 4*LSPACE
+                float heightToAdd = ( heightFromBBs > settings.systemsDistance ? heightFromBBs : settings.systemsDistance);
+                newpos.y = lastSystem->getPosition().y + system->getOffset().y + heightToAdd;
+                // (1):
+                newpos.y += cury ;//- (*ptr)->getBoundingBox().top;
+                system->setPosition(newpos);
+            }else {
+                // First system on page
+                // (1):
+                cury = (mPageheaderHeight > 0.0 ? mPageheaderHeight - mTopMargin + 10 : 0.0);
+                newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
+                system->setPosition(newpos);
+            }
+            lastSystem = system;
+            // END OF AC / The following FinishSystem will propagate solely the position
+			system->FinishSystem();
+			system->setGRPage(this);
 		}
 		return;
 	}
@@ -535,6 +544,8 @@ void GRPage::finishPage( bool islastpage )
     float dist = pagesizey - m_totalsystemheight - mPageheaderHeight;
 	if (systemCount > 1)
 		dist = dist / (float(systemCount - 1));
+    
+    cerr<<"<<< dist="<<dist<<" systemsDistance="<<settings.systemsDistance<<" systemsDistribLimit="<<settings.systemsDistribLimit * pagesizey;
 
 	if (dist > 0) {
 		if ((settings.systemsDistribution == kAlwaysDistrib)
@@ -558,54 +569,76 @@ void GRPage::finishPage( bool islastpage )
 
 			// then we put the mSystems at these distances ...
 			float cury = 0;
+            GRSystem * lastSystem = 0;
 			for(SystemPointerList::iterator i = mSystems.begin(); i != mSystems.end(); i++ ) {
 				GRSystem * system = *i;
-				if (cury > 0) {
-					NVPoint newpos;
-					newpos.y = cury - system->getBoundingBox().top;
-					system->setPosition( newpos );
-					cury += system->getBoundingBox().Height();
-				}
-				else // So this is the first system. Just get its bottom.
-				{
+                system->FinishSystem();
+                NVPoint newpos;
+
+                if (lastSystem) {
+                    // Not the first system
+                    newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
+                    system->setPosition( newpos );
+                    cury += system->getBoundingBox().Height();
+                }else {
+                    // This is the first system
                     // AC: Adjust using headerHeight for the first system
-                    if (mPageheaderHeight>0.0) {
-                        NVPoint newpos;
-                        cury = mPageheaderHeight - mTopMargin + 10;
-                        newpos.y = cury - system->getBoundingBox().top;
-                        system->setPosition( newpos );
-                    }
+                    cury = (mPageheaderHeight > 0.0 ? mPageheaderHeight : 0.0);
+                    newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
+                    system->setPosition(newpos);
                     // END OF AC
-					cury += system->getPosition().y + system->getBoundingBox().bottom;
-				}				
+                    cury += system->getBoundingBox().Height();//= system->getPosition().y + system->getBoundingBox().bottom; //
+                }
+                cerr<<"\t\n Sys w/cury="<<cury<<" h="<<system->getBoundingBox().Height()<<" top="<<system->getBoundingBox().top;
+                cerr<<" y="<<system->getPosition().y<<" mPageheaderHeight="<<mPageheaderHeight<<" mTopMargin="<<mTopMargin;
+                cerr<<" \n\t\t BB:";system->getBoundingBox().Print(cerr);system->getPosition().Print(cerr);
+                
 				cury += dist;
                 system->FinishSystem();
 				system->setGRPage(this);
+                lastSystem = system;
 			}
+            cerr<<endl;
 		}
 	}
 	else {
 		SystemPointerList::iterator ptr;
         // AC: Adjust y position based on Title and Headers
-        float cury = 0; // mPageheaderHeight - mTopMargin + 10;
+        float cury = 0;
+        GRSystem * lastSystem = 0;
+
 		for( ptr = mSystems.begin(); ptr != mSystems.end(); ++ ptr ) {
             // AC: Adjust y-pos based on page Header (titles, composer)
-            if ((cury == 0.0)&&(mPageheaderHeight>0.0)) {
-                // First system
-                NVPoint newpos;
-                cury = mPageheaderHeight - mTopMargin + 10;
-                newpos.y = cury - (*ptr)->getBoundingBox().top;
-                (*ptr)->setPosition(newpos);
-            }else if (cury>0.0) {
-                NVPoint newpos;
-                newpos.y = cury - (*ptr)->getBoundingBox().top;
-                (*ptr)->setPosition(newpos);
+            GRSystem * system = *ptr;
+            system->FinishSystem();
+            NVPoint newpos;
+
+            if (lastSystem) {
+                // Not the first system
+                newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
+                system->setPosition( newpos );
+                cury += system->getBoundingBox().Height();
+            }else {
+                // This is the first system
+                // AC: Adjust using headerHeight for the first system
+                cury = (mPageheaderHeight > 0.0 ? mPageheaderHeight : 0.0);
+                newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
+                system->setPosition(newpos);
+                // END OF AC
+                cury += system->getBoundingBox().Height();//= system->getPosition().y + system->getBoundingBox().bottom; //
             }
-            cury += (*ptr)->getBoundingBox().Height() + 50;
+
+            cerr<<"\t\n Sys2 w/cury="<<cury<<" h="<<system->getBoundingBox().Height()<<" top="<<system->getBoundingBox().top;
+            cerr<<" y="<<system->getPosition().y<<" mPageheaderHeight="<<mPageheaderHeight<<" mTopMargin="<<mTopMargin;
+            cerr<<" \n\t\t BB:";system->getBoundingBox().Print(cerr);system->getPosition().Print(cerr);
+            
+            cury +=  50;
+            lastSystem = system;
             // END OF AC
-			(*ptr)->FinishSystem();
-			(*ptr)->setGRPage(this);
+			system->FinishSystem();
+			system->setGRPage(this);
 		}
+        cerr<<endl;
 	}
 	// hack to get correct time position for the page [DF - May 26 2010]
 	setRelativeTimePosition ( (*mSystems.begin())->getRelativeTimePosition() );

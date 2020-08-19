@@ -886,7 +886,7 @@ int GRStaffManager::AddPageTag(GRNotationElement * grel, GRStaff * grstaff,int v
 	mGrPage->AddTail(grel);
     // AC: Add to pageHeaderHeight if the element is hooked to topMargin
     if (grpgtxt->isRelativeToTopMargin()) {
-        float bottom = grpgtxt->getPosition().y + grpgtxt->getBoundingBox().bottom + grpgtxt->getOffset().y;
+        float bottom = grpgtxt->getPosition().y + grpgtxt->getBoundingBox().bottom;
         if (bottom > mGrPage->mPageheaderHeight) {
             mGrPage->mPageheaderHeight = bottom;
         }
@@ -2557,6 +2557,8 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 	}
 	mSystemDistancePrev = mSystemDistance;
 	mSystemDistance = -1.0f;								// has to be reset with newSystem otherwise ....
+    
+    cerr<<"<<< FindOptimumBreaks pageHeight="<<pageheight<<" header?"<<mGrPage->mPageheaderHeight<<" inBeginHeight="<<inBeginHeight <<endl;
 
 	int count = -1;
 	GuidoPos pos = mSystemSlices->GetHeadPosition();		// then I just iterate through the systemslices ....
