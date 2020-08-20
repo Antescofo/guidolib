@@ -11,7 +11,8 @@ import os
 import json
 import requests
 
-VIDEO_GENERATOR_VERSION = 5
+# Major Version 6: Add solo recording
+VIDEO_GENERATOR_VERSION = 6
 
 SEMI_SUPERVISED = False
 DEBUG = False
@@ -278,8 +279,19 @@ print(video_keywords)
 
 musicxml_url = selected_accomp['musicxml_file'] or selected_accomp['solo_musicxml_file']
 asco_url = selected_accomp['asco_file']
-mp3_url = recordings[0]['compressed_file']
-
+backing_recording = None
+solo_recording = None
+for recording in recordings:
+    if recording['recording_type'] == 0:
+        backing_recording = recording
+    else:
+        solo_recording = recording
+mp3_url = None
+if backing_recording:
+    mp3_url = backing_recording['compressed_file']
+solo_mp3_url = None
+if solo_recording and solo_recording.get('compressed_file'):
+    solo_mp3_url = solo_recording['compressed_file']
 assert musicxml_url, 'No musicxml could be found'
 assert asco_url, 'No asco could be found'
 assert mp3_url, 'No mp3 could be found'
@@ -287,6 +299,9 @@ assert mp3_url, 'No mp3 could be found'
 musicxml_file = download_file(musicxml_url)
 asco_file = download_file(asco_url)
 mp3_file = download_file(mp3_url)
+solo_mp3_file = ''
+if solo_mp3_url:
+    solo_mp3_file = download_file(solo_mp3_url)
 
 assert musicxml_file, 'No musicxml file could be found'
 assert asco_file, 'No asco file could be found'
@@ -299,7 +314,7 @@ if GENERATE_VIDEO:
         os.remove(output_file)
     except:
         pass
-    subprocess.run(['videogen.sh', musicxml_file, asco_file, mp3_file, str(100 * selected_accomp.get('transposition', 0)), output_file])
+    subprocess.run(['videogen.sh', musicxml_file, asco_file, mp3_file, str(100 * selected_accomp.get('transposition', 0)), solo_mp3_file, output_file])
     if not os.path.exists(output_file):
         print('Error generating video')
         sys.exit(1)
