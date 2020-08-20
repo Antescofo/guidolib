@@ -62,6 +62,8 @@
 #include "GRVoiceManager.h"
 #include "GRStaffManager.h"
 
+#include "GRFixVisitor.h"
+
 // if _DEBUGSFF is set, then the temporary SpaceForceFunctions
 // for all potentail system breaks are written into files.
 // also look into GRSystem for a similar output routine for
@@ -2547,6 +2549,7 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 	}
 
 	float pageheight = mGrPage->getInnerHeight();
+    inBeginHeight += mGrPage->mPageheaderHeight;    // AC: Add eventual header height (title+composer) for the initial entry
 	float usedsystemdistance = -1.0f;
 	if (inBeginHeight > 0 && mSystemDistancePrev > 0)
 	{
@@ -2558,10 +2561,9 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 	mSystemDistancePrev = mSystemDistance;
 	mSystemDistance = -1.0f;								// has to be reset with newSystem otherwise ....
     
-    cerr<<"<<< FindOptimumBreaks pageHeight="<<pageheight<<" header?"<<mGrPage->mPageheaderHeight<<" inBeginHeight="<<inBeginHeight <<endl;
-
 	int count = -1;
 	GuidoPos pos = mSystemSlices->GetHeadPosition();		// then I just iterate through the systemslices ....
+    GRFixVisitor ffix;  // AC: For fixing Bounding Boxes before they propagate
 	while (pos)
 	{
 		// no longer needed because of sliceheight
@@ -2610,10 +2612,10 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 		// this variable is set so that we can abort the next loop once a precessor has been found.
 //		bool predecessor_found = false;
 //		float predecessor_value = 0;
-
 		while (tmppos) {
 			tmpcount++;
-			GRSystemSlice * slc = mSystemSlices->GetNext(tmppos);	
+			GRSystemSlice * slc = mSystemSlices->GetNext(tmppos);
+            slc->accept(ffix);   // AC: Fix BBs before propagation
 			if (slc)
 			{
                 float optconst = 0;

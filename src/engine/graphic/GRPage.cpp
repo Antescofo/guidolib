@@ -513,7 +513,6 @@ void GRPage::finishPage( bool islastpage )
             // AC: (1) Adjust y-pos based on page Header (titles, composer)
             // AC: (2) make systemDistance a factor between the "middle" (baseline) of staves instead of BB (2020/05)
             GRSystem * system = *ptr;
-            system->FinishSystem();     // This additional FinishSystem attemps to FIX Bounding Boxes before distribution!
             NVPoint newpos;
             if (lastSystem) {
                 // We are in system 2+
@@ -545,8 +544,6 @@ void GRPage::finishPage( bool islastpage )
 	if (systemCount > 1)
 		dist = dist / (float(systemCount - 1));
     
-    cerr<<"<<< dist="<<dist<<" systemsDistance="<<settings.systemsDistance<<" systemsDistribLimit="<<settings.systemsDistribLimit * pagesizey;
-
 	if (dist > 0) {
 		if ((settings.systemsDistribution == kAlwaysDistrib)
 			|| (settings.systemsDistribution == kAutoDistrib) // DF added on Feb 13 2011 to force correct mapping
@@ -569,13 +566,12 @@ void GRPage::finishPage( bool islastpage )
 
 			// then we put the mSystems at these distances ...
 			float cury = 0;
-            GRSystem * lastSystem = 0;
+            GRSystem * prevSystem = 0;
 			for(SystemPointerList::iterator i = mSystems.begin(); i != mSystems.end(); i++ ) {
 				GRSystem * system = *i;
-                system->FinishSystem();
                 NVPoint newpos;
 
-                if (lastSystem) {
+                if (prevSystem) {
                     // Not the first system
                     newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
                     system->setPosition( newpos );
@@ -589,14 +585,11 @@ void GRPage::finishPage( bool islastpage )
                     // END OF AC
                     cury += system->getBoundingBox().Height();//= system->getPosition().y + system->getBoundingBox().bottom; //
                 }
-                cerr<<"\t\n Sys w/cury="<<cury<<" h="<<system->getBoundingBox().Height()<<" top="<<system->getBoundingBox().top;
-                cerr<<" y="<<system->getPosition().y<<" mPageheaderHeight="<<mPageheaderHeight<<" mTopMargin="<<mTopMargin;
-                cerr<<" \n\t\t BB:";system->getBoundingBox().Print(cerr);system->getPosition().Print(cerr);
-                
+
 				cury += dist;
                 system->FinishSystem();
 				system->setGRPage(this);
-                lastSystem = system;
+                prevSystem = system;
 			}
             cerr<<endl;
 		}
@@ -610,7 +603,6 @@ void GRPage::finishPage( bool islastpage )
 		for( ptr = mSystems.begin(); ptr != mSystems.end(); ++ ptr ) {
             // AC: Adjust y-pos based on page Header (titles, composer)
             GRSystem * system = *ptr;
-            system->FinishSystem();
             NVPoint newpos;
 
             if (lastSystem) {
@@ -628,10 +620,6 @@ void GRPage::finishPage( bool islastpage )
                 cury += system->getBoundingBox().Height();//= system->getPosition().y + system->getBoundingBox().bottom; //
             }
 
-            cerr<<"\t\n Sys2 w/cury="<<cury<<" h="<<system->getBoundingBox().Height()<<" top="<<system->getBoundingBox().top;
-            cerr<<" y="<<system->getPosition().y<<" mPageheaderHeight="<<mPageheaderHeight<<" mTopMargin="<<mTopMargin;
-            cerr<<" \n\t\t BB:";system->getBoundingBox().Print(cerr);system->getPosition().Print(cerr);
-            
             cury +=  50;
             lastSystem = system;
             // END OF AC

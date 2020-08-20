@@ -1010,7 +1010,6 @@ void GRSystem::setSpringParameter( float nconst )
 void GRSystem::FinishSystem()
 {
 	traceMethod("FinishSystem()");
-    fixTellPositionOrder(); // AC: To update Slur/Tie and Note BBs before propagation
 	GuidoPos pos = mSystemSlices.GetHeadPosition();
     NVRect r;
 	TYPE_DURATION duration;
