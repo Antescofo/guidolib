@@ -514,6 +514,8 @@ void GRPage::finishPage( bool islastpage )
             // AC: (2) make systemDistance a factor between the "middle" (baseline) of staves instead of BB (2020/05)
             GRSystem * system = *ptr;
             NVPoint newpos;
+            system->FinishSystem();
+
             if (lastSystem) {
                 // We are in system 2+
                 // (2):
@@ -570,6 +572,7 @@ void GRPage::finishPage( bool islastpage )
 			for(SystemPointerList::iterator i = mSystems.begin(); i != mSystems.end(); i++ ) {
 				GRSystem * system = *i;
                 NVPoint newpos;
+                system->FinishSystem();
 
                 if (prevSystem) {
                     // Not the first system
@@ -604,6 +607,7 @@ void GRPage::finishPage( bool islastpage )
             // AC: Adjust y-pos based on page Header (titles, composer)
             GRSystem * system = *ptr;
             NVPoint newpos;
+            system->FinishSystem();
 
             if (lastSystem) {
                 // Not the first system

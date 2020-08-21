@@ -2592,6 +2592,10 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 		}
 		
 		GRSystemSlice * begslice = mSystemSlices->GetAt(pos);	// this is the beginning slice of the potential line.
+        // AC: Fix BBs before propagation
+        begslice->accept(ffix);
+        begslice->FinishSlice();
+        // END OF AC
 		GRBeginSpaceForceFunction2 * begsff = 0;
 		// this gets the SpaceForceFunction of the beginning-elemnts 
 		// that would be needed, if the break would really occur at this location.
@@ -2615,7 +2619,10 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 		while (tmppos) {
 			tmpcount++;
 			GRSystemSlice * slc = mSystemSlices->GetNext(tmppos);
-            slc->accept(ffix);   // AC: Fix BBs before propagation
+            // AC: Fix BBs before propagation
+            slc->accept(ffix);
+            slc->FinishSlice();
+            // END OF AC
 			if (slc)
 			{
                 float optconst = 0;
