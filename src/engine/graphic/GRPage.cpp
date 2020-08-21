@@ -594,7 +594,6 @@ void GRPage::finishPage( bool islastpage )
 				system->setGRPage(this);
                 prevSystem = system;
 			}
-            cerr<<endl;
 		}
 	}
 	else {
@@ -630,7 +629,6 @@ void GRPage::finishPage( bool islastpage )
 			system->FinishSystem();
 			system->setGRPage(this);
 		}
-        cerr<<endl;
 	}
 	// hack to get correct time position for the page [DF - May 26 2010]
 	setRelativeTimePosition ( (*mSystems.begin())->getRelativeTimePosition() );
