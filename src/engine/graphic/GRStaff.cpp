@@ -1938,11 +1938,18 @@ void GRStaff::updateBoundingBox()
             GRBowing * bowTag = dynamic_cast<GRBowing *>(e);
 			if (bowTag) {
 				tmp = bowTag->getBoundingBox() + bowTag->getPosition();
-				if (tmp.Height() < 500 && tmp.Height() > 0) {
+				if (tmp.Height() < 1000 && tmp.Height() > 0) {
 					if (r.top > tmp.top) 		r.top = tmp.top;
 					if (r.bottom < tmp.bottom)	r.bottom = tmp.bottom;
 				}
 			}
+            
+            const GRArticulation * artTag = e->isGRArticulation();
+            if (artTag) {
+                tmp = e->getBoundingBox() + e->getPosition() + e->getOffset();
+                if (r.top > tmp.top)         r.top = tmp.top;
+                if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+            }
 
 			GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
 			if (ptag) {

@@ -153,6 +153,7 @@ public:
     virtual 	  GRSlur *		isGRSlur() 				{ return 0; }
     virtual const GRHarmony *	isGRHarmony() const 	{ return 0; }
     virtual const GROctava *    isGROctava() const      { return 0; }
+    virtual const GRArticulation *    isGRArticulation() const      { return 0; }
 
 protected:
 	
