@@ -1905,6 +1905,18 @@ void GRStaff::boundingBoxPreview()
     traceMethod("boundingBoxPreview");
 #ifdef EXTENDEDBB
 	updateBoundingBox();
+    
+    // AC: calculate noteOnlyBoundingBox for AutoPos
+    noteOnlyBoundingBox.Set (0,0,0,0);
+    GuidoPos pos2 = mCompElements.GetHeadPosition();
+    while (pos2)
+    {
+        GRNotationElement * e = mCompElements.GetNext(pos2);
+        NVRect eltBox (e->getBoundingBox());
+        eltBox += e->getPosition();
+        noteOnlyBoundingBox.Merge( eltBox );
+     }
+    
 	return;
 #endif
     mBoundingBox.Set (0,0,0,0);
@@ -2046,7 +2058,26 @@ GRStaff * GRStaff::getNextStaff() const
 */
 float GRStaff::getStaffBottom() const
 {
-	float bottom = mBoundingBox.bottom;
+#ifdef EXTENDEDBB
+    // AC: To preserve AUtoPOS with extended bounding boxes, noteOnlyBoundingBox behaves like before
+    float bottom = noteOnlyBoundingBox.bottom;
+
+    const GRStaff* prev = getPreviousStaff();
+    while (prev) {
+        if (prev->noteOnlyBoundingBox.bottom > bottom)
+            bottom = prev->noteOnlyBoundingBox.bottom;
+        prev = prev->getPreviousStaff();
+    }
+
+    const GRStaff* next = getNextStaff();
+    while (next) {
+        if (next->noteOnlyBoundingBox.bottom > bottom)
+            bottom = next->noteOnlyBoundingBox.bottom;
+        next = next->getNextStaff();
+    }
+    return bottom;
+#else
+    float bottom = mBoundingBox.bottom;
 
 	const GRStaff* prev = getPreviousStaff();
 	while (prev) {
@@ -2062,6 +2093,7 @@ float GRStaff::getStaffBottom() const
 		next = next->getNextStaff();
 	}
 	return bottom;
+#endif
 }
 
 // ----------------------------------------------------------------------------

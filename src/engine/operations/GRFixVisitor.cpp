@@ -25,9 +25,15 @@ void GRFixVisitor::visitStart (GRSingleNote* note)
 	if (assoc) {
 		GuidoPos pos = assoc->GetHeadPosition();
 		while(pos) {
-			GRFingering * el = assoc->GetNext(pos)->isGRFingering();
+            auto next = assoc->GetNext(pos);
+			GRFingering * el = next->isGRFingering();
 			if (el)
 				el->tellPositionEnd (note, note->getPosition());
+            
+            GRText *el2 = next->isGRLyrics();
+            if (el2) {
+                el2->tellPositionEnd(note, note->getPosition());
+            }
 		}
 	}
 }

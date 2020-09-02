@@ -331,6 +331,8 @@ class GRStaff : public GRCompositeNotationElement
 		bool			firstOnOffSetting;
 
 		float			fProportionnalRendering;
+    
+    NVRect noteOnlyBoundingBox;     // Used for AutoPos
 };
 
 std::ostream& operator<< (std::ostream& os, const GRStaff& staff);

@@ -318,6 +318,24 @@ int GRSystemSlice::getStaffNumber(const GRStaff * staff) const
 	return -1;
 }
 
+// -----------------------------------------------------------------------------
+void GRSystemSlice::accept (GRVisitor& visitor)
+{
+    visitor.visitStart (this);
+    const StaffVector * staves = getStaves();
+    int n = staves->size();
+    //cerr << "GRSystem::accept for " << n << " staves" << endl;
+    for (int i= 1; i <= n; i++) {
+        GRStaff* staff = staves->Get (i);
+        //cerr << "GRSystem::accept visit staff " << i << " " << (void*)staff << endl;
+        while (staff) {
+            staff->accept (visitor);
+            staff = staff->getNextStaff();
+        }
+    }
+    visitor.visitEnd (this);
+}
+
 /** \brief Sets the vertical offset of the participating staves.
 
 	This is called before the systemslice is added to a list of finished slices. 

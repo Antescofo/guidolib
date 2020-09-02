@@ -504,6 +504,8 @@ const ARMusic * GRPage::getARMusic() const
 */
 void GRPage::finishPage( bool islastpage )
 {
+    float headerOffset = (mPageheaderHeight > 0.0 ? mPageheaderHeight + 10 : 0.0); // AC
+    
 	if (settings.systemsDistribution == kNeverDistrib) {
         // AC: Adjust y position based on Title and Headers
         float cury = 0;
@@ -528,7 +530,7 @@ void GRPage::finishPage( bool islastpage )
             }else {
                 // First system on page
                 // (1):
-                cury = (mPageheaderHeight > 0.0 ? mPageheaderHeight - mTopMargin + 10 : 0.0);
+                cury = headerOffset;
                 newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
                 system->setPosition(newpos);
             }
@@ -582,7 +584,7 @@ void GRPage::finishPage( bool islastpage )
                 }else {
                     // This is the first system
                     // AC: Adjust using headerHeight for the first system
-                    cury = (mPageheaderHeight > 0.0 ? mPageheaderHeight : 0.0);
+                    cury = headerOffset;
                     newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
                     system->setPosition(newpos);
                     // END OF AC
@@ -616,7 +618,7 @@ void GRPage::finishPage( bool islastpage )
             }else {
                 // This is the first system
                 // AC: Adjust using headerHeight for the first system
-                cury = (mPageheaderHeight > 0.0 ? mPageheaderHeight : 0.0);
+                cury = headerOffset;
                 newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
                 system->setPosition(newpos);
                 // END OF AC

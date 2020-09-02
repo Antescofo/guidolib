@@ -95,6 +95,8 @@ public:
 
 	void		setNumber(int num )	{ mNumber = num; }
 	bool		hasSystemBars( )	{ return mHasSystemBars; }
+    
+    virtual void accept   (GRVisitor& visitor);
 
 protected:
 	// this variable holds the current begin
