@@ -12,11 +12,11 @@ import json
 import requests
 
 # Major Version 6: Add solo recording
-# Major Version 7: Add thumbnails
+# Major Version 7: Add thumbnails, and qrcode
 
 VIDEO_GENERATOR_VERSION = 7
 
-SEMI_SUPERVISED = True
+SEMI_SUPERVISED = False
 DEBUG = False
 DEBUG_UPLOAD = False
 DEBUG_GENERATE = True
@@ -311,6 +311,9 @@ assert asco_file, 'No asco file could be found'
 assert mp3_file, 'No mp3 file could be found'
 
 print('Process video for', piece_pk, accomp_pk)
+deep_link_url = generate_piece_link(video_title, piece_pk)
+subprocess.run(['qrencode', '-t', 'PNG', '-s', '5', '-m', '0', '-o', 'qrcode.png', deep_link_url])
+
 output_file = '/app/tools/final_output.mp4'
 if GENERATE_VIDEO:
     try:
@@ -329,7 +332,6 @@ if GENERATE_VIDEO:
     # oof2
 video_file = output_file
 if UPLOAD_VIDEO:
-    deep_link_url = generate_piece_link(video_title, piece_pk)
     print('generate piece link:', deep_link_url)
     website_link = "https://www.antescofo.com"
     facebook_link = "https://www.facebook.com/Metronautapp/"
