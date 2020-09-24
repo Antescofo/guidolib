@@ -95,7 +95,13 @@ def initialize_upload(youtube, options):
       title=options.title,
       description=options.description,
       tags=tags,
-      categoryId=options.category
+      categoryId=options.category,
+      thumbnails=dict(default=dict(url='https://s3-eu-west-1.amazonaws.com/public.antescofo.com/final_thumbnail.png',
+                                   width=120,
+                                   height=90),
+                      standard=dict(url='https://s3-eu-west-1.amazonaws.com/public.antescofo.com/final_thumbnail.png',
+                                    width=640,
+                                    height=480))
     ),
     status=dict(
       privacyStatus=options.privacyStatus
@@ -120,19 +126,25 @@ def initialize_upload(youtube, options):
     media_body=MediaFileUpload(options.file, chunksize=-1, resumable=True)
   )
 
-  resumable_upload(insert_request)
-
+  video_id = resumable_upload(insert_request)
+  if video_id:
+    youtube.thumbnails().set(
+      videoId=video_id,
+      media_body='./final_thumbnail.png'
+    ).execute()
 # This method implements an exponential backoff strategy to resume a
 # failed upload.
 def resumable_upload(insert_request):
   response = None
   error = None
   retry = 0
+  video_id = None
   while response is None:
     try:
       print("Uploading file...")
       status, response = insert_request.next_chunk()
       if 'id' in response:
+        video_id = response['id']
         print("Video id '%s' was successfully uploaded." % response['id'])
       else:
         exit("The upload failed with an unexpected response: %s" % response)
@@ -155,6 +167,8 @@ def resumable_upload(insert_request):
       sleep_seconds = random.random() * max_sleep
       print("Sleeping %f seconds and then retrying..." % sleep_seconds)
       time.sleep(sleep_seconds)
+  return video_id
+
 
 if __name__ == '__main__':
   argparser.add_argument("--file", required=True, help="Video file to upload")

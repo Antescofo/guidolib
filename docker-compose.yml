@@ -4,6 +4,11 @@ services:
   guidotools:
     build:
       context: .
+    environment:
+      AWS_S3_REGION_NAME: eu-west-1
+      AWS_STORAGE_BUCKET_NAME: testing.antescofo.com
+      AWS_ACCESS_KEY_ID: AKIAIAWTQU25LD76YBEA
+      AWS_SECRET_ACCESS_KEY: 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
     volumes:
       - ./tools:/app/tools
       - ./platforms:/app/platforms

@@ -12,13 +12,15 @@ import json
 import requests
 
 # Major Version 6: Add solo recording
-VIDEO_GENERATOR_VERSION = 6
+# Major Version 7: Add thumbnails
 
-SEMI_SUPERVISED = False
+VIDEO_GENERATOR_VERSION = 7
+
+SEMI_SUPERVISED = True
 DEBUG = False
 DEBUG_UPLOAD = False
 DEBUG_GENERATE = True
-UPLOAD_VIDEO = (not DEBUG) or DEBUG_UPLOAD
+UPLOAD_VIDEO = True
 GENERATE_VIDEO = ((not DEBUG) and UPLOAD_VIDEO) or DEBUG_GENERATE
 
 # if not DEBUG:
@@ -248,6 +250,7 @@ piece_full_title = piece_detail['full_title'].strip()
 if piece_full_title:
     piece_title += ' - ' + piece_full_title
 author_title = author_detail['first_name'] + ' ' + author_detail['last_name']
+author_last_name = author_detail['last_name']
 video_title = author_title + ' - ' + piece_title
 keywords = [piece_title, author_title, 'sheet music', 'accompaniment', 'metronaut', 'antescofo', 'play along', 'app']
 
@@ -314,12 +317,16 @@ if GENERATE_VIDEO:
         os.remove(output_file)
     except:
         pass
+    subprocess.run(['python3', 'generate_thumbnail.py', piece_title, author_last_name])
+
     subprocess.run(['videogen.sh', musicxml_file, asco_file, mp3_file, str(100 * selected_accomp.get('transposition', 0)), solo_mp3_file, output_file])
     if not os.path.exists(output_file):
         print('Error generating video')
         sys.exit(1)
     print('Done processing video in', output_file)
 
+    # We also need to generate the video thumbnails...
+    # oof2
 video_file = output_file
 if UPLOAD_VIDEO:
     deep_link_url = generate_piece_link(video_title, piece_pk)
