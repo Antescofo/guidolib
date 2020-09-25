@@ -280,6 +280,8 @@ print('PIECE_PK:', piece_pk)
 print('ACCOMP_PK:', accomp_pk)
 print(video_title)
 print(video_keywords)
+preview_begin_measure = selected_accomp.get('preview_begin_measure')
+preview_end_measure = selected_accomp.get('preview_end_measure')
 
 musicxml_url = selected_accomp['musicxml_file'] or selected_accomp['solo_musicxml_file']
 asco_url = selected_accomp['asco_file']
