@@ -644,6 +644,12 @@ int main(int argc, char* argv[]) {
       fluid_synth_noteoff(synth, 1, midiPitch + transpo);
 
     audio_nframe = target_audio_frame;
+
+    // We only generate the first 30s
+    if (it->time > 45) {
+      fluid_synth_all_notes_off(synth, 1);
+      break;
+    }
   }
 
   // we have to generate 2sec of the last image / sounds.
