@@ -250,21 +250,28 @@ piece_full_title = piece_detail['full_title'].strip()
 short_title = opus_detail['display_title'].strip() or opus_detail['title'].strip() or opus_detail['original_title'].strip()
 if piece_full_title:
     piece_title += ' - ' + piece_full_title
+author_full_name = (author_detail['first_name'] + ' ' +  author_detail['last_name']).strip()
+verbose_instruments = ''
 author_title = author_detail['last_name'] or author_detail['first_name']
 author_last_name = author_detail['last_name']
 video_title = author_title + ' - ' + piece_title
-keywords = [piece_title, author_title, 'sheet music', 'accompaniment', 'metronaut', 'antescofo', 'play along', 'app']
+keywords = [piece_title, author_title, author_full_name, 'sheet music', 'accompaniment', 'metronaut', 'antescofo', 'play along', 'app']
+keywords += ['music score', 'classical music', 'tomplay', 'sheet music boss', 'musescore', 'musescore tutorial', 'how to use musescore',
+             'sibelius', 'muse score', 'imslp', 'best violin piece', 'violin masterpiece',
+             'advanced piece', 'repertoire', 'orchestra', 'backing track', 'karaoke' , 'classical karaoke'
+             'playalong', 'classical playalong','classical backing track']
 
 instruments_pk = selected_accomp.get('instruments', [])
 if instruments_pk:
     instruments = []
     for instrument_pk in instruments_pk:
-        if (instrument_pk in instrument_map) and (instrument_map[instrument_pk].lower() not in video_title.lower()):
+        if (instrument_pk in instrument_map): # and (instrument_map[instrument_pk].lower() not in video_title.lower()):
             instruments.append(instrument_map[instrument_pk])
     last_video_title = video_title
     if instruments:
+        verbose_instruments = instruments[0]
         keywords += instruments
-        video_title = ', '.join(instruments) + ' - ' + video_title
+        video_title = video_title + ' [' + instruments[0] + ' Sheet Music]'
         if len(video_title) >= 100:
             video_title = last_video_title
 video_title = video_title[:99]  # youtube limit the video title to 100 chars
@@ -298,6 +305,8 @@ if backing_recording:
 solo_mp3_url = None
 if solo_recording and solo_recording.get('compressed_file'):
     solo_mp3_url = solo_recording['compressed_file']
+if (not mp3_url) and solo_mp3_url:
+    mp3_url = solo_mp3_url
 assert musicxml_url, 'No musicxml could be found'
 assert asco_url, 'No asco could be found'
 assert mp3_url, 'No mp3 could be found'
@@ -337,14 +346,27 @@ if UPLOAD_VIDEO:
     print('generate piece link:', deep_link_url)
     website_link = "https://www.antescofo.com"
     facebook_link = "https://www.facebook.com/Metronautapp/"
-    video_description = """Play {} with accompaniment on Metronaut app: {}\n
-Discover Metronaut, the tailor made musical accompaniment app for classical musicians and play masterpieces the way they were meant to be played: with professional musicians to accompany you.\n
-Enjoy our growing catalog of music sheets and accompaniments for every instrument and level. Metronaut's accompanists are among the best orchestras and pianists and each accompaniment offers fully acoustic and high quality studio recordings.\n
-You're in full control of the digital music sheet: Play or sing hard or previously inaccessible pieces by choosing the speed of the accompaniment and discover pieces not written for your instrument thanks to automatic and quality preserving transposition.\n
-Personalize your performance using our speed adaptation feature. Get empowered to play at your own rhythm throughout the piece: Metronaut adapts accompaniment tempo to your interpretation in real-time.\n
+    video_description = """
+Discover sheet music of {} by {} for {} with accompaniment to play along to on Metronaut App: {}\n
+
+Practice your favorite masterpieces! Explore more than 3,000 sheet music with high quality backing tracks on Metronaut App.\n
+
+With Metronaut you can:
+- Explore a growing catalog of thousands of classical sheet music for all instruments and levels
+- Get music recommendations for your instrument and level
+- Change the accompaniment tempo: Slow down or speed up the tempo of the music accompaniment to adapt it to your level or activate Magic Mode to have the tempo automatically adapt to your speed in real time
+- Record your performance: Metronaut automatically records your performance so you can listen back to it and make progress
+- Practice difficult passages with the loop feature and synchronized metronome
+- Automatic transposition: Don’t worry about transposition anymore, Metronaut takes care of it for you so you can play any piece of the catalog
+
 Download the App for free: {}
-{}
-{}""".format(video_title, deep_link_url, deep_link_url, website_link, facebook_link)
+https://www.metronautapp.com
+
+Follow us on :
+Facebook : https://www.facebook.com/Metronautapp/
+Instagram : https://www.instagram.com/metronautapp/
+Twitter : https://twitter.com/metronaut_app
+""".format(video_title, author_full_name, verbose_instruments, deep_link_url, deep_link_url,)
     print(video_description)
     print('Uploading video')
     # We upload the video here
