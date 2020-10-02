@@ -2620,8 +2620,10 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 			tmpcount++;
 			GRSystemSlice * slc = mSystemSlices->GetNext(tmppos);
             // AC: Fix BBs before propagation
+            //cerr<<"SliceHeight="<<slc->getBoundingBox().Height(); //<<endl;
             slc->accept(ffix);
             slc->FinishSlice();
+            //cerr<<"\t ---> SliceHeight="<<slc->getBoundingBox().Height()<<endl;
             // END OF AC
 			if (slc)
 			{

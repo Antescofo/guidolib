@@ -624,6 +624,7 @@ void GRMusic::createGR (const ARPageFormat * inPageFormat, const GuidoLayoutSett
 
 	// intended to fix tellPosition order issues
 	GRFixVisitor ffix;
+    //cerr<<"\t GRMUSIC FFIX"<<endl;
 	this->accept( ffix );
 
 //cerr << "GRMusic: ---------- visit ---------" << endl;
