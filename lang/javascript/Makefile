@@ -40,7 +40,7 @@ library = libGUIDOEngine
 target = $(library).js
 
 
-OPTIONS :=  -s ALLOW_MEMORY_GROWTH=0 -s TOTAL_MEMORY=134217728 -s DISABLE_EXCEPTION_CATCHING=1 -s ASSERTIONS=0 -s MODULARIZE=1 -s EXPORT_NAME="'GuidoModule'"
+OPTIONS :=  -s ALLOW_MEMORY_GROWTH=1 -s DISABLE_EXCEPTION_CATCHING=1 -s ASSERTIONS=0 -s MODULARIZE=1 -s EXPORT_NAME="'GuidoModule'"
 
 OPT1    := -O3 --bind --memory-init-file 0
 
@@ -62,12 +62,12 @@ help :
 ##############################################################
 # building the library as wasm library
 ##############################################################
-
 $(library).js : $(objects) $(midiobj)
-	emcc $(OPT1) $(objects) $(midiobj) -o $(library).js $(OPTIONS) -s WASM=0 -s ASM_JS=1
+	emcc $(OPT1) $(objects) $(midiobj) -o $(library).js $(OPTIONS) -s WASM=1
+	cp $(library).js $(library).wasm $(npmdir)
 
 clean:
-	rm -f $(objects) $(target) $(library).wasm.*
+	rm -f $(objects) $(midiobj) $(target) $(library).wasm.*
 
 ##############################################################
 # testing
@@ -99,7 +99,7 @@ $(webfont) : ../../src/guido2.ttf
 # building the library as web assembly
 ##############################################################
 $(library).wasm.js : $(objects)
-	emcc $(OPT) --bind --memory-init-file 0 $(objects) -o $(target) $(OPTIONS) -s WASM=0 -s ASM_JS=1
+	emcc $(OPT) --bind --memory-init-file 0 $(objects) -o $(target) $(OPTIONS) -s WASM=1
 	
 depend :
 	makedepend -fMakefile -Y -- $(CXXFLAGS) -- $(sources)
@@ -278,6 +278,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/abstract/ARBar.o: ../../src/engine/abstract/TagParameterRGBColor.h
 ../../src/engine/abstract/ARBar.o: ../../src/engine/abstract/TagParameterString.h
 ../../src/engine/abstract/ARBar.o: ../../src/engine/abstract/TagParameterFloat.h
+../../src/engine/abstract/ARBar.o: ../../src/engine/abstract/TagParameterInt.h
 ../../src/engine/abstract/ARBarFormat.o: ../../src/engine/abstract/ARBarFormat.h
 ../../src/engine/abstract/ARBarFormat.o: ../../src/engine/abstract/ARMTParameter.h
 ../../src/engine/abstract/ARBarFormat.o: ../../src/engine/abstract/ARMusicalTag.h
@@ -661,6 +662,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/abstract/ARFactory.o: ../../src/engine/abstract/ARMark.h
 ../../src/engine/abstract/ARFactory.o: ../../src/engine/abstract/ARMerge.h
 ../../src/engine/abstract/ARFactory.o: ../../src/engine/abstract/ARMeter.h
+../../src/engine/abstract/ARFactory.o: ../../src/engine/abstract/ARMMRest.h
 ../../src/engine/abstract/ARFactory.o: ../../src/engine/abstract/ARMusic.h
 ../../src/engine/abstract/ARFactory.o: ../../src/engine/abstract/MusicalVoiceList.h
 ../../src/engine/abstract/ARFactory.o: ../../src/engine/abstract/ARMusicalVoiceState.h
@@ -967,6 +969,24 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/abstract/ARLyrics.o: ../../src/engine/abstract/TagParameterStrings.h
 ../../src/engine/abstract/ARLyrics.o: ../../src/engine/abstract/TagParameterRGBColor.h
 ../../src/engine/abstract/ARLyrics.o: ../../src/engine/abstract/TagParameterString.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/abstract/ARMMRest.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/abstract/ARMTParameter.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/abstract/ARMusicalTag.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/abstract/ARMusicalObject.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/lib/defines.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/misc/nvstring.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/abstract/Fraction.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/operations/ARVisitable.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/abstract/TagParameterMap.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/abstract/TagParameter.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/operations/ARVisitor.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/abstract/TagParametersMaps.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/abstract/TagParameterStrings.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/abstract/TagParameterRGBColor.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/abstract/ARPositionTag.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/misc/GUIDOTypes.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/abstract/TagParameterInt.h
+../../src/engine/abstract/ARMMRest.o: ../../src/engine/abstract/TagParameterFloat.h
 ../../src/engine/abstract/ARMark.o: ../../src/engine/abstract/ARMark.h
 ../../src/engine/abstract/ARMark.o: ../../src/engine/abstract/ARText.h
 ../../src/engine/abstract/ARMark.o: ../../src/engine/abstract/ARPositionTag.h
@@ -1124,6 +1144,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARAlter.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARNoteName.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMeter.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMMRest.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARBar.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARAutoBeamEnd.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARTagEnd.h
@@ -3206,7 +3227,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GREvent.o: ../../src/engine/misc/nvstring.h
 ../../src/engine/graphic/GREvent.o: ../../src/engine/abstract/Fraction.h
 ../../src/engine/graphic/GREvent.o: ../../src/engine/operations/ARVisitable.h
-../../src/engine/graphic/GREvent.o: ../../src/engine/abstract/ARDotFormat.h
+../../src/engine/graphic/GREvent.o: ../../src/engine/abstract/ARMMRest.h
 ../../src/engine/graphic/GREvent.o: ../../src/engine/abstract/ARMTParameter.h
 ../../src/engine/graphic/GREvent.o: ../../src/engine/abstract/ARMusicalTag.h
 ../../src/engine/graphic/GREvent.o: ../../src/engine/abstract/TagParameterMap.h
@@ -3216,6 +3237,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GREvent.o: ../../src/engine/abstract/TagParameterStrings.h
 ../../src/engine/graphic/GREvent.o: ../../src/engine/abstract/TagParameterRGBColor.h
 ../../src/engine/graphic/GREvent.o: ../../src/engine/abstract/ARPositionTag.h
+../../src/engine/graphic/GREvent.o: ../../src/engine/abstract/ARDotFormat.h
 ../../src/engine/graphic/GREvent.o: ../../src/engine/abstract/TagParameterFloat.h
 ../../src/engine/graphic/GREvent.o: ../../src/engine/abstract/TagParameterString.h
 ../../src/engine/graphic/GREvent.o: ../../src/engine/graphic/GREvent.h
@@ -4107,6 +4129,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRNotationElement.o: ../../src/engine/abstract/ARNoteName.h
 ../../src/engine/graphic/GRNotationElement.o: ../../src/engine/abstract/ARMusicalEvent.h
 ../../src/engine/graphic/GRNotationElement.o: ../../src/engine/misc/secureio.h
+../../src/engine/graphic/GRNotationElement.o: ../../src/engine/include/VGFont.h
 ../../src/engine/graphic/GRNotations.o: ../../src/engine/abstract/ARNotations.h
 ../../src/engine/graphic/GRNotations.o: ../../src/engine/abstract/ARMTParameter.h
 ../../src/engine/graphic/GRNotations.o: ../../src/engine/abstract/ARMusicalTag.h
@@ -4923,8 +4946,10 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRSingleRest.o: ../../src/engine/abstract/TagParameterStrings.h
 ../../src/engine/graphic/GRSingleRest.o: ../../src/engine/abstract/TagParameterRGBColor.h
 ../../src/engine/graphic/GRSingleRest.o: ../../src/engine/abstract/ARPositionTag.h
+../../src/engine/graphic/GRSingleRest.o: ../../src/engine/abstract/ARMMRest.h
 ../../src/engine/graphic/GRSingleRest.o: ../../src/engine/abstract/TagParameterFloat.h
 ../../src/engine/graphic/GRSingleRest.o: ../../src/engine/abstract/TagParameterString.h
+../../src/engine/graphic/GRSingleRest.o: ../../src/engine/lib/FontManager.h
 ../../src/engine/graphic/GRSingleRest.o: ../../src/engine/graphic/GRSingleRest.h
 ../../src/engine/graphic/GRSingleRest.o: ../../src/engine/graphic/GRRest.h
 ../../src/engine/graphic/GRSingleRest.o: ../../src/engine/graphic/GREvent.h
@@ -4958,6 +4983,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRSingleRest.o: ../../src/engine/abstract/ARTHead.h
 ../../src/engine/graphic/GRSingleRest.o: ../../src/engine/graphic/GRArticulation.h
 ../../src/engine/graphic/GRSingleRest.o: ../../src/engine/include/VGDevice.h
+../../src/engine/graphic/GRSingleRest.o: ../../src/engine/include/VGFont.h
 ../../src/engine/graphic/GRSliceHeight.o: ../../src/engine/graphic/GRSliceHeight.h
 ../../src/engine/graphic/GRSliceHeight.o: ../../src/engine/misc/kf_vect.h
 ../../src/engine/graphic/GRSliceHeight.o: ../../src/engine/misc/kf_list.h
@@ -6421,6 +6447,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/abstract/ARMarcato.h
 ../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/abstract/ARMark.h
 ../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/abstract/ARMeter.h
+../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/abstract/ARMMRest.h
 ../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/abstract/ARMusicalVoice.h
 ../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/abstract/ObjectList.h
 ../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/abstract/TagList.h
@@ -7550,6 +7577,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/operations/GRTrillsLinker.o: ../../src/engine/abstract/ARNote.h
 ../../src/engine/operations/GRTrillsLinker.o: ../../src/engine/abstract/ARAlter.h
 ../../src/engine/operations/GRTrillsLinker.o: ../../src/engine/abstract/ARNoteName.h
+../../src/engine/parser/GuidoParser.o: ../../src/engine/parser/GuidoParser.h
 ../../src/engine/parser/GuidoParser.o: ../../src/engine/parser/GuidoStream.h
 ../../src/engine/parser/GuidoParser.o: ../../src/engine/abstract/ARFactory.h
 ../../src/engine/parser/GuidoParser.o: ../../src/engine/misc/kf_ilist.h
@@ -7576,7 +7604,6 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/parser/GuidoParser.o: ../../src/engine/abstract/TagList.h
 ../../src/engine/parser/GuidoParser.o: ../../src/engine/abstract/ARAuto.h
 ../../src/engine/parser/GuidoParser.o: ../../src/engine/abstract/ARMTParameter.h
-../../src/engine/parser/GuidoParser.o: ../../src/engine/parser/GuidoParser.h
 ../../src/engine/parser/GuidoParser.o: ../../src/engine/include/GUIDOFactory.h
 ../../src/engine/parser/GuidoParser.o: ../../src/engine/include/GUIDOExport.h
 ../../src/engine/parser/GuidoParser.o: ../../src/engine/include/GUIDOEngine.h

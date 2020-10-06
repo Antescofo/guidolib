@@ -18,6 +18,7 @@
 #include "GREvent.h"
 
 class ARRest;
+class ARMMRest;
 class ARRestFormat;
 
 
@@ -35,14 +36,18 @@ class GRRest : public GREvent
 		virtual void	setRestFormat( const  ARRestFormat *restfrmt)	{}
 		virtual int		getWholeMeasure() const					{ return mWholeMeasure; }
 	  	virtual void	setWholeMeasure(int p)					{ mWholeMeasure = p; }
+	  	virtual void	setMMRest(const ARMMRest* mrest)		{ fMMRest = mrest; }
+
 		virtual void	OnDraw( VGDevice & hdc ) const = 0;
 
 		virtual const GRRest *	isRest() const					{ return this; }
 
-		const ARRest * getARRest() const;
+		const ARRest * 	 getARRest() const;
+		const ARMMRest * getARMMRest() const	{ return fMMRest; }
 	
 	private:
 		int		 mWholeMeasure;
+		const ARMMRest * fMMRest = 0;
 };
 
 #endif

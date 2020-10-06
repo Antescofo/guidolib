@@ -2,13 +2,24 @@ GUIDO Engine history
 
 
 ----------------------------------------------------------------
+  version 1.7.0
+- introduce variables
+- support single quote strings
+
+known issues: 
+- variables at the end of a range must be followed by a space (preceding the closing ')')
+- variables used as note name followed by note attributes must be followed by a space
+
+----------------------------------------------------------------
   version 1.6.9
-- new bar tag parameter: measNum: set mesaure number sequence 
+- new \mrest tag intended to multi measures rests
+- new bar tag parameter: measNum: set measure number sequence 
 - new bar tag parameter: hidden: a boolean to hide the bar and prevent measure num to move
 - VGDevice extension to support ellipses
 - implement circle with marks
 - new interface to change piano roll voices color, based on html names
 - fix infinite loop issue in the context of small page width
+- fix issue with meter position and staff size
 
 ----------------------------------------------------------------
   version 1.6.8
