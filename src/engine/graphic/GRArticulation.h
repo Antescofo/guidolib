@@ -58,6 +58,8 @@ class GRArticulation : public GRTagARNotationElement
 		void 	print(std::ostream& os) const;
 	
 		static bool  compare (GRArticulation* i, GRArticulation* j) 	{ return (i->getArticulationOrder() < j->getArticulationOrder()); }
+    
+        virtual const GRArticulation *    isGRArticulation() const      { return this; }
 
 	protected:
 		void	placeStaccato( const GREvent * inParent, NVPoint & ioPos );

@@ -90,6 +90,9 @@ using namespace std;
 #include "GRText.h"
 #include "GRVoice.h"
 
+#include "GRSlur.h"
+#include "GRBowing.h"
+
 #include "kf_ivect.h"
 #include "TCollisions.h"
 
@@ -1902,6 +1905,18 @@ void GRStaff::boundingBoxPreview()
     traceMethod("boundingBoxPreview");
 #ifdef EXTENDEDBB
 	updateBoundingBox();
+    
+    // AC: calculate noteOnlyBoundingBox for AutoPos
+    noteOnlyBoundingBox.Set (0,0,0,0);
+    GuidoPos pos2 = mCompElements.GetHeadPosition();
+    while (pos2)
+    {
+        GRNotationElement * e = mCompElements.GetNext(pos2);
+        NVRect eltBox (e->getBoundingBox());
+        eltBox += e->getPosition();
+        noteOnlyBoundingBox.Merge( eltBox );
+     }
+    
 	return;
 #endif
     mBoundingBox.Set (0,0,0,0);
@@ -1932,13 +1947,21 @@ void GRStaff::updateBoundingBox()
         GRNotationElement * e = mCompElements.GetNext(pos);
         if (e) {
 #ifdef EXTENDEDBB
-			if (e->isGRSlur()) {
-				tmp = e->getBoundingBox() + e->getPosition();
-				if (tmp.Height() < 300) {
+            GRBowing * bowTag = dynamic_cast<GRBowing *>(e);
+			if (bowTag) {
+				tmp = bowTag->getBoundingBox() + bowTag->getPosition();
+				if (tmp.Height() < 1000 && tmp.Height() > 0) {
 					if (r.top > tmp.top) 		r.top = tmp.top;
 					if (r.bottom < tmp.bottom)	r.bottom = tmp.bottom;
 				}
 			}
+            
+            const GRArticulation * artTag = e->isGRArticulation();
+            if (artTag) {
+                tmp = e->getBoundingBox() + e->getPosition() + e->getOffset();
+                if (r.top > tmp.top)         r.top = tmp.top;
+                if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+            }
 
 			GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
 			if (ptag) {
@@ -1952,7 +1975,7 @@ void GRStaff::updateBoundingBox()
 
 			const GRSingleNote * note = e->isSingleNote();
 			if (note) {
-				NVRect b = note->getEnclosingBox();
+				NVRect b = note->getEnclosingBox(true, true, true);
 				if (b.Height() < 500) {
 					if (r.top > b.top) 			r.top = b.top;
 					if (r.bottom < b.bottom)	r.bottom = b.bottom;
@@ -2035,7 +2058,26 @@ GRStaff * GRStaff::getNextStaff() const
 */
 float GRStaff::getStaffBottom() const
 {
-	float bottom = mBoundingBox.bottom;
+#ifdef EXTENDEDBB
+    // AC: To preserve AUtoPOS with extended bounding boxes, noteOnlyBoundingBox behaves like before
+    float bottom = noteOnlyBoundingBox.bottom;
+
+    const GRStaff* prev = getPreviousStaff();
+    while (prev) {
+        if (prev->noteOnlyBoundingBox.bottom > bottom)
+            bottom = prev->noteOnlyBoundingBox.bottom;
+        prev = prev->getPreviousStaff();
+    }
+
+    const GRStaff* next = getNextStaff();
+    while (next) {
+        if (next->noteOnlyBoundingBox.bottom > bottom)
+            bottom = next->noteOnlyBoundingBox.bottom;
+        next = next->getNextStaff();
+    }
+    return bottom;
+#else
+    float bottom = mBoundingBox.bottom;
 
 	const GRStaff* prev = getPreviousStaff();
 	while (prev) {
@@ -2051,6 +2093,7 @@ float GRStaff::getStaffBottom() const
 		next = next->getNextStaff();
 	}
 	return bottom;
+#endif
 }
 
 // ----------------------------------------------------------------------------

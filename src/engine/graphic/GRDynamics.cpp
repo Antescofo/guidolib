@@ -106,6 +106,9 @@ void GRDynamics::tellPosition(GObject *caller, const NVPoint & newPosition)
 		const float y = autopos ? staff->getStaffBottom() + staffLSpace : staff->getDredgeSize() + 2 * staffLSpace;
 		fCurrentSegment.fy = y - dy;
 		fXPoints[sse->grsystem] = fCurrentSegment;
+//        cerr<<"\tDYNAMICS2"<< " "<< fCurrentSegment.fx1<<" "<<fCurrentSegment.fx2<<" "<<fCurrentSegment.fy<<endl;
+//
+//        mBoundingBox = NVRect(fCurrentSegment.fx1, 0.0, fCurrentSegment.fx2, -1.0*fCurrentSegment.fy);
 		clear (fCurrentSegment);
 	}
 	if ((sse->endflag == GRSystemStartEndStruct::RIGHTMOST) && empty(fCurrentSegment)) {	// this is the last segment
@@ -195,5 +198,10 @@ void GRDynamics::DrawDynamic( VGDevice & hdc, bool cresc) const
         hdc.PopFillColor();
         hdc.PopPenColor();
     }
+        
+//   DrawBoundingBox(hdc, VGColor(0,0,255));
+//    cerr<<"Dynamics Draw ";mBoundingBox.Print(cerr);mPosition.Print(cerr);getOffset().Print(cerr);
+//    cerr<<" "<<segment->fx1<<" "<<segment->fx2<<" "<<segment->fy<<" w="<<fWidth;
+//    cerr<<endl;
 }
 

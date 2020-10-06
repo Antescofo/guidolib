@@ -37,6 +37,9 @@ class GRPageText : public GRTagARNotationElement
 
 		virtual void			calcPosition();
 		virtual unsigned int	getTextAlign() const	{ return fTextalign; }
+    
+    // Returns true if the y-position is relative to top-margin (for header position calculation)
+    virtual bool            isRelativeToTopMargin() const;
 
 	protected:
 		GRPage *	fGRPage;

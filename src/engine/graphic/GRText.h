@@ -51,7 +51,8 @@ class GRText : public GRPTagARNotationElement
 
 		virtual void	accept (GRVisitor& visitor);
 		virtual void 	removeAssociation( GRNotationElement * el );
-		virtual void 	tellPosition( GObject * caller, const NVPoint & inPosition );
+        virtual void    tellPosition( GObject * caller, const NVPoint & inPosition );
+		virtual void 	tellPositionEnd( GRSingleNote * caller, const NVPoint & inPosition);
 		virtual void 	addAssociation( GRNotationElement * el );
 		
 		virtual void 	OnDraw( VGDevice & hdc ) const;
@@ -71,6 +72,8 @@ class GRText : public GRPTagARNotationElement
 		virtual bool	checkCollisionWith() const	{ return true; }
 		virtual bool	isLyrics() const;
 		virtual const GRText*	isText() const			{ return this; }
+        virtual GRText *    isGRLyrics()    { return (isLyrics() ? this : 0); }
+
 
 	protected:
 		virtual const VGColor 	startDraw( VGDevice & hdc ) const;

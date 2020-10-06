@@ -24,6 +24,7 @@
 #include "GRStaff.h"
 #include "GRSystem.h"
 #include "GRText.h"
+#include "GRSingleNote.h"
 #include "GUIDOInternal.h"	// for gGlobalSettings.gDevice
 
 #include "TagParameterFloat.h"
@@ -289,6 +290,64 @@ void GRText::tellPosition(GObject * caller, const NVPoint & inPosition)
 			xoffset = mBoundingBox.Width();
 		mBoundingBox -= NVPoint(xoffset, 0);
 	}
+}
+
+void  GRText::tellPositionEnd( GRSingleNote * caller, const NVPoint & inPosition)  {
+    //cerr<<"TEXT TELLEND on Pos:";inPosition.Print(cerr) ;cerr<<" Height:"<<mBoundingBox.Height()<<" pos=";mPosition.Print(cerr);cerr<<endl;
+    if( caller == 0 ) {
+        mDraw = false;
+        return;
+    }
+
+    const GRStaff * staff = caller->getGRStaff();
+    if( staff == 0 ) return;
+    
+    mStaffBottom = staff->getStaffBottom();
+    GRSystemStartEndStruct * sse = getSystemStartEndStruct(staff->getGRSystem());
+    assert(sse);
+
+    GRTextSaveStruct * st = (GRTextSaveStruct *)sse->p;
+    GRNotationElement * startElement = sse->startElement;
+    NVPoint newPos( inPosition );
+
+    // - Check if we're left-opened
+    if (sse->startflag == GRSystemStartEndStruct::OPENLEFT) {
+        if (caller != startElement) {
+            if (st->position.x == 0)
+            {
+                newPos.x -= LSPACE * 0.5f; // this is actually notebreite!
+                st->position = newPos;
+                st->text = "-";
+            }
+        }
+    }
+
+    // - Follows the y-position of the first element of the range (if any)
+    else if (caller == startElement)
+    {
+        newPos.y = caller->getPosition().y;
+        st->position = newPos;
+
+        const ARText * arText = getARText();
+        const char* text = arText ? arText->getText() : 0;
+        if (text) st->text = text;
+
+        FloatRect r = getTextMetrics (*gGlobalSettings.gDevice, staff);
+        setPosition (NVPoint(r.left, r.top));
+        //cerr<<"\t\t text="<< st->text <<" st->position2=";st->position.Print(cerr);cerr<<endl;
+
+        NVRect bb (0, 0, r.Width(), r.Height());
+        mBoundingBox = bb;
+        float xoffset = 0;
+        if (mTextAlign & VGDevice::kAlignCenter)
+            xoffset = mBoundingBox.Width()/2;
+        if (mTextAlign & VGDevice::kAlignRight)
+            xoffset = mBoundingBox.Width();
+        
+        mBoundingBox -= NVPoint(xoffset, 0);
+    }
+    
+    //cerr<<"\t->"<<mBoundingBox.Height()<<" BB=";mBoundingBox.Print(cerr);mPosition.Print(cerr);cerr<<endl;
 }
 
 // -----------------------------------------------------------------------------
