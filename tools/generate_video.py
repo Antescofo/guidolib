@@ -262,8 +262,10 @@ keywords += ['music score', 'classical music', 'tomplay', 'sheet music boss', 'm
              'playalong', 'classical playalong','classical backing track']
 
 instruments_pk = selected_accomp.get('instruments', [])
+accomp_instru_pk = None
 if instruments_pk:
     instruments = []
+    accomp_instru_pk = instruments_pk[0]
     for instrument_pk in instruments_pk:
         if (instrument_pk in instrument_map): # and (instrument_map[instrument_pk].lower() not in video_title.lower()):
             instruments.append(instrument_map[instrument_pk])
@@ -332,7 +334,7 @@ if GENERATE_VIDEO:
         os.remove(output_file)
     except:
         pass
-    subprocess.run(['python3', 'generate_thumbnail.py', short_title, author_last_name])
+    subprocess.run(['python3', 'generate_thumbnail.py', short_title, author_last_name, str(accomp_instru_pk)])
     subprocess.run(['videogen.sh', musicxml_file, asco_file, mp3_file, str(100 * selected_accomp.get('transposition', 0)), solo_mp3_file, output_file])
     if not os.path.exists(output_file):
         print('Error generating video')
