@@ -34,6 +34,7 @@ BLACKLIST_PIECE_PK += [543, 1583] # ugly?
 BLACKLIST_PIECE_PK += [1544] # hella long
 BLACKLIST_PIECE_PK += [1830] # malloc issue
 
+ONLY_INSTRUMENTS = set([38, 34, 35])  # Violoncelle, Flûte, Violon
 def info_to_branch_item(video_title, piece_id):
     item = {
           "type": 2,
@@ -162,13 +163,15 @@ else:
             continue
         valid = False
         for accomp in piece['accompaniments']:
-            if accomp.get('status') == 'Done':
+            # check if instruments are either Violon - Flûte - Violoncelle
+            if (accomp.get('status') == 'Done') and (set(accomp.get('instruments', [])) & ONLY_INSTRUMENTS):
                 valid = True
                 accomp_pk = accomp['pk']
                 break
         if valid:
             piece_pk = piece['pk']
             break
+
 # We can remove this security later
 if accomp_pk in processing_store['processed_accompaniments']:
   print('Accompaniment', accomp_pk, 'is already processed')
