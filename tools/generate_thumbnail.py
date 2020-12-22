@@ -37,5 +37,9 @@ for f in piece_title.split(' '):
 if line_len != 0:
     to_display += '\n'
 to_display += '\n' + author
+to_display = to_display.replace(',', ' ')
 subprocess.run(['rm', '-f', 'test_output.png'])
+print(['ffmpeg', '-i', random_file, '-vf', f'drawtext="x=0: fontcolor=0xffffffff: fontfile=/app/tools/HelveticaNeueBd.ttf: text={to_display}: fontsize=65: x=30: y=30', '-codec:a', 'copy', 'test\
+_output.png'])
 subprocess.run(['ffmpeg', '-i', random_file, '-vf', f'drawtext="x=0: fontcolor=0xffffffff: fontfile=/app/tools/HelveticaNeueBd.ttf: text={to_display}: fontsize=65: x=30: y=30', '-codec:a', 'copy', 'test_output.png'])
+print('DONE GENERATING')
