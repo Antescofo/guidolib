@@ -88,7 +88,7 @@ void GRSliceHeight::AddSystemSlice( const GRSystemSlice * slc, bool doboundingre
 				// we do the bounding-rectangle thing ...
 				// this is actually not needed here : the bounding box update is
 				// already computed by GRSystemSlice::Finish
-//				tmpstaff->updateBoundingBox();
+				tmpstaff->updateBoundingBox();
 				// the boundingBoxPreview method has been temporary use here to test code restructuration
 //				tmpstaff->boundingBoxPreview();
 				const NVRect & myrect = tmpstaff->getBoundingBox();

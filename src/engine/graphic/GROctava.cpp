@@ -177,7 +177,7 @@ void GROctava::OnDraw( VGDevice & hdc) const
 	}
 	if (sse->startflag == GRSystemStartEndStruct::LEFTMOST) {
 		NVPoint pos (r.left - fStaff->getStaffLSPACE(), r.top);
-		pos.y += fBassa ? -5 : fTextHeight - 5;
+		pos.y += fBassa ? -5 :  +15;    // second was fTextHeight - 5
 		OnDrawText(hdc, pos, fText.c_str(), int(fText.length()) );
 	}
 	
@@ -200,6 +200,8 @@ void GROctava::OnDraw( VGDevice & hdc) const
 	}
 	if (endSegment) drawingstate = 0;
 	else drawingstate++;
+    
+    //DrawBoundingBox(hdc, VGColor(250,0,0));
 }
 
 //void GROctava::addAssociation(GRNotationElement * el)

@@ -23,20 +23,29 @@
 #include "GRVisitable.h"
 #include "GRVisitor.h"
 
-class NEPointerList;
-class GRStaff;
-class GRSystemSlice;
 class ARMusicalObject;
 class GRAccidental;
-class GRSingleNote;
+class GRBar;
+class GREvent;
+class GRFingering;
+class GRGlue;
+class GRHarmony;
 class GRNote;
 class GRRest;
-class GREvent;
-class GRText;
-class GRGlue;
+class GRSingleNote;
+class GRStaff;
+class GRSystemSlice;
 class GRTempo;
+class GRText;
 class GRTrill;
-class GRBar;
+class GROctava;
+class NEPointerList;
+
+#ifdef SMUFL
+#define DEFAULTNUMERICSPACE	6
+#else
+#define DEFAULTNUMERICSPACE	0
+#endif
 
 
 const float kMinNoteSize = 0.001f;	// minimum size of an element, the element is not drawn when the size is smaller
@@ -94,8 +103,8 @@ public:
 								float inOffsetY = 0, float inFontSize = 0) const; // , float inScaleX = 0) const;
 			void OnDrawText( VGDevice & hdc, NVPoint pos, const char * cp, int inCharCount = -1 ) const;
 			void OnDrawText( VGDevice & hdc, const char * cp, int inCharCount = -1 ) const;
-			void DrawSymbol( VGDevice & hdc, unsigned int inSymbol, float inOffsetX = 0, float inOffsetY = 0,
-								   float inFontSize = 0) const;
+			void DrawSymbol( VGDevice & hdc, unsigned int inSymbol, float x = 0, float y = 0, float size = 0) const;
+			void DrawNumericSymbols( VGDevice & hdc, const char* symbols, float x, float y, float size, float spacing=DEFAULTNUMERICSPACE) const;
 			void Show( bool status )		{ mShow = status; }
 			bool GetShow() const			{ return mShow; }
 
@@ -147,6 +156,12 @@ public:
     virtual const GRTrill *		isGRTrill() const		{ return 0; }
     virtual const GRBar *		isGRBar() const			{ return 0; }
     virtual const GRDynamics *	isGRDynamic() const		{ return 0; }
+    virtual       GRFingering *    isGRFingering()         { return 0; }
+    virtual 	  GRText *	    isGRLyrics() 		{ return 0; }
+    virtual 	  GRSlur *		isGRSlur() 				{ return 0; }
+    virtual const GRHarmony *	isGRHarmony() const 	{ return 0; }
+    virtual const GROctava *    isGROctava() const      { return 0; }
+    virtual const GRArticulation *    isGRArticulation() const      { return 0; }
 
 protected:
 	

@@ -87,6 +87,8 @@ class GRPage : public GREvent
 		const SystemPointerList *  getSystems() const { return &mSystems; }
 
 		TYPE_TIMEPOSITION mDebugPageDate;
+    
+    float mPageheaderHeight;
 
 	protected:
 				void	setScaling( VGDevice & hdc, float vsizex, float vsizey ) const;

@@ -5,12 +5,15 @@
 // the guido engine interface
 //----------------------------------------------------------------------------
 class GuidoEngine {
-    constructor() {
-        this.fEngine = 0;
-        this.fScoreMap = 0;
-        this.fPRoll = 0;
-        this.fSPR = 0;
-        this.fFactory = 0;
+
+    constructor(module) {
+        this.fModule   = module;
+        this.fEngine   = new module.GuidoEngineAdapter();
+        this.fEngine.init();
+        this.fPRoll    = new module.GUIDOPianoRollAdapter();
+        this.fSPR      = new module.GUIDOReducedProportionalAdapter();
+        this.fScoreMap = new module.GUIDOScoreMap();    
+        this.fFactory  = new module.GUIDOFactoryAdapter();    
 
         // pîano roll: pitch line display modes
         this.kPRCLine      =  1;
@@ -28,47 +31,15 @@ class GuidoEngine {
         this.kPRAutoLines  =  0;
         this.kPRNoLine     = -1;
     }
-    
-    //------------------------------------------------------------------------
-    // async initialization
-    initialize (lib) {
-        if ((typeof process !== 'undefined') && (process.release.name === 'node')) {
-            var guidomodule = require (lib);
-            return new Promise ( (success) => {
-                    guidomodule().then ( (instance) => {
-                    this.moduleInit (instance);
-                    success ( this ); 
-                });
-            });
-        }
-        else {
-            var module = GuidoModule();
-            return new Promise ( (success, failure) => {
-                module['onRuntimeInitialized'] = () => {
-                this.moduleInit (module);
-                success ( this ); 
-                }
-            });
-        }
-    }
-    
-    //------------------------------------------------------------------------
-    // async initialization
-    moduleInit ( module ) {
-        this.fEngine   = new module.GuidoEngineAdapter();
-        this.fEngine.init();
-        this.fPRoll    = new module.GUIDOPianoRollAdapter();
-        this.fSPR      = new module.GUIDOReducedProportionalAdapter();
-        this.fScoreMap = new module.GUIDOScoreMap();    
-        this.fFactory  = new module.GUIDOFactoryAdapter();    
-    }
-        
+            
     //------------------------------------------------------------------------
     // Guido Engine interface
     shutdown ()                     { this.fEngine.shutdown(); }
     
     ar2gr (ar)                      { return this.fEngine.ar2gr (ar); }
     ar2grSettings (ar, settings)    { return this.fEngine.ar2gr (ar, settings); }
+    ar2midi (ar, file)              { return this.fModule.ar2MIDIFile (ar); }
+    ar2midiSettings (ar, settings)  { return this.fEngine.ar2MIDIFile (ar, settings); }
     updateGR (gr)                   { return this.fEngine.updateGR (gr); }
     updateGRSettings (gr, settings) { return this.fEngine.updateGRSettings (gr, settings); }
     freeAR (ar)                     { this.fEngine.freeAR (ar); }
@@ -153,10 +124,16 @@ class GuidoEngine {
     enableAutoVoicesColoration (proll, status) { return this.fPRoll.enableAutoVoicesColoration ( proll, status ); }
     setRGBColorToVoice  ( proll, voice, r, g, b, a) { return this.fPRoll.setRGBColorToVoice ( proll, voice, r, g, b, a ); }
     setHtmlColorToVoice ( proll, voice, c)     { return this.fPRoll.setHtmlColorToVoice ( proll, voice, c ); }
+    setColorToVoice 	( proll, voice, c)     { return this.fPRoll.setColorToVoice ( proll, voice, c ); }
     removeColorToVoice  ( proll, voice )       { return this.fPRoll.removeColorToVoice ( proll, voice ); }
     enableMeasureBars   ( proll, status )      { return this.fPRoll.enableMeasureBars ( proll, status ); }
     setPitchLinesDisplayMode (proll, mode)     { return this.fPRoll.setPitchLinesDisplayMode ( proll, mode ); }
     proll2svg           ( proll, w, h )        { return this.fPRoll.svgExport ( proll, w, h  ); }
+
+    //------------------------------------------------------------------------
+    // Reduced Proportional representation
+    // no relay for the interface
+    reducedProp()               { return this.fSPR; }
 
 
     //------------------------------------------------------------------------

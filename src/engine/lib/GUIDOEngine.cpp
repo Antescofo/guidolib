@@ -76,9 +76,9 @@ using namespace std;
 // - Guido Global variables
 // ==========================================================================
 const int GUIDOENGINE_MAJOR_VERSION = 1;
-const int GUIDOENGINE_MINOR_VERSION = 6;
-const int GUIDOENGINE_SUB_VERSION   = 8;
-const char* GUIDOENGINE_VERSION_STR = "1.6.8";
+const int GUIDOENGINE_MINOR_VERSION = 7;
+const int GUIDOENGINE_SUB_VERSION   = 0;
+const char* GUIDOENGINE_VERSION_STR = "1.7.0";
 
 ARPageFormat* gARPageFormat;
 const TagParametersMaps* gMaps = 0;
@@ -816,7 +816,7 @@ GUIDOAPI GuidoErrCode GuidoGR2SVG( const GRHandler handle, int page, std::ostrea
 	desc.sizey = int(pf.height/SVGDevice::kSVGSizeDivider);
 	dev->NotifySize(desc.sizex, desc.sizey);
 	dev->SelectPenColor(VGColor(0,0,0));
-	dev->SelectFillColor(VGColor(0,0,0));
+//	dev->SelectFillColor(VGColor(0,0,0));
 
 	GuidoErrCode error = GuidoOnDraw (&desc);
 

@@ -118,4 +118,9 @@ void GRPageText::calcPosition()
 	else if (second == 'b' || second == '7')mPosition.y = (pageHeight);
 }
 
-
+bool GRPageText::isRelativeToTopMargin() const {
+    if (fLocation.size() != 2) return false;
+    char second = fLocation[1];
+    
+    return (second == 't') || (second == '1') || (second == '2') || (second == '3');
+}

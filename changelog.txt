@@ -2,7 +2,28 @@ GUIDO Engine history
 
 
 ----------------------------------------------------------------
+  version 1.7.0
+- introduce variables
+- support single quote strings
+
+known issues: 
+- variables at the end of a range must be followed by a space (preceding the closing ')')
+- variables used as note name followed by note attributes must be followed by a space
+
+----------------------------------------------------------------
+  version 1.6.9
+- new \mrest tag intended to multi measures rests
+- new bar tag parameter: measNum: set measure number sequence 
+- new bar tag parameter: hidden: a boolean to hide the bar and prevent measure num to move
+- VGDevice extension to support ellipses
+- implement circle with marks
+- new interface to change piano roll voices color, based on html names
+- fix infinite loop issue in the context of small page width
+- fix issue with meter position and staff size
+
+----------------------------------------------------------------
   version 1.6.8
+- fingering text supports comma-eparated strings, which are rendered vertically stacked
 - new "wavy" parameter tag for trills
 - new \bow tag
 - Guido font extension - version 3.9 - fp glyph
@@ -13,6 +34,11 @@ GUIDO Engine history
 - autoHideTiedAccidentals global setting is now 'on' by default
 - fix incorrect slur position for beamed chords (issue #100)
 - fix incorrect tuplets on chords (issue #103)
+- fix incorrect tremolo on chords preceded by a grace note (issue #108)
+- fix incorrect incorrect slur position (issue #94)
+- fix missing clef and signatures due to staff tag (part of issue #96)
+
++ known issue: incorrect system map for examples/beethoven.gmn
 
 ----------------------------------------------------------------
   version 1.6.7

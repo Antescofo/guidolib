@@ -32,6 +32,8 @@
 
 @params:
 @param:displayMeasNum:boolean:displays measure number:false:true
+@param:hidden:boolean:hide bar and prevent measure num increment:false:true
+@param:measNum:integer:set measure number:*none*:true
 @param:numDx:unit:measure number displacement:0:true
 @param:numDy:unit:measure number displacement:0:true
 @paramdesc
@@ -67,7 +69,8 @@ class ARBar : public ARMTParameter
         void  setMeasureNumberDisplayed(int mode)	  { fMeasureNumberDisplayed = mode; }
         bool  isMeasureNumberDisplayedSet() const     { return fMeasureNumberDisplayedIsSet; }
 
-        bool isMeasureNumSkipped() const                       { return fSkippedMeasureNum; }
+        bool isMeasureNumSkipped() const              { return fSkippedMeasureNum || fHidden; }
+        bool hidden() const              			  { return fHidden; }
      
 		float getMeasureNumberDxOffset() const        { return numDx; }
 		float getMeasureNumberDyOffset() const        { return numDy; }
@@ -90,6 +93,7 @@ class ARBar : public ARMTParameter
 		const ARBar*	fLastBar;
 
         bool fMeasureNumberDisplayedIsSet;
+        bool fHidden = false;
 };
 
 #endif

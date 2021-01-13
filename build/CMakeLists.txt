@@ -12,7 +12,7 @@ get_filename_component(ROOT ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
 
 #######################################
 # versions management
-set (VERSION 1.6.8.0)
+set (VERSION 1.7.0)
 macro (get_major_minor_patch version)
 	string( REGEX REPLACE "([0-9]*)\\.([0-9]*)\\.([0-9]*)" "\\1"  VERSION_MAJOR ${version} )
 	string( REGEX REPLACE "([0-9]*)\\.([0-9]*)\\.([0-9]*)" "\\2"  VERSION_MINOR ${version} )
@@ -20,7 +20,7 @@ macro (get_major_minor_patch version)
 endmacro()
 get_major_minor_patch( ${VERSION} )
 set (SOVERS ${VERSION_MAJOR})
-set (STRVERS "v.1.6.7")
+set (STRVERS "v.1.7.0")
 set (GUIDOFWKVERS C)
 message (STATUS "Configuring version ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
@@ -29,7 +29,6 @@ message (STATUS "Configuring version ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION
 # Options 
 option ( IOS 		"Generates project for iOS" off )
 option ( DIST 		"Compiles universal binaries (x86_64 i386) on MacOSX" off )
-option ( MIDIEXPORT "MIDI export support (requires MidiShareLight)" off)
 option ( INDEPENDENTSVG "Independent SVG support (gets all font information from provided SVG files)" off)
 option ( STATICLIB  "Generates a static library (default for iOS)" off)
 option ( SMUFL  	"Use SMUFL compliant Bravura font" off)
@@ -58,12 +57,13 @@ if(APPLE)
 	if ( IOS )
 		message (STATUS "Generates project for iOS - Use -DIOS=no to change.")
 		set (CMAKE_XCODE_EFFECTIVE_PLATFORMS "iPhoneOS")
-		set (CMAKE_OSX_ARCHITECTURES "arm64")
+		#set (CMAKE_OSX_ARCHITECTURES "arm64 x86_64")
 		set (CMAKE_OSX_SYSROOT "iphoneos")
 
 		set (libtype STATIC)
-		set(IOS_DEPLOYMENT_TARGET 11.2) 
-		set (FMWK "false")
+		set(IOS_DEPLOYMENT_TARGET 13.0) 
+		set (FMWK "true")
+		set (CMAKE_MACOSX_RPATH 1)
 	else ()
 		message (STATUS "Generates Mac OS project- Use -DIOS=yes to change.")
 	 	#######################################
@@ -73,11 +73,11 @@ if(APPLE)
 		else ()
 			message (STATUS "Only the current architecture will be compiled - Use -DDIST=yes to change.")
 		endif ()
-	set (CMAKE_C++_FLAGS -mmacosx-version-min=10.10)
-#	set (CMAKE_MACOSX_RPATH 1)
-	set (CMAKE_LDFLAGS -mmacosx-version-min=10.10)
-	set (CMAKE_OSX_DEPLOYMENT_TARGET 10.10)
-	set (MACOSX_DEPLOYMENT_TARGET 10.10)
+	set (CMAKE_C++_FLAGS -mmacosx-version-min=10.15)
+	set (CMAKE_MACOSX_RPATH 1)
+	set (CMAKE_LDFLAGS -mmacosx-version-min=10.15)
+	set (CMAKE_OSX_DEPLOYMENT_TARGET 10.15)
+	set (MACOSX_DEPLOYMENT_TARGET 10.15)
 	endif ()
 endif()
 
@@ -125,29 +125,6 @@ elseif(UNIX)
 endif()
 
 #######################################
-# midi export support
-if (MIDIEXPORT)
-	message (STATUS "MIDI export will be generated (requires MidiShareLight) - Use -DMIDIEXPORT=no to change.")
-	set (MSLIGHT_PATH	${ROOT}/src/midisharelight)
-	set (DEFS ${DEFS} MIDIEXPORT )
-	
-	set(INCL ${INCL} ${MSLIGHT_PATH})			# add include folders
-	if (WIN32)
-		if (${CMAKE_CL_64})
-			set(LINK ${LINK} "${MSLIGHT_PATH}/win64/midisharelight64.lib")
-		else()
-			set(LINK ${LINK} "${MSLIGHT_PATH}/win32/midisharelight.lib")
-		endif()
-	elseif(APPLE)
-		set(LINK ${LINK} "-L${MSLIGHT_PATH}/macos -lmidisharelight")
-	elseif(UNIX)
-		set(LINK ${LINK} "-L/usr/local/lib -lmidisharelight")
-	endif (WIN32)
-else()
-	message (STATUS "MIDI export will not be generated - Use -DMIDIEXPORT=yes to change (requires MidiShareLight).")
-endif()
-
-#######################################
 # independent svg support
 if (INDEPENDENTSVG STREQUAL "yes")
 	message (STATUS "Independent SVG will be enforced and all SVG fonts must be elaborated in SVG files - Use -DINDEPENDENTSVG=no to change.")
@@ -158,21 +135,27 @@ endif()
 
 
 #######################################
+# midi export support
+set (MSLIGHT_PATH	${ROOT}/midisharelight/src)
+set (DEFS ${DEFS} MIDIEXPORT MSLIGHT)
+
+#######################################
 # vgdev
 include (cmake/vgdev.cmake)
 
 
 #######################################
 # set sources and headers files
-file (GLOB SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${SRC_PATH}/*/*.cpp" ${VGDEV_SRC})
-file (GLOB HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${SRC_PATH}/*/*.h" ${VGDEV_H})
-file (GLOB PUBLICHEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${HEADERS_PATH}/*.h" "${VGDEV_H}" "${SRC_PATH}/devices/*H")
+file (GLOB SRC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${SRC_PATH}/*/*.cpp" ${MSLIGHT_PATH}/*.cpp ${VGDEV_SRC})
+file (GLOB HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${SRC_PATH}/*/*.h" ${MSLIGHT_PATH}/*.h ${VGDEV_H})
+file (GLOB PUBLICHEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${HEADERS_PATH}/*.h" "${VGDEV_H}" "${SRC_PATH}/devices/*H" "${SRC_PATH}/abstract/Fraction.h" "${SRC_PATH}/lib/GUIDOInternal.h" )
 
 
 #######################################
 # set includes
 set(INCL ${INCL} "${SRC_PATH}/*")			# add include folders
 set(INCL ${INCL} "${VGDEV_PATH}")			# add include folders
+set(INCL ${INCL} "${MSLIGHT_PATH}")			# add include folders
 file (GLOB INCDIRS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${INCL})
 include_directories( ${INCDIRS})
 set_source_files_properties (${INCL} PROPERTIES HEADER_FILE_ONLY TRUE)
@@ -186,7 +169,7 @@ if(WIN32)
 endif(WIN32)
 
 if(APPLE)
-	set(LINK ${LINK} "-framework Carbon -framework CoreText")
+	set(LINK ${LINK} "-framework CoreText -framework CoreGraphics -framework CoreFoundation")
 elseif (UNIX)
 	EXECUTE_PROCESS ( COMMAND "pkg-config"  "--libs" "cairo"   OUTPUT_VARIABLE TMP ERROR_VARIABLE TMP )
 	string (STRIP ${TMP} CAIRO)
@@ -196,11 +179,39 @@ endif()
 #######################################
 # describe targets
 if (IOS)
-	add_library(${target} STATIC ${SRC} ${HEADERS} ${PUBLICHEADERS})
-	set_target_properties ( ${target} PROPERTIES 
+	## IOS Static Lib
+	add_library(libguidoengine STATIC ${SRC} ${HEADERS} ${PUBLICHEADERS})
+	set_target_properties ( libguidoengine PROPERTIES 
 			ARCHIVE_OUTPUT_DIRECTORY  ${LIBDIR}
 			ARCHIVE_OUTPUT_DIRECTORY_RELEASE  ${LIBDIR}
-			XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${IOS_DEPLOYMENT_TARGET} )
+			XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${IOS_DEPLOYMENT_TARGET} 
+			FRAMEWORK FALSE
+			OUTPUT_NAME guidoengine)
+
+	## IOS Framework
+	add_library(${target} SHARED ${SRC} ${HEADERS} ${PUBLICHEADERS})
+	set_target_properties ( ${target} PROPERTIES 
+			RUNTIME_OUTPUT_DIRECTORY  ${LIBDIR}
+			RUNTIME_OUTPUT_DIRECTORY_RELEASE  ${LIBDIR}
+			ARCHIVE_OUTPUT_DIRECTORY  ${LIBDIR}
+			ARCHIVE_OUTPUT_DIRECTORY_RELEASE  ${LIBDIR}
+			LIBRARY_OUTPUT_DIRECTORY ${LIBDIR}
+			LIBRARY_OUTPUT_DIRECTORY_RELEASE ${LIBDIR}
+			XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${IOS_DEPLOYMENT_TARGET}
+			FRAMEWORK TRUE
+			FRAMEWORK_VERSION ${GUIDOFWKVERS}
+			XCODE_ATTRIBUTE_DEFINES_MODULE YES
+			PUBLIC_HEADER "${PUBLICHEADERS}"
+			VERSION ${VERSION}
+			SOVERSION ${SOVERS} 		
+			MACOSX_FRAMEWORK_IDENTIFIER "com.grame.guidoengine"
+			MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${STRVERS}
+			MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION}
+			INSTALL_NAME_DIR "$(LOCAL_LIBRARY_DIR)/Frameworks"
+      		BUILD_WITH_INSTALL_NAME_DIR YES
+			#XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
+			XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH YES 
+			)
 
 else()
 
@@ -254,14 +265,12 @@ add_subdirectory (java)
 add_subdirectory (postprocess)
 endif()
 
-if (NOT IOS)
 #######################################
 # install setup
 #######################################
 if (PACK)
 set (CMAKE_INSTALL_PREFIX .)
 endif()
-
 message (STATUS "Library install prefix set to ${CMAKE_INSTALL_PREFIX} - Use -DCMAKE_INSTALL_PREFIX=path to change.")
 install ( TARGETS ${target}
 	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin CONFIGURATIONS Release
@@ -271,7 +280,7 @@ install ( TARGETS ${target}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/guido
 )
 
-
+if (NOT IOS)
 ####################################
 # install gmn files
 set (GMN ${ROOT}/gmn-examples)

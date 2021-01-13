@@ -75,6 +75,7 @@ GRPage::GRPage(GRMusic * grmusic, GRStaffManager * grstafmgr,
 	// TYPE_TIMEPOSITION starttime= von;
 	m_staffmgr = grstafmgr;
 	mCurMusic = grmusic;
+    mPageheaderHeight = 0.0;
 }
 
 // ----------------------------------------------------------------------------
@@ -141,7 +142,7 @@ bool GRPage::addSystem( GRSystem * inSystem, float * ioUsedSystemDistance )
 			*ioUsedSystemDistance = -1;
 		}
 		else {
-			newPos.y = lastSystem->getPosition().y + lastSystem->getBoundingBox().bottom;
+            newPos.y = lastSystem->getPosition().y + lastSystem->getBoundingBox().bottom;
 			// this should be handled by "springs" as well... and there should be a "minimum" distance...
 			newPos.y -= newSystemBox.top;
 			// the default distance ...
@@ -503,21 +504,50 @@ const ARMusic * GRPage::getARMusic() const
 */
 void GRPage::finishPage( bool islastpage )
 {
+    float headerOffset = (mPageheaderHeight > 0.0 ? mPageheaderHeight + 10 : 0.0); // AC
+    
 	if (settings.systemsDistribution == kNeverDistrib) {
+        // AC: Adjust y position based on Title and Headers
+        float cury = 0;
+        GRSystem * lastSystem = 0;
 		SystemPointerList::iterator ptr;
 		for( ptr = mSystems.begin(); ptr != mSystems.end(); ++ ptr ) {
-			(*ptr)->FinishSystem();
-			(*ptr)->setGRPage(this);
+            // AC: (1) Adjust y-pos based on page Header (titles, composer)
+            // AC: (2) make systemDistance a factor between the "middle" (baseline) of staves instead of BB (2020/05)
+            GRSystem * system = *ptr;
+            NVPoint newpos;
+            system->FinishSystem();
+
+            if (lastSystem) {
+                // We are in system 2+
+                // (2):
+                float heightFromBBs = lastSystem->getBoundingBox().bottom - system->getBoundingBox().top + 300;  // 200 = 4*LSPACE
+                float heightToAdd = ( heightFromBBs > settings.systemsDistance ? heightFromBBs : settings.systemsDistance);
+                newpos.y = lastSystem->getPosition().y + system->getOffset().y + heightToAdd;
+                // (1):
+                newpos.y += cury ;//- (*ptr)->getBoundingBox().top;
+                system->setPosition(newpos);
+            }else {
+                // First system on page
+                // (1):
+                cury = headerOffset;
+                newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
+                system->setPosition(newpos);
+            }
+            lastSystem = system;
+            // END OF AC / The following FinishSystem will propagate solely the position
+			system->FinishSystem();
+			system->setGRPage(this);
 		}
 		return;
 	}
 
 	const size_t systemCount = mSystems.size();
 	float pagesizey = getInnerHeight();
-	float dist = pagesizey - m_totalsystemheight;
+    float dist = pagesizey - m_totalsystemheight - mPageheaderHeight;
 	if (systemCount > 1)
 		dist = dist / (float(systemCount - 1));
-
+    
 	if (dist > 0) {
 		if ((settings.systemsDistribution == kAlwaysDistrib)
 			|| (settings.systemsDistribution == kAutoDistrib) // DF added on Feb 13 2011 to force correct mapping
@@ -540,29 +570,66 @@ void GRPage::finishPage( bool islastpage )
 
 			// then we put the mSystems at these distances ...
 			float cury = 0;
+            GRSystem * prevSystem = 0;
 			for(SystemPointerList::iterator i = mSystems.begin(); i != mSystems.end(); i++ ) {
 				GRSystem * system = *i;
-				if (cury > 0) {
-					NVPoint newpos;
-					newpos.y = cury - system->getBoundingBox().top;
-					system->setPosition( newpos );
-					cury += system->getBoundingBox().Height();
-				}
-				else // So this is the first system. Just get its bottom.
-				{
-					cury += system->getPosition().y + system->getBoundingBox().bottom;
-				}				
+                NVPoint newpos;
+                system->FinishSystem();
+
+                if (prevSystem) {
+                    // Not the first system
+                    newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
+                    system->setPosition( newpos );
+                    cury += system->getBoundingBox().Height();
+                }else {
+                    // This is the first system
+                    // AC: Adjust using headerHeight for the first system
+                    cury = headerOffset;
+                    newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
+                    system->setPosition(newpos);
+                    // END OF AC
+                    cury += system->getBoundingBox().Height();//= system->getPosition().y + system->getBoundingBox().bottom; //
+                }
+
 				cury += dist;
                 system->FinishSystem();
 				system->setGRPage(this);
+                prevSystem = system;
 			}
 		}
 	}
 	else {
 		SystemPointerList::iterator ptr;
+        // AC: Adjust y position based on Title and Headers
+        float cury = 0;
+        GRSystem * lastSystem = 0;
+
 		for( ptr = mSystems.begin(); ptr != mSystems.end(); ++ ptr ) {
-			(*ptr)->FinishSystem();
-			(*ptr)->setGRPage(this);
+            // AC: Adjust y-pos based on page Header (titles, composer)
+            GRSystem * system = *ptr;
+            NVPoint newpos;
+            system->FinishSystem();
+
+            if (lastSystem) {
+                // Not the first system
+                newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
+                system->setPosition( newpos );
+                cury += system->getBoundingBox().Height();
+            }else {
+                // This is the first system
+                // AC: Adjust using headerHeight for the first system
+                cury = headerOffset;
+                newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
+                system->setPosition(newpos);
+                // END OF AC
+                cury += system->getBoundingBox().Height();//= system->getPosition().y + system->getBoundingBox().bottom; //
+            }
+
+            cury +=  50;
+            lastSystem = system;
+            // END OF AC
+			system->FinishSystem();
+			system->setGRPage(this);
 		}
 	}
 	// hack to get correct time position for the page [DF - May 26 2010]

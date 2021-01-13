@@ -68,6 +68,7 @@
 #include "ARMark.h"
 #include "ARMerge.h"
 #include "ARMeter.h"
+#include "ARMMRest.h"
 #include "ARMusic.h"
 #include "ARMusicalVoice.h"
 #include "ARNewPage.h"
@@ -1153,7 +1154,13 @@ void ARFactory::createTag( const char * name, int no )
 				ARMeter * tmp = new ARMeter;
 				mTags.AddHead(tmp); // push()
 				mCurrentVoice->AddTail(tmp);
-				
+				mCurrentMeter = tmp;
+			}
+			else if (!strcmp(name, kTagMRest ))
+			{
+				ARMMRest * tmp = new ARMMRest;
+				mTags.AddHead(tmp);
+				mCurrentVoice->AddPositionTag(tmp);
 			}
 			else if (!strcmp(name, kTagMark ))
 			{
@@ -1758,7 +1765,7 @@ void ARFactory::endTremolo (ARMusicalTag * tag)
 			
 			NoteAndChordParser * newParser = new NoteAndChordParser();
 			newParser->setFactory(newFactory);
-			std::string pitch = mCurrentTremolo->getPitch() ? mCurrentTremolo->getPitch()->getValue() : 0;
+			std::string pitch = mCurrentTremolo->getPitch();
 			pitch.insert(pitch.begin(), 1, '[');
 			std::stringstream pitchStr(pitch);
 			newParser->setStream(&pitchStr);

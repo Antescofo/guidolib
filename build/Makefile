@@ -37,6 +37,7 @@ basic : $(PROJ)
 	cd $(BUILDDIR) && cmake --build .  $(BUILDOPT) -- $(JOBS)
 
 all : $(PROJ)
+	git submodule update --init
 	$(MAKE) basic
 	$(MAKE) Qt
 	$(MAKE) wasm
@@ -77,6 +78,7 @@ help :
 	@echo "   localinstall : install the Guido tools to $$HOME/bin"
 	@echo "   tags         : extract the current tags list"
 	@echo "   guido2       : build the embedded svg font"
+	@echo "   package      : build a package for distribution"
 	@echo 
 	@echo "Options:"
 	@echo "   BUILDDIR     : the output folder (currently $(BUILDDIR))"
@@ -134,6 +136,7 @@ android :
 # building the library for iOS
 #===============================================================
 ios : iosdir/guidolib.xcodeproj
+	git submodule update --init
 	cd iosdir && cmake --build .  $(BUILDOPT) --target GUIDOEngine -- $(JOBS)
 
 iosdir/guidolib.xcodeproj:
@@ -178,7 +181,6 @@ localinstall:
 #===============================================================
 package: PACK:=GuidoLib-$(VERSION)
 package: ../gmn-examples/examples
-	cd ../gmn-examples/examples && svn up
 	make install PREFIX=../$(PACK)
 	hdiutil create $(PACK).dmg -fs HFS+ -srcfolder $(PACK) -format UDBZ -ov
 	rm -rf
