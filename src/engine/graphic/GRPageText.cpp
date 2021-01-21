@@ -24,6 +24,8 @@
 #include "VGFont.h"
 
 #include "FontManager.h"
+#include "TagParameterFloat.h"
+
 
 
 GRPageText::GRPageText ( const ARText * ar, GRPage * page, const char* txt, const char* location)
@@ -38,6 +40,7 @@ GRPageText::GRPageText ( const ARText * ar, GRPage * page, const char* txt, cons
 	fFontName   = ar->getFont();
 	fFontAttrib = ar->getTextAttributes();
 	fFontSize   = ar->getFSize();
+    fDy         = ar->getDY()->getValue();
 
 	fTextalign = VGDevice::kAlignLeft + VGDevice::kAlignTop;
 	const VGFont* myfont = FontManager::GetTextFont(ar, LSPACE, fTextalign);
@@ -123,4 +126,8 @@ bool GRPageText::isRelativeToTopMargin() const {
     char second = fLocation[1];
     
     return (second == 't') || (second == '1') || (second == '2') || (second == '3');
+}
+
+float GRPageText::getYOffset() const {
+    return fDy;
 }

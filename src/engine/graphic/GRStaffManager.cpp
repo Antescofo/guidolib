@@ -888,10 +888,11 @@ int GRStaffManager::AddPageTag(GRNotationElement * grel, GRStaff * grstaff,int v
 	mGrPage->AddTail(grel);
     // AC: Add to pageHeaderHeight if the element is hooked to topMargin
     if (grpgtxt->isRelativeToTopMargin()) {
-        float bottom = grpgtxt->getPosition().y + grpgtxt->getBoundingBox().bottom;
+        float bottom = grpgtxt->getPosition().y + grpgtxt->getBoundingBox().bottom - grpgtxt->getYOffset();
         if (bottom > mGrPage->mPageheaderHeight) {
             mGrPage->mPageheaderHeight = bottom;
         }
+
     }
     // END OF AC
 	return 0;
