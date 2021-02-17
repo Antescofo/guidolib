@@ -48,7 +48,7 @@ WORKDIR /app/build
 RUN make -j 4 && make install
 
 RUN apt-get update
-RUN apt-get install -y imagemagick
+RUN apt-get install -y imagemagick qrencode
 
 COPY tools /app/tools
 WORKDIR /app/tools
