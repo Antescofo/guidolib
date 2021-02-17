@@ -48,7 +48,10 @@ WORKDIR /app/build
 RUN make -j 4 && make install
 
 RUN apt-get update
-RUN apt-get install -y imagemagick qrencode
+RUN apt-get install -y curl unzip qrencode imagemagick
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+RUN unzip awscliv2.zip
+RUN ./aws/install
 
 COPY tools /app/tools
 WORKDIR /app/tools
