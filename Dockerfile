@@ -59,6 +59,7 @@ RUN cmake .
 RUN make -j 4
 RUN cp /app/tools/videogeneration /usr/bin/videogeneration
 RUN cp /app/tools/audioselector /usr/bin/audioselector
+RUN cp /app/tools/get_json_mapping /usr/bin/get_json_mapping
 
 RUN ln -s /app/tools/videogen.sh /usr/bin/videogen.sh
 RUN ln -s /app/tools/generate_video.py /usr/bin/generate_video
