@@ -47,18 +47,13 @@ COPY src /app/src
 WORKDIR /app/build
 RUN make -j 4 && make install
 
-COPY tools /app/tools
-
 RUN apt-get update
-RUN apt-get install -y curl unzip qrencode
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-RUN unzip awscliv2.zip
-RUN ./aws/install
+RUN apt-get install -y imagemagick
 
+COPY tools /app/tools
 WORKDIR /app/tools
 RUN cmake .
 RUN make -j 4
-RUN apt-get install -y imagemagick
 RUN cp /app/tools/videogeneration /usr/bin/videogeneration
 RUN cp /app/tools/audioselector /usr/bin/audioselector
 

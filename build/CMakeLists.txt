@@ -136,8 +136,8 @@ endif()
 
 #######################################
 # midi export support
-set (MSLIGHT_PATH	${ROOT}/midisharelight/src)
-set (DEFS ${DEFS} MIDIEXPORT MSLIGHT)
+# set (MSLIGHT_PATH	${ROOT}/midisharelight/src)
+# set (DEFS ${DEFS} MIDIEXPORT MSLIGHT)
 
 #######################################
 # vgdev
@@ -155,7 +155,7 @@ file (GLOB PUBLICHEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${HEADERS_PATH}/*
 # set includes
 set(INCL ${INCL} "${SRC_PATH}/*")			# add include folders
 set(INCL ${INCL} "${VGDEV_PATH}")			# add include folders
-set(INCL ${INCL} "${MSLIGHT_PATH}")			# add include folders
+# set(INCL ${INCL} "${MSLIGHT_PATH}")			# add include folders
 file (GLOB INCDIRS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${INCL})
 include_directories( ${INCDIRS})
 set_source_files_properties (${INCL} PROPERTIES HEADER_FILE_ONLY TRUE)
@@ -171,9 +171,10 @@ endif(WIN32)
 if(APPLE)
 	set(LINK ${LINK} "-framework CoreText -framework CoreGraphics -framework CoreFoundation")
 elseif (UNIX)
-	EXECUTE_PROCESS ( COMMAND "pkg-config"  "--libs" "cairo"   OUTPUT_VARIABLE TMP ERROR_VARIABLE TMP )
+        EXECUTE_PROCESS ( COMMAND "pkg-config"  "--libs" "cairo"   OUTPUT_VARIABLE TMP ERROR_VARIABLE TMP )
 	string (STRIP ${TMP} CAIRO)
 	set(LINK ${LINK} ${CAIRO})
+
 endif()
 
 #######################################

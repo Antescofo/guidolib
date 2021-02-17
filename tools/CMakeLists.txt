@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 2.6)
 project (videogeneration)
 set (target videogeneration)
+set (target_json_mapping get_json_mapping)
 set (target_audioselector audioselector)
 
 # LibFindMacros
@@ -14,6 +15,8 @@ list(REMOVE_ITEM SERVER_CPP_SOURCES "/app/tools/../server/main.cpp")
 FILE(GLOB SERVER_C_SOURCES   ${ROOT}/server/*.c)
 FILE(GLOB CAIRO_CPP_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/../platforms/linux/src/Cairo*.cpp)
 FILE(GLOB LOCAL_CPP_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/videogeneration.cpp)
+FILE(GLOB LOCAL_CPP_SOURCES_JSON_MAPPING  ${CMAKE_CURRENT_SOURCE_DIR}/get_json_mapping.cpp)
+
 FILE(GLOB AUDIOSELECTOR_CPP_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/audioselector.cc)
 
 FILE(GLOB REMOTE_CPP_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/../platforms/linux/server/*.cpp)
@@ -48,22 +51,23 @@ if(cairo_INCLUDE_DIRS)
 endif()
 set(LINK ${LINK} ${cairo_LIBRARIES})
 
-
 # libmusicxml
 find_path(musicxml_INCLUDE_DIR
   NAMES libmusicxml.h
 )
 find_library(musicxml_LIBRARY
-  NAMES musicxml2
+  NAMES libmusicxml
 )
 set(musicxml_PROCESS_INCLUDES musicxml_INCLUDE_DIR)
 set(musicxml_PROCESS_LIBS musicxml_LIBRARY)
-libfind_process(musicxml)
+libfind_process(libmusicxml)
 if(musicxml_INCLUDE_DIRS)
   add_definitions("-I" ${musicxml_INCLUDE_DIRS})
 endif()
-set(LINK ${LINK} ${musicxml_LIBRARIES})
-
+message(STATUS "Looking for someheader.h")
+message(STATUS ${musicxml_LIBRARIES})
+set(LINK ${LINK} ${musicxml_LIBRARIES} -llibmusicxml)
+message(STATUS ${LINK})
 # microhttpd
 libfind_pkg_check_modules(microhttpd_PKGCONF libmicrohttpd)
 find_path(microhttpd_INCLUDE_DIR
@@ -152,6 +156,9 @@ set(CMAKE_CXX_FLAGS "-O3 -fpermissive -std=c++11")
 # set(CMAKE_CXX_FLAGS "-g -ggdb -std=c++11 -fpermissive")
 
 add_executable(${target} ${LOCAL_CPP_SOURCES} ${REMOTE_CPP_SOURCES} ${SERVER_CPP_SOURCES} ${SERVER_C_SOURCES} ${CAIRO_CPP_SOURCES} ${JSON_CPP_SOURCES})
+add_executable(${target_json_mapping} ${LOCAL_CPP_SOURCES_JSON_MAPPING} ${REMOTE_CPP_SOURCES} ${SERVER_CPP_SOURCES} ${SERVER_C_SOURCES} ${CAIRO_CPP_SOURCES} ${JSON_CPP_SOURCES})
+
 add_executable(${target_audioselector} ${AUDIOSELECTOR_CPP_SOURCES})
 
 target_link_libraries(${target} ${LINK})
+target_link_libraries(${target_json_mapping} ${LINK})
