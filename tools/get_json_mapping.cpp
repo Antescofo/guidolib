@@ -328,10 +328,6 @@ int main(int argc, char* argv[]) {
 
   interpolate(date_to_time, map_collector);
 
-  for (auto it : map_collector) {
-    if (it.event_type != 2)
-      std::cout << it.date << " " << it.time << " " << it.measure << std::endl;
-  }
   std::string whole_guido = guidostr;
   std::string preview_guido = guidostr;
   int num_offset_preview = 0;
@@ -339,11 +335,25 @@ int main(int argc, char* argv[]) {
   double preview_audio_begin = 0;
   
   if (has_begin_bar) {
+      for (auto it : map_collector) {
+        if (it.event_type != 2) {
+          if (it.measure >= begin_bar) {
+            preview_audio_begin = it.time;
+            num_offset_preview = it.date.num;
+            deno_offset_preview = it.date.denom;
+            break;
+          }
+        }
+      }
     // std::cout << "Need to compute" << endl;
     // return 1;
   }
   // Filter it with begin_bar & end_bar
   std::string ret = "{";
+  ret += "\"num_offset_preview\": " + to_string(num_offset_preview);
+  ret += ", \"deno_offset_preview\": " + to_string(deno_offset_preview);
+  ret += ", \"preview_audio_begin\": " + to_string(preview_audio_begin);
+
   ret += "}";
   cout << ret << endl;
   return 0;
