@@ -10,3 +10,4 @@ Makefile
 sizedebug
 videogeneration
 audioselector
+get_json_mapping
