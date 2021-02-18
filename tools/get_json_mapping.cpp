@@ -1,5 +1,6 @@
 #include <map>
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <sstream>
 #include <string>
@@ -8,17 +9,21 @@
 #include <libmusicxml/libmusicxml.h>
 #include "engine.h"
 #include "Fraction.h"
+#include "Base64.h"
 #include <cmath>
 
 
 using namespace std;
 
 
-bool replace(std::string& str, const std::string& from, const std::string& to) {
+bool replace(std::string& str, const std::string& from, const std::string& to, bool only_once=false) {
+  int last_pos = 0;
   while (1) {
-    size_t start_pos = str.find(from);
+    size_t start_pos = str.find(from, last_pos);
     if(start_pos == std::string::npos)
       return false;
+    if (only_once)
+      last_pos = start_pos + 2;
     str.replace(start_pos, from.length(), to);
   }
   return true;
@@ -408,7 +413,12 @@ int main(int argc, char* argv[]) {
 
 
   // std::string preview_guido = guidostr;
-  //ret += ", \"preview_guido\": \"" + preview_guido + "\"";
+  replace(preview_guido, "\n", " ");
+  replace(preview_guido, "\r", " ");
+  replace(preview_guido, "\t", " ");
+
+  replace(preview_guido, "  ", " ");
+  ret += ", \"preview_guido_b64\": \"" + macaron::Base64().Encode(preview_guido) + "\"";
 
   ret += "}";
   cout << ret << endl;
