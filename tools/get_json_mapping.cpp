@@ -366,7 +366,23 @@ int main(int argc, char* argv[]) {
 
   // Filter it with begin_bar & end_bar
   std::string ret = "{";
-  ret += "\"num_offset_preview\": " + to_string(num_offset_preview);
+  ret += "\"beat_mapping\": {";
+  bool first = true;
+  for (auto it : map_collector) {
+    if (it.event_type != 2) {
+      if (!first) ret += ", ";
+      first = false;
+      ret += "\"" + to_string(it.date.num) + "/" + to_string(it.date.denom) + "\"";
+      ret += ": {";
+      ret += "\"t\": " + to_string(it.time);
+      ret += ", \"m\": " + to_string(it.measure);
+      ret += ", \"e\": " + to_string(it.event_type);
+      ret += "}";
+
+    }
+  }  
+  ret += "}";
+  ret += ", \"num_offset_preview\": " + to_string(num_offset_preview);
   ret += ", \"deno_offset_preview\": " + to_string(deno_offset_preview);
   ret += ", \"preview_audio_begin\": " + to_string(preview_audio_begin);
 
