@@ -215,10 +215,10 @@ public:
       ninfos.isOriginTied = infos.isOriginTied;
       ninfos.intensity = infos.intensity;
       this->push_back(Element(box, dates.first, ninfos, this->page, 1, measure)); // note on
-      // bool noteoff = ((!ninfos.isTied) || (!ninfos.isOriginTied));
-      // if (noteoff) {
-      // this->push_back(Element(box, dates.second, ninfos, this->page, 2)); // note off
-      // }
+      bool noteoff = ((!ninfos.isTied) || (!ninfos.isOriginTied));
+      if (noteoff) {
+        this->push_back(Element(box, dates.second, ninfos, this->page, 2, measure)); // note off
+      }
     }
     else if (infos.type == kRest) {
       this->push_back(Element(box, dates.first, infos, this->page, 0, measure));
@@ -333,6 +333,12 @@ int main(int argc, char* argv[]) {
   int num_offset_preview = 0;
   int deno_offset_preview = 1;
   double preview_audio_begin = 0;
+  int num_preview_end = 0;
+  int deno_preview_end = 0;
+  double preview_audio_end = 0;
+
+  int computed_end_bar = 99999;
+  if (has_end_bar) computed_end_bar = end_bar;
   
   if (has_begin_bar) {
       for (auto it : map_collector) {
@@ -348,11 +354,25 @@ int main(int argc, char* argv[]) {
     // std::cout << "Need to compute" << endl;
     // return 1;
   }
+  
+  for (auto it : map_collector) {
+    preview_audio_end = it.time;
+    num_preview_end = it.date.num;
+    deno_preview_end = it.date.denom;
+    if (it.measure > computed_end_bar) {
+      break;
+    }
+  }
+
   // Filter it with begin_bar & end_bar
   std::string ret = "{";
   ret += "\"num_offset_preview\": " + to_string(num_offset_preview);
   ret += ", \"deno_offset_preview\": " + to_string(deno_offset_preview);
   ret += ", \"preview_audio_begin\": " + to_string(preview_audio_begin);
+
+  ret += ", \"num_preview_end\": " + to_string(num_preview_end);
+  ret += ", \"deno_preview_end\": " + to_string(deno_preview_end);
+  ret += ", \"preview_audio_end\": " + to_string(preview_audio_end);
 
   ret += "}";
   cout << ret << endl;
