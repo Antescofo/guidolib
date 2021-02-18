@@ -1,6 +1,7 @@
 #include <map>
 #include <iostream>
 #include <algorithm>
+#include <sstream>
 #include <string>
 #include <vector>
 #include "guidosession.h"
@@ -206,7 +207,7 @@ public:
     else if (infos.type == kNote) {
       // we only play the first staff
       GuidoElementInfos ninfos;
-     
+
       ninfos.type = infos.type;
       ninfos.staffNum = infos.staffNum;
       ninfos.voiceNum = infos.voiceNum;
@@ -302,6 +303,22 @@ int main(int argc, char* argv[]) {
   std::stringstream guido;
 
   getline(ifs, content_xml, '\0');
+
+  /*
+     if ((beginMeasure != 0) || (endMeasure != 0)) {
+            return partialxml2guido(xmlfile, generateBars, partFilter, beginMeasure, endMeasure, out, 0);
+        }
+                return xml2guido(xmlfile, generateBars, partFilter, out, file);
+        }
+
+   */
+  // musicxmlfile2guido(const char *file, bool generateBars, int beginMeasure, int endMeasure, int partFilter, ostream& out)
+
+  if (!has_begin_bar) begin_bar = 0;
+  if (!has_end_bar) end_bar = 0;
+  std::ostringstream preview_guido_stream;
+  MusicXML2::musicxmlfile2guido(musicxml_file.c_str(), true, begin_bar, end_bar, part_filter, preview_guido_stream);
+  std::string preview_guido = preview_guido_stream.str();
   MusicXML2::musicxmlstring2guidoOnPart(content_xml.c_str(), true, part_filter, guido);
   std::string guidostr = guido.str();
   // We can post process things here we do not want in th guido
@@ -329,7 +346,6 @@ int main(int argc, char* argv[]) {
   interpolate(date_to_time, map_collector);
 
   std::string whole_guido = guidostr;
-  std::string preview_guido = guidostr;
   int num_offset_preview = 0;
   int deno_offset_preview = 1;
   double preview_audio_begin = 0;
@@ -339,7 +355,7 @@ int main(int argc, char* argv[]) {
 
   int computed_end_bar = 99999;
   if (has_end_bar) computed_end_bar = end_bar;
-  
+
   if (has_begin_bar) {
       for (auto it : map_collector) {
         if (it.event_type != 2) {
@@ -354,7 +370,7 @@ int main(int argc, char* argv[]) {
     // std::cout << "Need to compute" << endl;
     // return 1;
   }
-  
+
   for (auto it : map_collector) {
     preview_audio_end = it.time;
     num_preview_end = it.date.num;
@@ -380,7 +396,7 @@ int main(int argc, char* argv[]) {
       ret += "}";
 
     }
-  }  
+  }
   ret += "}";
   ret += ", \"num_offset_preview\": " + to_string(num_offset_preview);
   ret += ", \"deno_offset_preview\": " + to_string(deno_offset_preview);
@@ -389,6 +405,10 @@ int main(int argc, char* argv[]) {
   ret += ", \"num_preview_end\": " + to_string(num_preview_end);
   ret += ", \"deno_preview_end\": " + to_string(deno_preview_end);
   ret += ", \"preview_audio_end\": " + to_string(preview_audio_end);
+
+
+  // std::string preview_guido = guidostr;
+  //ret += ", \"preview_guido\": \"" + preview_guido + "\"";
 
   ret += "}";
   cout << ret << endl;
