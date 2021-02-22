@@ -60,8 +60,9 @@ float parse_float(std::string& content, int& off) {
 
 bool parse_guido_date(std::string& content, int& off, Fraction& out) {
   int denom = 1;
+  
   int num = parse_int(content, off);
-
+  
 
   if (content[off] == '/') {
     ++off;
@@ -72,6 +73,7 @@ bool parse_guido_date(std::string& content, int& off, Fraction& out) {
   }
   out.setNumerator(num);
   out.setDenominator(denom * 4);
+  return true;
 }
 
 bool parse_asco(std::string& asco_file, std::vector<std::pair<GuidoDate*, float> >& date_to_time) {
@@ -112,6 +114,7 @@ bool parse_asco(std::string& asco_file, std::vector<std::pair<GuidoDate*, float>
     //<< " @" << cumul.getNumerator() << "/" << cumul.getDenominator()
     //        << std::endl;
   }
+  return true;
 }
 
 
