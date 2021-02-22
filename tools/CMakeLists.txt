@@ -11,7 +11,7 @@ set (ROOT  ${CMAKE_CURRENT_SOURCE_DIR}/..)
 set (GUIDO  ${ROOT}/src)
 FILE(GLOB SERVER_CPP_SOURCES ${ROOT}/server/*.cpp)
 
-list(REMOVE_ITEM SERVER_CPP_SOURCES "/app/tools/../server/main.cpp")
+list(REMOVE_ITEM SERVER_CPP_SOURCES "/app/tools/../server/main.cpp" "/home/guidolib/server/main.cpp" "../server/main.cpp" "/home/guidolib/tools/../server/main.cpp")
 FILE(GLOB SERVER_C_SOURCES   ${ROOT}/server/*.c)
 FILE(GLOB CAIRO_CPP_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/../platforms/linux/src/Cairo*.cpp)
 FILE(GLOB LOCAL_CPP_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/videogeneration.cpp)
@@ -141,6 +141,7 @@ endif()
 set(LINK ${LINK} ${curl_LIBRARIES})
 
 # Magick++
+add_definitions("-I /usr/include/ImageMagick-7")
 libfind_pkg_check_modules(Magick++_PKGCONF ImageMagick++)
 add_definitions(${Magick++_PKGCONF_CFLAGS})
 set(LINK ${LINK} ${Magick++_PKGCONF_LDFLAGS})
