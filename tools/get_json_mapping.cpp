@@ -324,6 +324,27 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  bool whole_guido_too = false;
+  bool export_debug = false;
+  if (argc >= 7) {
+    std::string addparam = argv[6];
+    if (addparam == "--whole") {
+      whole_guido_too = true;
+    }
+    else if (addparam == "--debug") {
+      export_debug = true;
+    }
+  }
+  if (argc >= 8) {
+    std::string addparam = argv[7];
+    if (addparam == "--whole") {
+      whole_guido_too = true;
+    }
+    else if (addparam == "--debug") {
+      export_debug = true;
+    }
+  }
+
   string musicxml_file = argv[1];
   string asco_file = argv[2];
   int part_filter = stoi(argv[3]);
@@ -391,7 +412,6 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  bool whole_guido_too = false;
   // Filter it with begin_bar & end_bar
   std::string ret = "{";
   bool first = true;
@@ -482,6 +502,11 @@ int main(int argc, char* argv[]) {
     ret += ", \"guido_b64\": \"" + base64_guido(guidostr) + "\"";
 
   ret += "}";
+  if (export_debug) {
+    cout << "export const canon = ";
+  }
+  
   cout << ret << endl;
+
   return 0;
 }
