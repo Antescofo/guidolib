@@ -277,6 +277,44 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
   }
 }
 
+std::string preclean_guido(std::string& guido) {
+  erase_tag(guido, "instr");
+  erase_tag(guido, "title");
+  erase_tag(guido, "composer");
+  return guido;
+}
+
+std::string base64_guido(std::string& guido) {
+  replace(guido, "\n", " ");
+  replace(guido, "\r", " ");
+  replace(guido, "\t", " ");
+  replace(guido, "  ", " ");
+  return macaron::Base64().Encode(guido);
+}
+
+MyMapCollector* get_map_collector_from_guido(std::string& guido,
+                                             std::vector<std::pair<GuidoDate*, float> >& date_to_time) {
+  MyMapCollector* map_collector = new MyMapCollector();
+  std::string svg_font_file = "/app/src/guido2.svg";
+  guidohttpd::guidosession* currentSession = new guidohttpd::guidosession(svg_font_file, guido, "1shauishauis.gmm");
+  // currentSession->updateGRH(guidohttpd::guidosession::sDefaultScoreParameters);
+
+  CGRHandler gr = currentSession->getGRHandler();
+  int pageCount = GuidoGetPageCount(gr);
+  int width = 1280;
+  int height = 720;
+
+
+  for (int npage = 1; npage <= pageCount; ++npage) {
+    map_collector->page = npage;
+    GuidoGetMap(gr, npage, width, height, kGuidoBarAndEvent, *map_collector);
+  }
+  std::sort(map_collector->begin(), map_collector->end(), sort_by_date);
+
+  interpolate(date_to_time, *map_collector);
+  return map_collector;
+}
+
 int main(int argc, char* argv[]) {
   if (argc < 6) {
     cerr << "Usage: "
@@ -302,23 +340,11 @@ int main(int argc, char* argv[]) {
 
   parse_asco(asco_file, date_to_time);
 
-
   std::ifstream ifs(musicxml_file.c_str());
   std::string content_xml;
   std::stringstream guido;
 
   getline(ifs, content_xml, '\0');
-
-  /*
-     if ((beginMeasure != 0) || (endMeasure != 0)) {
-            return partialxml2guido(xmlfile, generateBars, partFilter, beginMeasure, endMeasure, out, 0);
-        }
-                return xml2guido(xmlfile, generateBars, partFilter, out, file);
-        }
-
-   */
-  // musicxmlfile2guido(const char *file, bool generateBars, int beginMeasure, int endMeasure, int partFilter, ostream& out)
-
   if (!has_begin_bar) begin_bar = 0;
   if (!has_end_bar) end_bar = 0;
   std::ostringstream preview_guido_stream;
@@ -327,28 +353,10 @@ int main(int argc, char* argv[]) {
   MusicXML2::musicxmlstring2guidoOnPart(content_xml.c_str(), true, part_filter, guido);
   std::string guidostr = guido.str();
   // We can post process things here we do not want in th guido
-  erase_tag(guidostr, "instr");
-  erase_tag(guidostr, "title");
-  erase_tag(guidostr, "composer");
-
-  MyMapCollector map_collector;
-  std::string svg_font_file = "/app/src/guido2.svg";
-  guidohttpd::guidosession* currentSession = new guidohttpd::guidosession(svg_font_file, guidostr, "1shauishauis.gmm");
-  // currentSession->updateGRH(guidohttpd::guidosession::sDefaultScoreParameters);
-
-  CGRHandler gr = currentSession->getGRHandler();
-  int pageCount = GuidoGetPageCount(gr);
-  int width = 1280;
-  int height = 720;
+  preclean_guido(guidostr);
 
 
-  for (int npage = 1; npage <= pageCount; ++npage) {
-    map_collector.page = npage;
-    GuidoGetMap(gr, npage, width, height, kGuidoBarAndEvent, map_collector);
-  }
-  std::sort(map_collector.begin(), map_collector.end(), sort_by_date);
-
-  interpolate(date_to_time, map_collector);
+  MyMapCollector* map_collector = get_map_collector_from_guido(guidostr, date_to_time);
 
   std::string whole_guido = guidostr;
   int num_offset_preview = 0;
@@ -362,21 +370,19 @@ int main(int argc, char* argv[]) {
   if (has_end_bar) computed_end_bar = end_bar;
 
   if (has_begin_bar) {
-      for (auto it : map_collector) {
-        if (it.event_type != 2) {
-          if (it.measure >= begin_bar) {
-            preview_audio_begin = it.time;
-            num_offset_preview = it.date.num;
-            deno_offset_preview = it.date.denom;
-            break;
-          }
+    for (auto it : *map_collector) {
+      if (it.event_type != 2) {
+        if (it.measure >= begin_bar) {
+          preview_audio_begin = it.time;
+          num_offset_preview = it.date.num;
+          deno_offset_preview = it.date.denom;
+          break;
         }
       }
-    // std::cout << "Need to compute" << endl;
-    // return 1;
+    }
   }
 
-  for (auto it : map_collector) {
+  for (auto it : *map_collector) {
     preview_audio_end = it.time;
     num_preview_end = it.date.num;
     deno_preview_end = it.date.denom;
@@ -385,11 +391,50 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  bool whole_guido_too = false;
   // Filter it with begin_bar & end_bar
   std::string ret = "{";
-  ret += "\"beat_mapping\": {";
   bool first = true;
-  for (auto it : map_collector) {
+
+  ret += "\"preview_beat_mapping\": {";
+  first = true;
+  std::vector<std::pair<GuidoDate*, float> > preview_date_to_time;
+  auto gdate = new GuidoDate();
+  gdate->num = 0;
+  gdate->denom = 1;
+  preview_date_to_time.push_back(std::pair<GuidoDate*, float>(gdate, preview_audio_begin));
+
+  float guido_time_start = (float)num_offset_preview / (float)deno_offset_preview;
+  float guido_time_end = (float)num_preview_end / (float)deno_preview_end;
+  Fraction begin_offset;
+  begin_offset.setNumerator(num_offset_preview);
+  begin_offset.setDenominator(deno_offset_preview);
+
+  Fraction end_preview;
+  end_preview.setNumerator(num_preview_end);
+  end_preview.setDenominator(deno_preview_end);
+  auto offset = end_preview - begin_offset;
+
+  for (auto it : date_to_time) {
+    if ((to_float(*it.first) >= guido_time_start) && (to_float(*it.first) <= guido_time_end)) {
+      gdate = new GuidoDate();
+      Fraction current;
+      current.setNumerator(it.first->num);
+      current.setDenominator(it.first->denom);
+      auto result = current - begin_offset;
+      gdate->num = result.getNumerator();
+      gdate->denom = result.getDenominator();
+      preview_date_to_time.push_back(std::pair<GuidoDate*, float>(gdate, it.second));
+    }
+  }
+  gdate = new GuidoDate();
+  gdate->num = offset.getNumerator();
+  gdate->denom = offset.getDenominator();
+  preview_date_to_time.push_back(std::pair<GuidoDate*, float>(gdate, preview_audio_end));
+
+  MyMapCollector* preview_map_collector = get_map_collector_from_guido(preview_guido, preview_date_to_time);
+
+  for (auto it : *preview_map_collector) {
     if (it.event_type != 2) {
       if (!first) ret += ", ";
       first = false;
@@ -403,6 +448,26 @@ int main(int argc, char* argv[]) {
     }
   }
   ret += "}";
+
+  if (whole_guido_too) {
+    ret += "\"beat_mapping\": {";
+    first = true;
+    for (auto it : *map_collector) {
+      if (it.event_type != 2) {
+        if (!first) ret += ", ";
+        first = false;
+        ret += "\"" + to_string(it.date.num) + "/" + to_string(it.date.denom) + "\"";
+        ret += ": {";
+        ret += "\"t\": " + to_string(it.time);
+        ret += ", \"m\": " + to_string(it.measure);
+        ret += ", \"e\": " + to_string(it.event_type);
+        ret += "}";
+
+      }
+    }
+    ret += "}";
+  }
+
   ret += ", \"num_offset_preview\": " + to_string(num_offset_preview);
   ret += ", \"deno_offset_preview\": " + to_string(deno_offset_preview);
   ret += ", \"preview_audio_begin\": " + to_string(preview_audio_begin);
@@ -412,13 +477,9 @@ int main(int argc, char* argv[]) {
   ret += ", \"preview_audio_end\": " + to_string(preview_audio_end);
 
 
-  // std::string preview_guido = guidostr;
-  replace(preview_guido, "\n", " ");
-  replace(preview_guido, "\r", " ");
-  replace(preview_guido, "\t", " ");
-
-  replace(preview_guido, "  ", " ");
-  ret += ", \"preview_guido_b64\": \"" + macaron::Base64().Encode(preview_guido) + "\"";
+  ret += ", \"preview_guido_b64\": \"" + base64_guido(preview_guido) + "\"";
+  if (whole_guido_too)
+    ret += ", \"guido_b64\": \"" + base64_guido(guidostr) + "\"";
 
   ret += "}";
   cout << ret << endl;
