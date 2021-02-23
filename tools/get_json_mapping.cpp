@@ -167,15 +167,18 @@ struct Element {
   int page;
   int measure;
   float time;
-
-  Element(const FloatRect& box_, const GuidoDate& date_, const GuidoElementInfos& infos_, int page_, int event_type_, int measure_) :
+  int staff;
+  int voice;
+  Element(const FloatRect& box_, const GuidoDate& date_, const GuidoElementInfos& infos_, int page_, int event_type_, int measure_, int staff_, int voice_) :
     box(box_),
     date(date_),
     infos(infos_),
     page(page_),
     event_type(event_type_),
     time(0),
-    measure(measure_)
+    measure(measure_),
+    staff(staff_),
+    voice(voice_)
     {
     }
 };
@@ -195,9 +198,8 @@ bool sort_by_date(Element& a, Element& b)
 class MyMapCollector : public MapCollector, public std::vector<Element> {
 public:
   int page = 1;
-  int measure = 1;
   std::map<int, PageInfo> page_infos;
-
+  std::map<int, int> voice_to_measure;
   virtual void Graph2TimeMap( const FloatRect& box, const TimeSegment& dates, const GuidoElementInfos& infos ) {
     PageInfo inf;
     if (page_infos.count(this->page) > 0) {
@@ -209,8 +211,12 @@ public:
     inf.min_y = std::min(inf.min_y, box.top);
     inf.max_y = std::max(inf.max_y, box.bottom);
     page_infos[this->page] = PageInfo(inf.min_y, inf.max_y);
+    if (voice_to_measure.find(infos.voiceNum) == voice_to_measure.end()) {
+      voice_to_measure[infos.voiceNum] = 1;
+    }
+
     if (infos.type == kBar) {
-      ++measure;
+      voice_to_measure[infos.voiceNum] += 1;
     }
     else if (infos.type == kNote) {
       // we only play the first staff
@@ -223,14 +229,14 @@ public:
       ninfos.isTied = infos.isTied;
       ninfos.isOriginTied = infos.isOriginTied;
       ninfos.intensity = infos.intensity;
-      this->push_back(Element(box, dates.first, ninfos, this->page, 1, measure)); // note on
+      this->push_back(Element(box, dates.first, ninfos, this->page, 1, voice_to_measure[infos.voiceNum], infos.staffNum, infos.voiceNum)); // note on
       bool noteoff = ((!ninfos.isTied) || (!ninfos.isOriginTied));
       if (noteoff) {
-        this->push_back(Element(box, dates.second, ninfos, this->page, 2, measure)); // note off
+        this->push_back(Element(box, dates.second, ninfos, this->page, 2, voice_to_measure[infos.voiceNum], infos.staffNum, infos.voiceNum)); // note off
       }
     }
     else if (infos.type == kRest) {
-      this->push_back(Element(box, dates.first, infos, this->page, 0, measure));
+      this->push_back(Element(box, dates.first, infos, this->page, 0, voice_to_measure[infos.voiceNum], infos.staffNum, infos.voiceNum));
     }
   }
 };
@@ -385,18 +391,22 @@ int main(int argc, char* argv[]) {
   std::string whole_guido = guidostr;
   int num_offset_preview = 0;
   int deno_offset_preview = 1;
-  double preview_audio_begin = 0;
+  float preview_audio_begin = 0;
   int num_preview_end = 0;
   int deno_preview_end = 0;
-  double preview_audio_end = 0;
+  float preview_audio_end = 0;
 
   int computed_end_bar = 99999;
+  int computed_begin_bar = 1;
+  if (has_begin_bar) computed_begin_bar = begin_bar;
   if (has_end_bar) computed_end_bar = end_bar;
 
   if (has_begin_bar) {
     for (auto it : *map_collector) {
+      if (it.voice <= 0) continue;
+   
       if (it.event_type != 2) {
-        if (it.measure >= begin_bar) {
+        if ((it.measure <= computed_end_bar) && (it.measure >= computed_begin_bar)) {
           preview_audio_begin = it.time;
           num_offset_preview = it.date.num;
           deno_offset_preview = it.date.denom;
@@ -407,11 +417,12 @@ int main(int argc, char* argv[]) {
   }
 
   for (auto it : *map_collector) {
-    preview_audio_end = it.time;
-    num_preview_end = it.date.num;
-    deno_preview_end = it.date.denom;
-    if (it.measure > computed_end_bar) {
-      break;
+    if (it.voice <= 0) continue;
+    if ((it.measure <= computed_end_bar) && (it.measure >= computed_begin_bar)) {
+      // std::cout << "OH:" << it.measure << " " << it.time << " " << it.event_type << " " << it.staff << " " << it.voice << std::endl;
+      preview_audio_end = it.time;
+      num_preview_end = it.date.num;
+      deno_preview_end = it.date.denom;
     }
   }
 
@@ -458,6 +469,8 @@ int main(int argc, char* argv[]) {
   MyMapCollector* preview_map_collector = get_map_collector_from_guido(preview_guido, preview_date_to_time);
 
   for (auto it : *preview_map_collector) {
+    // preview_audio_begin = std::min(preview_audio_begin, it.time);
+    // preview_audio_end = std::max(preview_audio_end, it.time);
     if (it.event_type != 2) {
       if (!first) ret += ", ";
       first = false;
