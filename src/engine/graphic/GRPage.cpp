@@ -504,41 +504,38 @@ const ARMusic * GRPage::getARMusic() const
 */
 void GRPage::finishPage( bool islastpage )
 {
-    float headerOffset = (mPageheaderHeight > 0.0 ? mPageheaderHeight + 10 : 0.0); // AC
+    float headerOffset = (mPageheaderHeight > 0.0 ? mPageheaderHeight + 10 - mTopMargin : 0.0); // AC
     
 	if (settings.systemsDistribution == kNeverDistrib) {
         // AC: Adjust y position based on Title and Headers
         float cury = 0;
         GRSystem * lastSystem = 0;
 		SystemPointerList::iterator ptr;
-		for( ptr = mSystems.begin(); ptr != mSystems.end(); ++ ptr ) {
-            // AC: (1) Adjust y-pos based on page Header (titles, composer)
-            // AC: (2) make systemDistance a factor between the "middle" (baseline) of staves instead of BB (2020/05)
-            GRSystem * system = *ptr;
+        for(SystemPointerList::iterator i = mSystems.begin(); i != mSystems.end(); i++ ) {
+            GRSystem * system = *i;
             NVPoint newpos;
             system->FinishSystem();
 
             if (lastSystem) {
-                // We are in system 2+
-                // (2):
-                float heightFromBBs = lastSystem->getBoundingBox().bottom - system->getBoundingBox().top + 300;  // 200 = 4*LSPACE
-                float heightToAdd = ( heightFromBBs > settings.systemsDistance ? heightFromBBs : settings.systemsDistance);
-                newpos.y = lastSystem->getPosition().y + system->getOffset().y + heightToAdd;
-                // (1):
-                newpos.y += cury ;//- (*ptr)->getBoundingBox().top;
-                system->setPosition(newpos);
+                // Not the first system
+                newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
+                system->setPosition( newpos );
+                cury += system->getBoundingBox().Height();
             }else {
-                // First system on page
-                // (1):
+                // This is the first system
+                // AC: Adjust using headerHeight for the first system
                 cury = headerOffset;
                 newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
                 system->setPosition(newpos);
+                // END OF AC
+                cury += system->getBoundingBox().Height();//= system->getPosition().y + system->getBoundingBox().bottom; //
             }
+
+            cury += settings.systemsDistance;
+            system->FinishSystem();
+            system->setGRPage(this);
             lastSystem = system;
-            // END OF AC / The following FinishSystem will propagate solely the position
-			system->FinishSystem();
-			system->setGRPage(this);
-		}
+        }
 		return;
 	}
 
