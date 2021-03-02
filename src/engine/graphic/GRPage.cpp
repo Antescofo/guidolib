@@ -505,132 +505,78 @@ const ARMusic * GRPage::getARMusic() const
 void GRPage::finishPage( bool islastpage )
 {
     float headerOffset = (mPageheaderHeight > 0.0 ? mPageheaderHeight + 10 - mTopMargin : 0.0); // AC
-    
-	if (settings.systemsDistribution == kNeverDistrib) {
-        // AC: Adjust y position based on Title and Headers
-        float cury = 0;
-        GRSystem * lastSystem = 0;
-		SystemPointerList::iterator ptr;
-        for(SystemPointerList::iterator i = mSystems.begin(); i != mSystems.end(); i++ ) {
-            GRSystem * system = *i;
-            NVPoint newpos;
-            system->FinishSystem();
+    float pagesizey = getInnerHeight();
+    const size_t systemCount = mSystems.size();
+    const float distribLimit =settings.systemsDistribLimit * pagesizey;
 
-            if (lastSystem) {
-                // Not the first system
-                newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
-                system->setPosition( newpos );
-                cury += system->getBoundingBox().Height();
-            }else {
-                // This is the first system
-                // AC: Adjust using headerHeight for the first system
-                cury = headerOffset;
-                newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
-                system->setPosition(newpos);
-                // END OF AC
-                cury += system->getBoundingBox().Height();//= system->getPosition().y + system->getBoundingBox().bottom; //
-            }
-
-            cury += settings.systemsDistance;
-            system->FinishSystem();
-            system->setGRPage(this);
-            lastSystem = system;
-        }
-		return;
-	}
-
-	const size_t systemCount = mSystems.size();
-	float pagesizey = getInnerHeight();
-    float dist = pagesizey - m_totalsystemheight - mPageheaderHeight;
-	if (systemCount > 1)
-		dist = dist / (float(systemCount - 1));
-    
-	if (dist > 0) {
-		if ((settings.systemsDistribution == kAlwaysDistrib)
-			|| (settings.systemsDistribution == kAutoDistrib) // DF added on Feb 13 2011 to force correct mapping
-			|| settings.optimalPageFill
-			|| (!islastpage) || (dist <= (0.1f * pagesizey)))
-		{
-			const float distribLimit =settings.systemsDistribLimit * pagesizey;
-			if(( settings.systemsDistribution == kAutoDistrib ) && ( dist > distribLimit ))
-			{
-				// We are here because the distance between systems is too large
-				if( false ) // islastpage )
-				{
-					return;
-				}
-				else {
-					// this is auto ...
-					dist = 0.075f * pagesizey; // Hardcoded
-				}
-			}
-
-			// then we put the mSystems at these distances ...
-			float cury = 0;
-            GRSystem * prevSystem = 0;
-			for(SystemPointerList::iterator i = mSystems.begin(); i != mSystems.end(); i++ ) {
-				GRSystem * system = *i;
-                NVPoint newpos;
-                system->FinishSystem();
-
-                if (prevSystem) {
-                    // Not the first system
-                    newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
-                    system->setPosition( newpos );
-                    cury += system->getBoundingBox().Height();
-                }else {
-                    // This is the first system
-                    // AC: Adjust using headerHeight for the first system
-                    cury = headerOffset;
-                    newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
-                    system->setPosition(newpos);
-                    // END OF AC
-                    cury += system->getBoundingBox().Height();//= system->getPosition().y + system->getBoundingBox().bottom; //
+    /// Distribution distance between systems on page. Depends on settings.systemsDistribution and other parameters
+    float dist;
+    if (settings.systemsDistribution == kNeverDistrib) {
+        dist = settings.systemsDistance;
+    }else {
+        dist = pagesizey - m_totalsystemheight - mPageheaderHeight;
+        if (systemCount > 1)
+            dist = dist / (float(systemCount - 1));
+        
+        if ((settings.systemsDistribution == kAlwaysDistrib)
+            || (settings.systemsDistribution == kAutoDistrib) // DF added on Feb 13 2011 to force correct mapping
+            || settings.optimalPageFill
+            || (!islastpage) || (dist <= (0.1f * pagesizey)))
+        {
+            if(( settings.systemsDistribution == kAutoDistrib ) && ( dist > distribLimit ))
+            {
+                // We are here because the distance between systems is too large
+                if( false ) // islastpage )
+                {
+                    return;
                 }
-
-				cury += dist;
-                system->FinishSystem();
-				system->setGRPage(this);
-                prevSystem = system;
-			}
-		}
-	}
-	else {
-		SystemPointerList::iterator ptr;
-        // AC: Adjust y position based on Title and Headers
-        float cury = 0;
-        GRSystem * lastSystem = 0;
-
-		for( ptr = mSystems.begin(); ptr != mSystems.end(); ++ ptr ) {
-            // AC: Adjust y-pos based on page Header (titles, composer)
-            GRSystem * system = *ptr;
-            NVPoint newpos;
-            system->FinishSystem();
-
-            if (lastSystem) {
-                // Not the first system
-                newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
-                system->setPosition( newpos );
-                cury += system->getBoundingBox().Height();
-            }else {
-                // This is the first system
-                // AC: Adjust using headerHeight for the first system
-                cury = headerOffset;
-                newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
-                system->setPosition(newpos);
-                // END OF AC
-                cury += system->getBoundingBox().Height();//= system->getPosition().y + system->getBoundingBox().bottom; //
+                else {
+                    // this is auto ...
+                    //dist = 0.075f * pagesizey; // Hardcoded
+                    // AC: Use the systemDistance instead of the hardcoded value above! systemDistance is already used at this point to calculate line breaks.
+                    dist = distribLimit;
+                }
             }
-
-            cury +=  50;
-            lastSystem = system;
+        }else {
+            // FIXME: AC: Is this correct?! before we were just returning!
+            dist = settings.systemsDistance;
+        }
+    }
+    
+//    cerr<<"<<< GK finishPage dist="<<dist<<" ("<<settings.systemsDistance<<","<<distribLimit<<") pagesize="<<pagesizey
+//        <<" m_totalsystemheight="<<m_totalsystemheight<<" systemCount="<<systemCount
+//        <<" mPageheaderHeight="<<mPageheaderHeight <<endl;
+    
+    float cury = 0;
+    GRSystem * prevSystem = 0;
+    for(SystemPointerList::iterator i = mSystems.begin(); i != mSystems.end(); i++ ) {
+        GRSystem * system = *i;
+        NVPoint newpos;
+        system->FinishSystem();
+        
+        if (prevSystem) {
+            // Not the first system
+            newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
+            system->setPosition( newpos );
+            cury += system->getBoundingBox().Height();
+        }else {
+            // This is the first system
+            // AC: Adjust using headerHeight for the first system
+            cury = headerOffset;
+            newpos.y = cury - system->getBoundingBox().top + system->getOffset().y;
+            system->setPosition(newpos);
             // END OF AC
-			system->FinishSystem();
-			system->setGRPage(this);
-		}
-	}
-	// hack to get correct time position for the page [DF - May 26 2010]
-	setRelativeTimePosition ( (*mSystems.begin())->getRelativeTimePosition() );
+            cury += system->getBoundingBox().Height();//= system->getPosition().y + system->getBoundingBox().bottom; //
+        }
+        
+        cury += dist;
+        system->FinishSystem();
+        system->setGRPage(this);
+        prevSystem = system;
+    }
+    
+    // hack to get correct time position for the page [DF - May 26 2010]
+    setRelativeTimePosition ( (*mSystems.begin())->getRelativeTimePosition() );
 }
 
 // ==========================================================================
