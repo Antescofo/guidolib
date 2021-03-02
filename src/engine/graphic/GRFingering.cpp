@@ -69,6 +69,8 @@ void GRFingering::OnDraw( VGDevice & hdc ) const
 	    ypos -= offset;
 	}
 	endDraw (hdc, textColor);
+    
+    //DrawBoundingBox(hdc, VGColor(250, 0, 0));
 }
 
 // -----------------------------------------------------------------------------
@@ -116,6 +118,13 @@ void GRFingering::tellPositionEnd(GRSingleNote * note, const NVPoint & inPositio
 		NVRect ebb = note->getEnclosingBox(false, false, true);
 		NVPoint spos = staff->getPosition();
 		float xpos = note->getPosition().x - r.Width()/2 + dx;
+        
+        // AC: take into account multiple fingerings
+        float height = 0.0;
+        if (fing->getFingeringPosition() == ARFingering::kAbove)
+            height -= r.Height() * (fing->countFingerings());
+        else
+            height += r.Height() * fing->countFingerings();
 
 		switch (placement) {
 			// here positionning takes account of the implicit dy=1 inherited from ARText (see TagParameterStrings.cpp)
@@ -128,8 +137,8 @@ void GRFingering::tellPositionEnd(GRSingleNote * note, const NVPoint & inPositio
 			default:
 				setPosition (NVPoint(xpos, r.top) );
 		}
-		
-		NVRect bb (0, 0, r.Width(), r.Height());
-		mBoundingBox = bb + NVPoint(0,dy);
+        
+		NVRect bb (0, 0, r.Width(), height);
+        mBoundingBox = bb;// + NVPoint(0,dy);
 	}
 }
