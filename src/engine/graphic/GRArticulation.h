@@ -60,6 +60,8 @@ class GRArticulation : public GRTagARNotationElement
 		static bool  compare (GRArticulation* i, GRArticulation* j) 	{ return (i->getArticulationOrder() < j->getArticulationOrder()); }
     
         virtual const GRArticulation *    isGRArticulation() const      { return this; }
+    
+    bool isBow() const { return (mArticulationFlag == kFlagBow); };
 
 	protected:
 		void	placeStaccato( const GREvent * inParent, NVPoint & ioPos );

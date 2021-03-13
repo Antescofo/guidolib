@@ -21,6 +21,7 @@
 #include "GRDynamics.h"
 #include "GRIntens.h"
 #include "GRArticulation.h"
+#include "GRBreathMark.h"
 
 using namespace std;
 
@@ -29,10 +30,16 @@ void GRShowVisitor::visitStart (GRRange* o)			{ if (fTarget == kGRArticulations)
 void GRShowVisitor::visitStart (GRSlur* o)			{ if (fTarget == kGRSlur)		o->Show(fState); }
 void GRShowVisitor::visitStart (GRDynamics* o)		{ if (fTarget == kGRDynamics) o->Show(fState); }
 void GRShowVisitor::visitStart (GRIntens* o)		{ if (fTarget == kGRDynamics) o->Show(fState); }
-void GRShowVisitor::visitStart (GRArticulation* o)	{ if (fTarget == kGRArticulations) o->Show(fState); }
+void GRShowVisitor::visitStart (GRBreathMark* o)        { if (fTarget == kGRBreathMark) o->Show(fState); }
+
+void GRShowVisitor::visitStart (GRArticulation* o)    {
+    if ((fTarget == kGRBow) && o->isBow()) o->Show(fState);
+    else if (fTarget == kGRArticulations) o->Show(fState);
+}
 
 void GRShowVisitor::visitStart (GRText* o)
 {
 	if ((fTarget == kGRText) && !o->isLyrics())		o->Show(fState);
 	else if ((fTarget == kGRLyrics) && o->isLyrics()) o->Show(fState);
+    else if ((fTarget == kGRFingering) && o->isGRFingering()) o->Show(fState);
 }

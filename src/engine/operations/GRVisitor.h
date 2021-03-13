@@ -35,6 +35,7 @@ class GRSystem;
 class GRText;
 class GRTrill;
 class GRVoice;
+class GRBreathMark;
 
 class GRVisitor
 {
@@ -105,6 +106,9 @@ class GRVisitor
 
 		virtual void visitStart (GRSingleRest* o)	{}
 		virtual void visitEnd   (GRSingleRest* o)	{}
+
+    virtual void visitStart (GRBreathMark* o)    {}
+    virtual void visitEnd   (GRBreathMark* o)    {}
 };
 
 #endif
