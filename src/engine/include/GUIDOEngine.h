@@ -606,7 +606,7 @@ as by date. Page numbers start at 1.
 
 	/** \brief Releases a meters array..
 
-		\param meters: a meters array.
+		\param meters a meters array.
 		\return a Guido error code.
 	*/
 	GUIDOAPI GuidoErrCode GuidoFreeMeters (GuidoMeters meters);
@@ -627,7 +627,7 @@ as by date. Page numbers start at 1.
 
 	/** \brief Releases a tempo array..
 
-		\param tempi: a tempo array.
+		\param tempi a tempo array.
 		\return a Guido error code.
 	*/
 	GUIDOAPI GuidoErrCode GuidoFreeTempoList (GuidoTempoList tempi);
@@ -844,7 +844,6 @@ The number of version functions is due to historical reasons.
 		\param major on output: the major revision number.
 		\param minor on ouput: the minor revision number.
 		\param sub on ouput: the sub revision number.
-		\return a Guido error code.
 	*/
 	GUIDOAPI void GuidoGetVersionNums(int * major, int * minor, int * sub);
 

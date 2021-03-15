@@ -318,7 +318,7 @@ GUIDOAPI GuidoErrCode	GuidoGetSVGMap( GRHandler gr, int pagenum, GuidoElementSel
 
 /** \brief Retrieves the rolled to unrolled time mapping
 
-	\param gr a Guido opaque handle to a GR structure.
+	\param ar a Guido opaque handle to a AR structure.
 	\param f a TimeMapCollector object that will be called for each time segment.
 	\return an error code.
 */
