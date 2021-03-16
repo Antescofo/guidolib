@@ -26,7 +26,7 @@ message (STATUS "Configuring version ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION
 
 
 #######################################
-# Options 
+# Options
 option ( IOS 		"Generates project for iOS" off )
 option ( DIST 		"Compiles universal binaries (x86_64 i386) on MacOSX" off )
 option ( INDEPENDENTSVG "Independent SVG support (gets all font information from provided SVG files)" off)
@@ -35,7 +35,7 @@ option ( SMUFL  	"Use SMUFL compliant Bravura font" off)
 option ( GL         "Links to opengl device" off)
 
 #######################################
-# Output folders 
+# Output folders
 set (BINDIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set (LIBDIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
@@ -61,7 +61,7 @@ if(APPLE)
 		set (CMAKE_OSX_SYSROOT "iphoneos")
 
 		set (libtype STATIC)
-		set(IOS_DEPLOYMENT_TARGET 13.0) 
+		set(IOS_DEPLOYMENT_TARGET 13.0)
 		set (FMWK "true")
 		set (CMAKE_MACOSX_RPATH 1)
 	else ()
@@ -136,8 +136,8 @@ endif()
 
 #######################################
 # midi export support
-# set (MSLIGHT_PATH	${ROOT}/midisharelight/src)
-# set (DEFS ${DEFS} MIDIEXPORT MSLIGHT)
+set (MSLIGHT_PATH	${ROOT}/midisharelight/src)
+set (DEFS ${DEFS} MIDIEXPORT MSLIGHT)
 
 #######################################
 # vgdev
@@ -155,7 +155,7 @@ file (GLOB PUBLICHEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${HEADERS_PATH}/*
 # set includes
 set(INCL ${INCL} "${SRC_PATH}/*")			# add include folders
 set(INCL ${INCL} "${VGDEV_PATH}")			# add include folders
-# set(INCL ${INCL} "${MSLIGHT_PATH}")			# add include folders
+set(INCL ${INCL} "${MSLIGHT_PATH}")			# add include folders
 file (GLOB INCDIRS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${INCL})
 include_directories( ${INCDIRS})
 set_source_files_properties (${INCL} PROPERTIES HEADER_FILE_ONLY TRUE)
@@ -175,6 +175,8 @@ elseif (UNIX)
 	string (STRIP ${TMP} CAIRO)
 	set(LINK ${LINK} ${CAIRO})
 
+	set(LINK ${LINK} /usr/local/lib/libmidisharelight.a)
+
 endif()
 
 #######################################
@@ -182,16 +184,16 @@ endif()
 if (IOS)
 	## IOS Static Lib
 	add_library(libguidoengine STATIC ${SRC} ${HEADERS} ${PUBLICHEADERS})
-	set_target_properties ( libguidoengine PROPERTIES 
+	set_target_properties ( libguidoengine PROPERTIES
 			ARCHIVE_OUTPUT_DIRECTORY  ${LIBDIR}
 			ARCHIVE_OUTPUT_DIRECTORY_RELEASE  ${LIBDIR}
-			XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${IOS_DEPLOYMENT_TARGET} 
+			XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${IOS_DEPLOYMENT_TARGET}
 			FRAMEWORK FALSE
 			OUTPUT_NAME guidoengine)
 
 	## IOS Framework
 	add_library(${target} SHARED ${SRC} ${HEADERS} ${PUBLICHEADERS})
-	set_target_properties ( ${target} PROPERTIES 
+	set_target_properties ( ${target} PROPERTIES
 			RUNTIME_OUTPUT_DIRECTORY  ${LIBDIR}
 			RUNTIME_OUTPUT_DIRECTORY_RELEASE  ${LIBDIR}
 			ARCHIVE_OUTPUT_DIRECTORY  ${LIBDIR}
@@ -204,14 +206,14 @@ if (IOS)
 			XCODE_ATTRIBUTE_DEFINES_MODULE YES
 			PUBLIC_HEADER "${PUBLICHEADERS}"
 			VERSION ${VERSION}
-			SOVERSION ${SOVERS} 		
+			SOVERSION ${SOVERS}
 			MACOSX_FRAMEWORK_IDENTIFIER "com.grame.guidoengine"
 			MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${STRVERS}
 			MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION}
 			INSTALL_NAME_DIR "$(LOCAL_LIBRARY_DIR)/Frameworks"
       		BUILD_WITH_INSTALL_NAME_DIR YES
 			#XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/Frameworks"
-			XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH YES 
+			XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH YES
 			)
 
 else()
@@ -238,7 +240,7 @@ if (STATICLIB AND NOT IOS)
 	add_library( ${statictarget} STATIC ${SRC} ${HEADERS} ${PUBLICHEADERS})
 	target_compile_definitions (${statictarget} PRIVATE ${DEFS})
 	target_include_directories (${statictarget} PRIVATE ${INCDIRS})
-	set_target_properties(${statictarget} PROPERTIES 
+	set_target_properties(${statictarget} PROPERTIES
 		ARCHIVE_OUTPUT_DIRECTORY ${LIBDIR}
 		LIBRARY_OUTPUT_DIRECTORY ${LIBDIR})
 else ()

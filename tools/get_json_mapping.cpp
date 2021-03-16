@@ -1,10 +1,12 @@
 #include <map>
 #include <iostream>
 #include <iomanip>
+#include <stdexcept>
 #include <algorithm>
 #include <sstream>
 #include <string>
 #include <vector>
+#include "GUIDO2Midi.h"
 #include "guidosession.h"
 #include <libmusicxml/libmusicxml.h>
 #include "engine.h"
@@ -60,9 +62,9 @@ float parse_float(std::string& content, int& off) {
 
 bool parse_guido_date(std::string& content, int& off, Fraction& out) {
   int denom = 1;
-  
+
   int num = parse_int(content, off);
-  
+
 
   if (content[off] == '/') {
     ++off;
@@ -302,14 +304,18 @@ std::string base64_guido(std::string& guido) {
 }
 
 MyMapCollector* get_map_collector_from_guido(std::string& guido,
-                                             std::vector<std::pair<GuidoDate*, float> >& date_to_time) {
+                                             std::vector<std::pair<GuidoDate*, float> >& date_to_time,
+                                             std::string& outmidi) {
   MyMapCollector* map_collector = new MyMapCollector();
   std::string svg_font_file = "/app/src/guido2.svg";
   guidohttpd::guidosession* currentSession = new guidohttpd::guidosession(svg_font_file, guido, "1shauishauis.gmm");
   // currentSession->updateGRH(guidohttpd::guidosession::sDefaultScoreParameters);
 
   CGRHandler gr = currentSession->getGRHandler();
+
   int pageCount = GuidoGetPageCount(gr);
+
+
   int width = 1280;
   int height = 720;
 
@@ -321,6 +327,9 @@ MyMapCollector* get_map_collector_from_guido(std::string& guido,
   std::sort(map_collector->begin(), map_collector->end(), sort_by_date);
 
   interpolate(date_to_time, *map_collector);
+  guidohttpd::guidosessionresponse return_midi = currentSession->genericReturnMidi();
+  if ((return_midi.fHttpStatus != 200) && (return_midi.fHttpStatus != 201)) throw std::invalid_argument("Error convert midi file");
+  outmidi = std::string(return_midi.fData, return_midi.fSize);
   return map_collector;
 }
 
@@ -385,8 +394,8 @@ int main(int argc, char* argv[]) {
   // We can post process things here we do not want in th guido
   preclean_guido(guidostr);
 
-
-  MyMapCollector* map_collector = get_map_collector_from_guido(guidostr, date_to_time);
+  std::string out_midi_whole;
+  MyMapCollector* map_collector = get_map_collector_from_guido(guidostr, date_to_time, out_midi_whole);
 
   std::string whole_guido = guidostr;
   int num_offset_preview = 0;
@@ -404,7 +413,7 @@ int main(int argc, char* argv[]) {
   if (has_begin_bar) {
     for (auto it : *map_collector) {
       if (it.voice <= 0) continue;
-   
+
       if (it.event_type != 2) {
         if ((it.measure <= computed_end_bar) && (it.measure >= computed_begin_bar)) {
           preview_audio_begin = it.time;
@@ -465,8 +474,8 @@ int main(int argc, char* argv[]) {
   gdate->num = offset.getNumerator();
   gdate->denom = offset.getDenominator();
   preview_date_to_time.push_back(std::pair<GuidoDate*, float>(gdate, preview_audio_end));
-
-  MyMapCollector* preview_map_collector = get_map_collector_from_guido(preview_guido, preview_date_to_time);
+  std::string out_midi_preview;
+  MyMapCollector* preview_map_collector = get_map_collector_from_guido(preview_guido, preview_date_to_time, out_midi_preview);
 
   for (auto it : *preview_map_collector) {
     // preview_audio_begin = std::min(preview_audio_begin, it.time);
@@ -514,6 +523,7 @@ int main(int argc, char* argv[]) {
 
 
   ret += ", \"preview_guido_b64\": \"" + base64_guido(preview_guido) + "\"";
+  ret += ", \"preview_midi\": \"" + macaron::Base64().Encode(out_midi_preview) + "\"";
   if (whole_guido_too)
     ret += ", \"guido_b64\": \"" + base64_guido(guidostr) + "\"";
 
@@ -521,7 +531,7 @@ int main(int argc, char* argv[]) {
   if (export_debug) {
     cout << "export const canon = ";
   }
-  
+
   cout << ret << endl;
 
   return 0;
