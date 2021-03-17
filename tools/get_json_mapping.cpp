@@ -1,5 +1,6 @@
 #include <map>
 #include <iostream>
+#include <cstring>
 #include <iomanip>
 #include <stdexcept>
 #include <algorithm>
@@ -333,6 +334,170 @@ MyMapCollector* get_map_collector_from_guido(std::string& guido,
   return map_collector;
 }
 
+
+int is_big_endian(void)
+{
+  union {
+    uint32_t i;
+    char c[4];
+  } e = { 0x01000000 };
+
+  return e.c[0];
+}
+
+template <class T>
+void append_value(T& val, char* output, unsigned long& offset) {
+  int bytes = sizeof(val);
+// We have to store values big endian style
+  if (!is_big_endian()) {
+    char* source = (char*)&val;
+
+    for (int k = 0; k < bytes; ++k) {
+      output[offset + k] = source[bytes - 1 - k];
+    }
+  }
+  else {
+    memcpy(&output[offset], &val, bytes);
+  }
+  offset += bytes;
+}
+
+void append_variable_length(unsigned long value, char* output, unsigned long& offset)
+{
+  unsigned long buffer;
+  buffer = value & 0x7F;
+
+  while ((value >>= 7))
+  {
+    buffer <<= 8;
+    buffer |= ((value & 0x7F) | 0x80);
+  }
+
+  while (true)
+  {
+    output[offset++] = ((unsigned char*)&buffer)[0];
+    if (buffer & 0x80)
+      buffer >>= 8;
+    else
+      break;
+  }
+}
+
+void append_track(MyMapCollector* collector, char* output, unsigned long& offset, float preview_audio_begin, unsigned long division) {
+  output[offset++] = 'M';
+  output[offset++] = 'T';
+  output[offset++] = 'r';
+  output[offset++] = 'k';
+
+  // Append events
+
+  // Delta time in append_variable_length
+  // Event
+  // <MTrk event> = <delta-time><event>
+  // <event> = <MIDI event> | <sysex event> | <meta-event>
+  // http://www.music.mcgill.ca/~ich/classes/mumt306/StandardMIDIfileformat.html#BMA1_
+
+  float last_time = 0.0;
+  char* track_data = new char[10000];
+  unsigned long offset_track = 0;
+  unsigned char status;
+
+  // We first set the program and the tempo
+  append_variable_length(0, track_data, offset_track);
+  status = 0xC0;  // program change
+  append_value(status, track_data, offset_track);
+  unsigned char program = 0;
+  append_value(program, track_data, offset_track);
+
+
+  // Tempo change
+  append_variable_length(0, track_data, offset_track);
+  status = 0xFF;
+  append_value(status, track_data, offset_track);
+  status = 0x51;
+  append_value(status, track_data, offset_track);
+  status = 0x03;
+  append_value(status, track_data, offset_track);
+  // tt tt tt 500000
+
+  status = 0x07;
+  append_value(status, track_data, offset_track);
+  status = 0xa1;
+  append_value(status, track_data, offset_track);
+  status = 0x20;
+  append_value(status, track_data, offset_track);
+
+  /*
+    This event indicates a tempo change. Another way of putting "microseconds per quarter-note" is "24ths of a microsecond per MIDI clock". Representing tempos as time per beat instead of beat per time allows absolutely exact long-term synchronisation with a time-based sync protocol such as SMPTE time code or MIDI time code. The amount of accuracy provided by this tempo resolution allows a four-minute piece at 120 beats per minute to be accurate within 500 usec at the end of the piece. Ideally, these events should only occur where MIDI clocks would be located -- this convention is intended to guarantee, or at least increase the likelihood, of compatibility with other synchronisation devices so that a time signature/tempo map stored in this format may easily be transferred to another device.
+  */
+  for (auto it : *collector) {
+    // it.time
+    // it.midiPitch
+    float relative_time = it.time - preview_audio_begin;
+    float delta_time = relative_time - last_time;
+    unsigned long variable_delta_time = division * 2.0 * delta_time; // * bpm or shit like that
+    unsigned char key = it.infos.midiPitch;
+    unsigned char velocity = 80;
+    if (it.event_type == 1) { // note on
+      std::cout << variable_delta_time << std::endl;
+      std::cout << "NOTEON " << it.infos.midiPitch << " " << it.time << " " << it.measure << std::endl;
+      status = 144;  // 10010000
+    }
+    else if (it.event_type == 2) { // note off
+      std::cout << variable_delta_time << std::endl;
+      
+      std::cout << "NOTEOFF " << it.infos.midiPitch << " " << it.time << std::endl;
+      std::cout << std::endl;
+      status = 128; // 10000000
+    }
+    else {
+      continue;
+    }
+    append_variable_length(variable_delta_time, track_data, offset_track);
+    append_value(status, track_data, offset_track);
+    append_value(key, track_data, offset_track);
+    append_value(velocity, track_data, offset_track);
+    last_time = relative_time;
+  }
+  // end of track
+  append_variable_length(0, track_data, offset_track);
+  status = 0xff;
+  append_value(status, track_data, offset_track);
+  status = 0x2f;
+  append_value(status, track_data, offset_track);
+  status = 0x00;
+  append_value(status, track_data, offset_track);
+
+  unsigned int track_length = offset_track;
+  append_value(track_length, output, offset);
+  memcpy(&output[offset], track_data, offset_track);
+  offset += offset_track;
+}
+
+std::string generate_midi(MyMapCollector* collector, float preview_audio_begin) {
+  char* output = new char[1024*1024];
+  unsigned long offset = 0;
+
+  output[offset++] = 'M';
+  output[offset++] = 'T';
+  output[offset++] = 'h';
+  output[offset++] = 'd';
+  unsigned int header_length = 6;
+  unsigned short format = 0;
+  unsigned short ntracks = 1;
+  // unsigned short division = 59176; // many Pulses (i.e. clocks) Per Quarter Note (abbreviated as PPQN)
+  // unsigned short division = 42000; // many Pulses (i.e. clocks) Per Quarter Note (abbreviated as PPQN)
+  unsigned short division = 96;
+
+  append_value(header_length, output, offset);
+  append_value(format, output, offset);
+  append_value(ntracks, output, offset);
+  append_value(division, output, offset);
+
+  append_track(collector, output, offset, preview_audio_begin, division);
+  return std::string(output, offset);
+}
+
 int main(int argc, char* argv[]) {
   if (argc < 6) {
     cerr << "Usage: "
@@ -521,9 +686,9 @@ int main(int argc, char* argv[]) {
   ret += ", \"deno_preview_end\": " + to_string(deno_preview_end);
   ret += ", \"preview_audio_end\": " + to_string(preview_audio_end);
 
+  ret += ", \"preview_midi\": \"" + macaron::Base64().Encode(generate_midi(preview_map_collector, preview_audio_begin)) + "\"";
 
   ret += ", \"preview_guido_b64\": \"" + base64_guido(preview_guido) + "\"";
-  ret += ", \"preview_midi\": \"" + macaron::Base64().Encode(out_midi_preview) + "\"";
   if (whole_guido_too)
     ret += ", \"guido_b64\": \"" + base64_guido(guidostr) + "\"";
 
