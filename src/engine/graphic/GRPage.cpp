@@ -155,8 +155,9 @@ bool GRPage::addSystem( GRSystem * inSystem, float * ioUsedSystemDistance )
 		m_totalsystemheight += newSystemBox.Height();
 	}
 	else // So this is the first system of the page
-	{	
-		newPos.y = - newSystemBox.top;
+	{
+        float headerOffset = (mPageheaderHeight > 0.0 ? mPageheaderHeight + 10 : 0.0); // AC:
+		newPos.y = headerOffset - newSystemBox.top;
 		m_totalsystemheight = newSystemBox.Height(); // TODO: bottom - newPos.y;
 	}
 	inSystem->setPosition( newPos );
@@ -517,7 +518,7 @@ void GRPage::finishPage( bool islastpage )
     if (settings.systemsDistribution == kNeverDistrib) {
         dist = settings.systemsDistance;
     }else {
-        dist = pagesizey - m_totalsystemheight - mPageheaderHeight;
+        dist = pagesizey - m_totalsystemheight - headerOffset;
         if (systemCount > 1)
             dist = dist / (float(systemCount - 1));
         
@@ -547,10 +548,16 @@ void GRPage::finishPage( bool islastpage )
                 headerOffset += (pagesizey - m_totalsystemheight)/2.0;
             }
         }
+        
+        if (dist < 0.0) {
+            cerr<<"\t<<< GLIB WTF!!!! FinishPage with "<<mSystems.size()<<" dist="<<dist<<" systemDistrib="<<settings.systemsDistance
+            << " limit:"<<distribLimit<<", totalSystemHeight="<<m_totalsystemheight<<" pagesizey="<<pagesizey<<endl;
+            dist = settings.systemsDistance;
+        }
     }
     
-    cerr<<"\t<<< GLIB FinishPage with "<<mSystems.size()<<" dist="<<dist<<" systemDistrib="<<settings.systemsDistance
-    << " limits:"<<distribLimit<<" ,"<<0.1*pagesizey <<endl;
+//    cerr<<"\t<<< GLIB FinishPage with "<<mSystems.size()<<" dist="<<dist<<" systemDistrib="<<settings.systemsDistance
+//    << " limit:"<<distribLimit<<", totalSystemHeight="<<m_totalsystemheight<<" pagesizey="<<pagesizey<<endl;
 
     float cury = 0;
     GRSystem * prevSystem = 0;
