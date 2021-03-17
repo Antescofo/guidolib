@@ -226,35 +226,6 @@ GRGlobalStem * GRBowing::findGlobalStem( const GRNotationElement * stemOwner ) c
 }
 
 // -----------------------------------------------------------------------------
-void GRBowing::updateBoundingBox()
-{
-	GRSystemStartEndStruct * sse = getSystemStartEndStruct( getGRStaff()->getGRSystem());
-	if ( sse == 0 ) return;
-
-	GRBowingSaveStruct * bowInfos = (GRBowingSaveStruct *)sse->p;
-	if( bowInfos == 0 ) return;
-
-	// - Update bounding box
-	mBoundingBox.left = bowInfos->offsets[0].x + bowInfos->position.x;		// middle point might be smaller.
-	mBoundingBox.right = bowInfos->offsets[2].x + bowInfos->position.x;	    // middle point might be larger.
-
-	const float y0 = bowInfos->offsets[0].y + bowInfos->position.y;
-	const float y1 = bowInfos->offsets[1].y + bowInfos->position.y;
-	const float y2 = bowInfos->offsets[2].y + bowInfos->position.y;
-
-	if( y1 < y0 )	// upward
-	{
-		mBoundingBox.top = y1;
-		mBoundingBox.bottom = y2 > y0 ? y2 : y0;
-	}
-	else
-	{
-		mBoundingBox.top = y2 < y0 ? y2 : y0;
-		mBoundingBox.bottom = y1;
-	}
-}
-
-// -----------------------------------------------------------------------------
 /** \brief Calculates the placement of the bow: direction, anchor and control points.
 
 	Changes the parameter-names and just handle positions correctly.
@@ -394,7 +365,54 @@ void GRBowing::updateBow( GRStaff * inStaff, bool grace )
 		}
 #endif
 	}
-	updateBoundingBox();
+
+    // Note: The Bounding box of BOWINGs depend on the position so we should get them dynamically based on the staff using the override method. Thus, there is no need to update them!
+}
+
+NVRect GRBowing::getBoundingBox(GRStaff * grstaff) const {
+    GRSystemStartEndStruct * sse = getSystemStartEndStruct( grstaff->getGRSystem());
+    if ( sse == 0 ) return;
+
+    GRBowingSaveStruct * bowInfos = (GRBowingSaveStruct *)sse->p;
+    if( bowInfos == 0 ) return;
+    
+    NVRect r = NVRect(0, 0, 0, 0);
+
+    // - Update bounding box
+    r.left = bowInfos->offsets[0].x + bowInfos->position.x;        // middle point might be smaller.
+    r.right = bowInfos->offsets[2].x + bowInfos->position.x;        // middle point might be larger.
+
+    const float y0 = bowInfos->offsets[0].y + bowInfos->position.y;
+    const float y1 = bowInfos->offsets[1].y + bowInfos->position.y;
+    const float y2 = bowInfos->offsets[2].y + bowInfos->position.y;
+    
+
+    if (sse->startflag != GRSystemStartEndStruct::OPENLEFT) {
+
+        if( y1 < y0 )    // upward
+        {
+            r.top = y1;
+            r.bottom = y2 > y0 ? y2 : y0;
+        }
+        else
+        {
+            r.top = y2 < y0 ? y2 : y0;
+            r.bottom = y1;
+        }
+    }else {
+        if( y0 < y2 )    // upward
+        {
+            r.top = y0;
+            r.bottom = y2 > y1 ? y2 : y1;
+        }
+        else
+        {
+            r.top = y2 < y1 ? y2 : y1;
+            r.bottom = y0;
+        }
+    }
+    
+    return r;
 }
 
 // -----------------------------------------------------------------------------
@@ -696,9 +714,7 @@ void GRBowing::OnDraw( VGDevice & hdc) const
 
 //	NVRect r = getAssociatedBoundingBox();
 //	hdc.Frame(r.left, r.top, r.right, r.bottom);
-//
-//	DrawBoundingBox( hdc, VGColor( 255, 120, 150, 120 )); // DEBUG
-//	hdc.Frame(mBoundingBox.left, mBoundingBox.top, mBoundingBox.right, mBoundingBox.bottom);
+    
 	GRSystemStartEndStruct * sse = getSystemStartEndStruct( gCurSystem );
 	if( sse == 0) return; // don't draw
 
@@ -725,6 +741,8 @@ void GRBowing::OnDraw( VGDevice & hdc) const
 
 	// restore old pen and brush
 	if (mColRef) hdc.PopFillColor();
+    
+    // Note: AC: To draw the BB for debug, one should use the override method and not the GObject mBoundingBox
 	
 //	hdc.Frame(fStartBox.left, fStartBox.top, fStartBox.right, fStartBox.bottom);
 //	hdc.Frame(fEndBox.left, fEndBox.top, fEndBox.right, fEndBox.bottom);

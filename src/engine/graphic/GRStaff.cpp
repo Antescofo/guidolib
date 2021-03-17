@@ -93,6 +93,8 @@ using namespace std;
 #include "GRSlur.h"
 #include "GRBowing.h"
 
+#include "GRDynamics.h"
+
 #include "kf_ivect.h"
 #include "TCollisions.h"
 
@@ -1949,12 +1951,23 @@ void GRStaff::updateBoundingBox()
 #ifdef EXTENDEDBB
             GRBowing * bowTag = dynamic_cast<GRBowing *>(e);
 			if (bowTag) {
-				tmp = bowTag->getBoundingBox() + bowTag->getPosition();
+                // Note: we use the dynamic BB here which depends on the staff
+                tmp = bowTag->getBoundingBox(this);
 				if (tmp.Height() < 1000 && tmp.Height() > 0) {
 					if (r.top > tmp.top) 		r.top = tmp.top;
 					if (r.bottom < tmp.bottom)	r.bottom = tmp.bottom;
 				}
 			}
+            
+            const GRDynamics * dynTag = e->isGRDynamic();
+            if (dynTag) {
+                // Note: we use the dynamic BB here which depends on the staff. It can be empty depending on the construction stage!
+                tmp = dynTag->getBoundingBox(getGRSystem());
+                if (tmp.Height() < 1000 && tmp.Height() > 0) {
+                    if (r.top > tmp.top)         r.top = tmp.top;
+                    if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                }
+            }
             
             const GRArticulation * artTag = e->isGRArticulation();
             if (artTag) {

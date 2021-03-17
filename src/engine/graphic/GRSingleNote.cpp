@@ -540,7 +540,7 @@ NVRect GRSingleNote::getEnclosingBox(bool includeAccidentals, bool includeSlurs,
 		if (includeSlurs) {
 			const GRSlur * slur = dynamic_cast<const GRSlur *>(el);
 			if (slur) {
-				NVRect r = slur->getBoundingBox();
+                NVRect r = slur->getBoundingBox(getGRStaff());
 				if (r.top < outrect.top) outrect.top = r.top;
 				if (r.bottom > outrect.bottom) outrect.bottom = r.bottom;
 			}

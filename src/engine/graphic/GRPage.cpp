@@ -133,8 +133,11 @@ bool GRPage::addSystem( GRSystem * inSystem, float * ioUsedSystemDistance )
 {
 	assert(inSystem->getGRPage() == this);
 	GRSystem * lastSystem = mSystems.empty() ? 0 : mSystems.back(); // get the current last system
+    // AC: Fix orderings and BBs (Slurs etc) and finalize systems before accessing the BB
+    inSystem->fixTellPositionOrder();
+    inSystem->FinishSystem();
 	const NVRect & newSystemBox = inSystem->getBoundingBox();
-	
+
 	NVPoint newPos;
 	if( lastSystem ) {
 		if (*ioUsedSystemDistance > 0) {
@@ -504,7 +507,7 @@ const ARMusic * GRPage::getARMusic() const
 */
 void GRPage::finishPage( bool islastpage )
 {
-    float headerOffset = (mPageheaderHeight > 0.0 ? mPageheaderHeight + 10 - mTopMargin : 0.0); // AC
+    float headerOffset = (mPageheaderHeight > 0.0 ? mPageheaderHeight + 10 : 0.0); // AC:
     float pagesizey = getInnerHeight();
     const size_t systemCount = mSystems.size();
     const float distribLimit =settings.systemsDistribLimit * pagesizey;
@@ -521,38 +524,40 @@ void GRPage::finishPage( bool islastpage )
         if ((settings.systemsDistribution == kAlwaysDistrib)
             || (settings.systemsDistribution == kAutoDistrib) // DF added on Feb 13 2011 to force correct mapping
             || settings.optimalPageFill
-            || (!islastpage) || (dist <= (0.1f * pagesizey)))
+            || (!islastpage))
         {
             if(( settings.systemsDistribution == kAutoDistrib ) && ( dist > distribLimit ))
             {
                 // We are here because the distance between systems is too large
-                if( false ) // islastpage )
-                {
-                    return;
-                }
-                else {
-                    // this is auto ...
-                    //dist = 0.075f * pagesizey; // Hardcoded
-                    // AC: Use the systemDistance instead of the hardcoded value above! systemDistance is already used at this point to calculate line breaks.
-                    dist = distribLimit;
-                }
+                // this is auto ...
+                //dist = 0.075f * pagesizey; // Hardcoded
+                // AC: Use the systemDistance instead of the hardcoded value above! systemDistance is already used at this point to calculate line breaks.
+                dist = distribLimit;
             }
         }else {
             // FIXME: AC: Is this correct?! before we were just returning!
             dist = settings.systemsDistance;
         }
+        
+        if (islastpage) {
+            dist = settings.systemsDistance;
+        }else {
+            // If there is only ONE system on page, and we are NOT on last page, try centering it vertically
+            if (mSystems.size()==1) {
+                headerOffset += (pagesizey - m_totalsystemheight)/2.0;
+            }
+        }
     }
     
-//    cerr<<"<<< GK finishPage dist="<<dist<<" ("<<settings.systemsDistance<<","<<distribLimit<<") pagesize="<<pagesizey
-//        <<" m_totalsystemheight="<<m_totalsystemheight<<" systemCount="<<systemCount
-//        <<" mPageheaderHeight="<<mPageheaderHeight <<endl;
-    
+    cerr<<"\t<<< GLIB FinishPage with "<<mSystems.size()<<" dist="<<dist<<" systemDistrib="<<settings.systemsDistance
+    << " limits:"<<distribLimit<<" ,"<<0.1*pagesizey <<endl;
+
     float cury = 0;
     GRSystem * prevSystem = 0;
     for(SystemPointerList::iterator i = mSystems.begin(); i != mSystems.end(); i++ ) {
         GRSystem * system = *i;
         NVPoint newpos;
-        system->FinishSystem();
+        //system->FinishSystem();
         
         if (prevSystem) {
             // Not the first system

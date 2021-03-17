@@ -124,6 +124,28 @@ void GRDynamics::tellPosition(GObject *caller, const NVPoint & newPosition)
 	}
 }
 
+NVRect GRDynamics::getBoundingBox(const GRSystem* system) const {
+    NVRect r = NVRect(0, 0, 0, 0);
+    GRSystemStartEndStruct * sse = getSystemStartEndStruct(system);
+    if (sse == 0) return;
+    const TXSegment* segment = getSegment (sse->grsystem);
+    if (segment) {
+        float y1 = segment->fy - fWidth/2;
+        float y2 = segment->fy + fWidth/2;
+        float x2 = segment->fx2;
+        if (segment->fx1 == x2)    {
+            // this is to catch single note dynamics - next event pos is not available at tellPosition time
+            if (fNext) x2 = (fNext->getBoundingBox()+fNext->getPosition()).left;
+        }
+        r.Set(min(segment->fx1, x2),    // left
+              min(y1, y2),              // top
+              max(segment->fx1, x2),    // right
+              max(y1, y2));             // bottom        
+    }
+    
+    return r;
+}
+
 //---------------------------------------------------------------------------------
 void GRDynamics::addAssociation(GRNotationElement * grnot)
 {
@@ -198,10 +220,10 @@ void GRDynamics::DrawDynamic( VGDevice & hdc, bool cresc) const
         hdc.PopFillColor();
         hdc.PopPenColor();
     }
-        
-//   DrawBoundingBox(hdc, VGColor(0,0,255));
-//    cerr<<"Dynamics Draw ";mBoundingBox.Print(cerr);mPosition.Print(cerr);getOffset().Print(cerr);
-//    cerr<<" "<<segment->fx1<<" "<<segment->fx2<<" "<<segment->fy<<" w="<<fWidth;
-//    cerr<<endl;
+    
+//    hdc.PushPen( VGColor(255, 0, 0), 4);
+//    NVRect r = getBoundingBox(sse->grsystem);
+//    hdc.Frame(r.left, r.top, r.right, r.bottom);
+//    hdc.PopPen();
 }
 

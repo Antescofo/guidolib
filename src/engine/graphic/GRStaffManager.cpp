@@ -888,11 +888,10 @@ int GRStaffManager::AddPageTag(GRNotationElement * grel, GRStaff * grstaff,int v
 	mGrPage->AddTail(grel);
     // AC: Add to pageHeaderHeight if the element is hooked to topMargin
     if (grpgtxt->isRelativeToTopMargin()) {
-        float bottom = grpgtxt->getPosition().y + grpgtxt->getBoundingBox().bottom - grpgtxt->getYOffset();
-        if (bottom > mGrPage->mPageheaderHeight) {
-            mGrPage->mPageheaderHeight = bottom;
+        float offset = grpgtxt->offsetFromTopMargin;
+        if (offset > mGrPage->mPageheaderHeight) {
+            mGrPage->mPageheaderHeight = offset;
         }
-
     }
     // END OF AC
 	return 0;
@@ -2564,7 +2563,6 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
     
 	int count = -1;
 	GuidoPos pos = mSystemSlices->GetHeadPosition();		// then I just iterate through the systemslices ....
-    GRFixVisitor ffix;  // AC: For fixing Bounding Boxes before they propagate
 	while (pos)
 	{
 		// no longer needed because of sliceheight
@@ -2593,10 +2591,6 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 		}
 		
 		GRSystemSlice * begslice = mSystemSlices->GetAt(pos);	// this is the beginning slice of the potential line.
-        // AC: Fix BBs before propagation
-        begslice->accept(ffix);
-        begslice->FinishSlice();
-        // END OF AC
 		GRBeginSpaceForceFunction2 * begsff = 0;
 		// this gets the SpaceForceFunction of the beginning-elemnts 
 		// that would be needed, if the break would really occur at this location.
@@ -2620,12 +2614,6 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 		while (tmppos) {
 			tmpcount++;
 			GRSystemSlice * slc = mSystemSlices->GetNext(tmppos);
-            // AC: Fix BBs before propagation
-            //cerr<<"SliceHeight="<<slc->getBoundingBox().Height(); //<<endl;
-            slc->accept(ffix);
-            slc->FinishSlice();
-            //cerr<<"\t ---> SliceHeight="<<slc->getBoundingBox().Height()<<endl;
-            // END OF AC
 			if (slc)
 			{
                 float optconst = 0;

@@ -87,7 +87,6 @@ class GRBowing : public GRPTagARNotationElement
 
 		GRPositionTag::GRSaveStruct * getNewGRSaveStruct();
 		virtual void OnDraw( VGDevice & hdc ) const;
-		virtual void updateBoundingBox();
 										
 		virtual void setOffset(int n_point, const NVPoint & p);
 		virtual void removeAssociation(GRNotationElement * el );
@@ -97,7 +96,10 @@ class GRBowing : public GRPTagARNotationElement
 		virtual void					tellPosition(GObject * caller, const NVPoint & newPosition);
 		virtual GRNotationElement *		getStartElement(GRStaff * grstaff) const;
 		virtual GRNotationElement *		getEndElement(GRStaff * grstaff) const;
-	
+    
+        /// Override getBoundingBox since for this GR they depend on the staff and need to be dynamically calculated. (AC: 2021/03)
+        NVRect getBoundingBox(GRStaff * grstaff) const;
+
 	protected:
 		virtual void automaticCurveDirection	( GRBowingContext * context, const ARBowing * arBow, GRSystemStartEndStruct * sse );
 		virtual void automaticAnchorPoints		( const GRBowingContext * context, const ARBowing * arBow, GRSystemStartEndStruct * sse );

@@ -76,6 +76,8 @@ GRPageText::GRPageText ( const ARText * ar, GRPage * page, const char* txt, cons
 		mBoundingBox.top    = -height;
 		mBoundingBox.bottom = 0;
 	}
+    
+    offsetFromTopMargin = 0.0;
 }
 
 //-------------------------------------------------------------------------------
@@ -119,6 +121,9 @@ void GRPageText::calcPosition()
 	else if (second == '5')					mPosition.y = (pageHeight -(mb * kCmToVirtual));
 	else if (second == '6')					mPosition.y = (pageHeight - ((mb * kCmToVirtual) * 0.5f));
 	else if (second == 'b' || second == '7')mPosition.y = (pageHeight);
+    
+    // Calculate y-distance from top-margin which depends on the second attribute, BB, and position
+    offsetFromTopMargin = mBoundingBox.bottom - fDy;
 }
 
 bool GRPageText::isRelativeToTopMargin() const {

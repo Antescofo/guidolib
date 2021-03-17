@@ -623,9 +623,9 @@ void GRMusic::createGR (const ARPageFormat * inPageFormat, const GuidoLayoutSett
 	fLyricsChecked = false;
 
 	// intended to fix tellPosition order issues
-	GRFixVisitor ffix;
+	//GRFixVisitor ffix;
     //cerr<<"\t GRMUSIC FFIX"<<endl;
-	this->accept( ffix );
+	//this->accept( ffix );
 
 //cerr << "GRMusic: ---------- visit ---------" << endl;
 	GRTrillLinker v;
