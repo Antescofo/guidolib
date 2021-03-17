@@ -439,15 +439,9 @@ void append_track(MyMapCollector* collector, char* output, unsigned long& offset
     unsigned char key = it.infos.midiPitch;
     unsigned char velocity = 80;
     if (it.event_type == 1) { // note on
-      std::cout << variable_delta_time << std::endl;
-      std::cout << "NOTEON " << it.infos.midiPitch << " " << it.time << " " << it.measure << std::endl;
       status = 144;  // 10010000
     }
     else if (it.event_type == 2) { // note off
-      std::cout << variable_delta_time << std::endl;
-      
-      std::cout << "NOTEOFF " << it.infos.midiPitch << " " << it.time << std::endl;
-      std::cout << std::endl;
       status = 128; // 10000000
     }
     else {
