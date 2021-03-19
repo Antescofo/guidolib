@@ -24,7 +24,8 @@
 
 #include "GRSliceHeight.h" 
 #include "GRSystemSlice.h" 
-#include "GRStaff.h" 
+#include "GRStaff.h"
+#include "GRSystem.h"
 #include "kf_ivect.h"
 
 GRSliceHeight::GRSliceHeight() : mHVector(0)
@@ -88,6 +89,9 @@ void GRSliceHeight::AddSystemSlice( const GRSystemSlice * slc, bool doboundingre
 				// we do the bounding-rectangle thing ...
 				// this is actually not needed here : the bounding box update is
 				// already computed by GRSystemSlice::Finish
+                if (tmpstaff->getGRSystem()) {
+                    tmpstaff->getGRSystem()->fixTellPositionOrder(); // AC: Update BBs before propagation
+                }
 				tmpstaff->updateBoundingBox();
 				// the boundingBoxPreview method has been temporary use here to test code restructuration
 //				tmpstaff->boundingBoxPreview();

@@ -2634,7 +2634,7 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 				    curxmin += slc->mPossibleBreakState->sff->getXminOpt(); // we also just add the curxmin-value ....
 
 				// we have to deal with the height ...
-				sliceheight.AddSystemSlice(slc);
+				sliceheight.AddSystemSlice(slc, 1); // AC: added ability to update BBs in the process
 				const float slcheight = slc->mBoundingBox.Height();
 								
 				if (slcheight > curheight)
