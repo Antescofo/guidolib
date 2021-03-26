@@ -172,7 +172,7 @@ MyMapCollector* get_map_collector_from_guido(std::string& guido,
     map_collector->page = npage;
     GuidoGetMap(gr, npage, width, height, kGuidoBarAndEvent, *map_collector);
   }
-  std::sort(map_collector->begin(), map_collector->end(), sort_by_date);
+  // std::sort(map_collector->begin(), map_collector->end(), sort_by_date);
 
   interpolate(date_to_time, *map_collector);
   return map_collector;
@@ -211,7 +211,6 @@ void append_variable_length(unsigned long value, char* output, unsigned long& of
   register unsigned long buffer;
   buffer = value & 0x7F;
 
-  std::cout << "Variable length: " << value << std::endl;
   while ((value >>= 7))
   {
     buffer <<= 8;
@@ -291,8 +290,8 @@ void append_track(MyMapCollector* collector, char* output, unsigned long& offset
     float delta_time = relative_time - last_time;
     unsigned long variable_delta_time = division * 2.0 * delta_time; // * bpm or shit like that
 
-    std::cout << std::endl << "EUH BONJOUR: " << it.time << " " << it.event_type << " " << it.infos.midiPitch << std::endl;
-    std::cout << relative_time << " - " << last_time << " => " << delta_time << std::endl;
+    // std::cout << std::endl << "EUH BONJOUR: " << it.time << " " << it.event_type << " " << it.infos.midiPitch << std::endl;
+    // std::cout << relative_time << " - " << last_time << " => " << delta_time << std::endl;
     unsigned char key = it.infos.midiPitch;
     unsigned char velocity = 80;
     if (it.event_type == 1) { // note on
@@ -393,5 +392,3 @@ std::string preclean_guido(std::string& guido) {
   erase_tag(guido, "composer");
   return guido;
 }
-
-
