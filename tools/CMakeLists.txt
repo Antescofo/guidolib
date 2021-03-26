@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 2.6)
 project (videogeneration)
 set (target videogeneration)
 set (target_json_mapping get_json_mapping)
+set (target_xml_asco_to_midi xml_asco_to_midi)
 set (target_audioselector audioselector)
 
 # LibFindMacros
@@ -12,11 +13,13 @@ set (GUIDO  ${ROOT}/src)
 FILE(GLOB SERVER_CPP_SOURCES ${ROOT}/server/*.cpp)
 
 list(REMOVE_ITEM SERVER_CPP_SOURCES "/app/tools/../server/main.cpp" "/home/guidolib/server/main.cpp" "../server/main.cpp" "/home/guidolib/tools/../server/main.cpp" "/home/externals/guidolib/tools/../server/main.cpp")
+set(COMMON_CPP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/common.cpp)
 MESSAGE(STATUS ${SERVER_CPP_SOURCES})
 FILE(GLOB SERVER_C_SOURCES   ${ROOT}/server/*.c)
 FILE(GLOB CAIRO_CPP_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/../platforms/linux/src/Cairo*.cpp)
 FILE(GLOB LOCAL_CPP_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/videogeneration.cpp)
-FILE(GLOB LOCAL_CPP_SOURCES_JSON_MAPPING  ${CMAKE_CURRENT_SOURCE_DIR}/get_json_mapping.cpp)
+FILE(GLOB LOCAL_CPP_SOURCES_JSON_MAPPING  ${COMMON_CPP_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/get_json_mapping.cpp)
+FILE(GLOB LOCAL_CPP_SOURCES_XML_ASCO_TO_MIDI ${COMMON_CPP_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/xml_asco_to_midi.cpp)
 
 FILE(GLOB AUDIOSELECTOR_CPP_SOURCES  ${CMAKE_CURRENT_SOURCE_DIR}/audioselector.cc)
 
@@ -154,13 +157,15 @@ else()
   set(LINK ${LINK}  "-l GUIDOEngine")
   LINK_DIRECTORIES(${ROOT}/build/linux/)
 endif(APPLE)
-set(CMAKE_CXX_FLAGS "-O3 -fpermissive -std=c++11")
-# set(CMAKE_CXX_FLAGS "-g -ggdb -std=c++11 -fpermissive")
+# set(CMAKE_CXX_FLAGS "-O3 -fpermissive -std=c++11")
+set(CMAKE_CXX_FLAGS "-g -ggdb -std=c++11 -fpermissive")
 
 add_executable(${target} ${LOCAL_CPP_SOURCES} ${REMOTE_CPP_SOURCES} ${SERVER_CPP_SOURCES} ${SERVER_C_SOURCES} ${CAIRO_CPP_SOURCES} ${JSON_CPP_SOURCES})
 add_executable(${target_json_mapping} ${LOCAL_CPP_SOURCES_JSON_MAPPING} ${REMOTE_CPP_SOURCES} ${SERVER_CPP_SOURCES} ${SERVER_C_SOURCES} ${CAIRO_CPP_SOURCES} ${JSON_CPP_SOURCES})
+add_executable(${target_xml_asco_to_midi} ${LOCAL_CPP_SOURCES_XML_ASCO_TO_MIDI} ${REMOTE_CPP_SOURCES} ${SERVER_CPP_SOURCES} ${SERVER_C_SOURCES} ${CAIRO_CPP_SOURCES} ${JSON_CPP_SOURCES})
 
 add_executable(${target_audioselector} ${AUDIOSELECTOR_CPP_SOURCES})
 
 target_link_libraries(${target} ${LINK})
 target_link_libraries(${target_json_mapping} ${LINK})
+target_link_libraries(${target_xml_asco_to_midi} ${LINK})
