@@ -282,6 +282,7 @@ void append_track(MyMapCollector* collector, char* output, unsigned long& offset
   */
 
   std::sort(collector->begin(), collector->end(), sort_by_time);
+  std::map<unsigned char, bool> last_tieds;
 
   for (auto it : *collector) {
     // it.time
@@ -293,8 +294,19 @@ void append_track(MyMapCollector* collector, char* output, unsigned long& offset
     // std::cout << std::endl << "EUH BONJOUR: " << it.time << " " << it.event_type << " " << it.infos.midiPitch << std::endl;
     // std::cout << relative_time << " - " << last_time << " => " << delta_time << std::endl;
     unsigned char key = it.infos.midiPitch;
-    unsigned char velocity = 80;
+    unsigned char velocity = it.infos.intensity;
     if (it.event_type == 1) { // note on
+      bool should_play = true;
+      bool last_tied = false;
+      if (last_tieds.count(key) > 0)
+        last_tied = last_tieds[key];
+      if (it.infos.isTied && last_tied) {
+        should_play = false;
+      }
+      last_tieds[key] = it.infos.isTied && it.infos.isOriginTied;
+      if (!should_play) {
+        continue;
+      }
       status = 144;  // 10010000
     }
     else if (it.event_type == 2) { // note off
