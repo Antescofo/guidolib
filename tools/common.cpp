@@ -283,7 +283,7 @@ void append_track(MyMapCollector* collector, char* output, unsigned long& offset
 
   std::sort(collector->begin(), collector->end(), sort_by_time);
   std::map<unsigned char, bool> last_tieds;
-
+  int transpo = collector->transpo;
   for (auto it : *collector) {
     // it.time
     // it.midiPitch
@@ -293,7 +293,7 @@ void append_track(MyMapCollector* collector, char* output, unsigned long& offset
 
     // std::cout << std::endl << "EUH BONJOUR: " << it.time << " " << it.event_type << " " << it.infos.midiPitch << std::endl;
     // std::cout << relative_time << " - " << last_time << " => " << delta_time << std::endl;
-    unsigned char key = it.infos.midiPitch;
+    unsigned char key = it.infos.midiPitch + transpo;
     unsigned char velocity = it.infos.intensity;
     if (it.event_type == 1) { // note on
       bool should_play = true;
@@ -367,6 +367,29 @@ void generate_midi(MyMapCollector* collector, const std::string& output_midi_fil
   delete outfile;
 }
 
+std::string extract_tag(std::string& content_xml, std::string tag_name) {
+  int si_tag = tag_name.size();
+  size_t start_pos = content_xml.find("<" + tag_name + ">");
+  if(start_pos == std::string::npos)
+    return "none";
+  size_t end_pos = content_xml.find("</" + tag_name + ">");
+  if(end_pos == std::string::npos)
+    return "none";
+  int si_tag_with_chev = si_tag + 2;
+  int beg = start_pos + si_tag_with_chev;
+  std::string tag = content_xml.substr(beg, end_pos - beg);
+  return tag;
+}
+
+
+int extract_transpo(std::string& content_xml) {
+  replace(content_xml, "\n", "");
+  auto tag = extract_tag(content_xml, "transpose");
+  if (tag == "none") return 0;
+  auto chromatic = extract_tag(tag, "chromatic");
+  if (chromatic == "none") return 0;
+  return std::atoi(chromatic.c_str());
+}
 
 MyMapCollector* get_map_collector_from_xml_and_asco(const std::string& musicxml_file,
                                                     const std::string& asco_file,
@@ -379,11 +402,13 @@ MyMapCollector* get_map_collector_from_xml_and_asco(const std::string& musicxml_
 
   getline(ifs, content_xml, '\0');
   parse_asco(asco_file, date_to_time);
+  int transpo = extract_transpo(content_xml);
   MusicXML2::musicxmlstring2guidoOnPart(content_xml.c_str(), true, part_filter, guidostream);
   guido = guidostream.str();
   preclean_guido(guido);
-
-  return get_map_collector_from_guido(guido, date_to_time);
+  MyMapCollector* ret = get_map_collector_from_guido(guido, date_to_time);
+  ret->transpo = transpo;
+  return ret;
 }
 
 

@@ -58,6 +58,7 @@ struct Element {
 
 class MyMapCollector : public MapCollector, public std::vector<Element> {
 public:
+  int transpo = 0;
   int page = 1;
   std::map<int, PageInfo> page_infos;
   std::map<int, int> voice_to_measure;
