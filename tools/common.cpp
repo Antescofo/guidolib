@@ -305,11 +305,35 @@ void append_track(MyMapCollector* collector, char* output, unsigned long& offset
       }
       last_tieds[key] = it.infos.isTied && it.infos.isOriginTied;
       if (!should_play) {
+        /*
+        std::cout << "NOTE ON~: "
+                  << "measure:" << it.measure << " "
+                  << "key:" << (int)key << " "
+                  << "t:" << it.time << " "
+                  << "dt:" << delta_time << " "
+                  << std::endl;
+        */
         continue;
       }
+      /*
+      std::cout << "NOTE ON : "
+                << "measure:" << it.measure << " "
+                << "key:" << (int)key << " "
+                << "t:" << it.time << " "
+                << "dt:" << delta_time << " "
+                << std::endl;
+      */
       status = 144;  // 10010000
     }
     else if (it.event_type == 2) { // note off
+      /*
+      std::cout << "NOTE OFF: "
+                << "measure:" << it.measure << " "
+                << "key:" << (int)key << " "
+                << "t:" << it.time << " "
+                << "dt:" << delta_time << " "
+                << std::endl;
+      */
       status = 128; // 10000000
     }
     else {
@@ -351,7 +375,7 @@ void generate_midi(MyMapCollector* collector, const std::string& output_midi_fil
   unsigned short ntracks = 1;
   // unsigned short division = 59176; // many Pulses (i.e. clocks) Per Quarter Note (abbreviated as PPQN)
   // unsigned short division = 42000; // many Pulses (i.e. clocks) Per Quarter Note (abbreviated as PPQN)
-  unsigned short division = 96;
+  unsigned short division = 96 * 32;
 
   append_value(header_length, output, offset);
   append_value(format, output, offset);
