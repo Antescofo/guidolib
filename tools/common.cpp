@@ -24,27 +24,9 @@ bool sort_by_date(Element& a, Element& b)
   return (af < bf);
 }
 
-bool parse_guido_date(std::string& content, int& off, Fraction& out) {
-  int denom = 1;
-
-  int num = parse_int(content, off);
-
-
-  if (content[off] == '/') {
-    ++off;
-    denom = parse_int(content, off);
-  }
-  if (content[off] == ')') {
-    ++off;
-  }
-  out.setNumerator(num);
-  out.setDenominator(denom * 4);
-  return true;
-}
-
-
 float parse_float(std::string& content, int& off) {
   float num = 0;
+  while ((off < content.size() && (content[off] == ' '))) ++off;
   while ((off < content.size()) && ((content[off] >= '0') && (content[off] <= '9'))) {
     num = num * 10 + (content[off] - '0');
     ++off;
@@ -63,6 +45,34 @@ float parse_float(std::string& content, int& off) {
 }
 
 
+
+bool parse_guido_date(std::string& content, int& off, Fraction& out) {
+  float denom = 1;
+
+  float num = parse_float(content, off);
+  bool has_denom = false;
+  if (content[off] == '/') {
+    ++off;
+    denom = parse_float(content, off);
+    has_denom = true;
+  }
+  if (has_denom) {
+    out.setNumerator(num);
+    out.setDenominator(denom * 4);
+  }
+  else {
+    out.setNumerator(num * 4 * 2 * 3 * 2);
+    out.setDenominator(4 * 4 * 2 * 3 * 2);
+  }
+  return true;
+}
+
+
+static inline std::string &ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))));
+    return s;
+}
 bool parse_asco(const std::string& asco_file, std::vector<std::pair<GuidoDate*, float> >& date_to_time) {
   std::ifstream ifs(asco_file.c_str());
   std::string content;
@@ -74,19 +84,36 @@ bool parse_asco(const std::string& asco_file, std::vector<std::pair<GuidoDate*, 
   replace(content, "  ", " ");
   replace(content, "} }", "}}");
 
-  size_t start_pos = content.find("NIM {") + 5;
+  size_t start_pos_metadata = content.find("<metadata>");
+  size_t end_pos_metadata = content.find("</metadata>");
+
+  if ((start_pos_metadata != std::string::npos) && (end_pos_metadata != std::string::npos)) {
+    content.erase(start_pos_metadata, end_pos_metadata - start_pos_metadata);
+  }
+  size_t start_pos = content.find("@eval_when_load { $nim := NIM {");
+
+  start_pos = content.find("NIM {", start_pos) + 5;
   size_t end_pos = content.find("}}");
 
   content = content.substr(start_pos, end_pos - start_pos);
   // BEAT TIME BEAT TIME BEAT TIME
-  replace(content, " ", "");
   int off = 0;
   Fraction cumul;
+  replace(content, ")", " ");
+  replace(content, "(", " ");
+  replace(content, "  ", " ");
+
+  content = ltrim(content);
+
+  /*
+  if (content[off] != '(') {
+    parse_float(content, off);
+  }
+  */
+  //replace(content, " ", "");
 
   while (off < content.size()) {
-    if (content[off] == '(') {
-      ++off;
-    }
+    while ((off < content.size() && (content[off] == ' '))) ++off;
     Fraction out;
     parse_guido_date(content, off, out);
     // std::cout << out.getNumerator() << " " << out.getDenominator() << std::endl;
@@ -100,6 +127,7 @@ bool parse_asco(const std::string& asco_file, std::vector<std::pair<GuidoDate*, 
     //std::cout << "Time:" << time
     //<< " @" << cumul.getNumerator() << "/" << cumul.getDenominator()
     //        << std::endl;
+    while ((off < content.size() && (content[off] == ' '))) ++off;
   }
   return true;
 }
