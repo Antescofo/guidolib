@@ -312,7 +312,7 @@ void append_track(MyMapCollector* collector, char* output, unsigned long& offset
   std::sort(collector->begin(), collector->end(), sort_by_time);
   std::map<unsigned char, bool> last_tieds;
   int transpo = collector->transpo;
-  unsigned long cumul_delta_time = 0;
+  double cumul_delta_time = 0;
   for (auto it : *collector) {
     // it.time
     // it.midiPitch
@@ -324,9 +324,7 @@ void append_track(MyMapCollector* collector, char* output, unsigned long& offset
 
     double error = real_target - (cumul_delta_time + variable_delta_time);
     double casted_error = floor(error);
-    // std::cout << real_target << " " << (variable_delta_time + cumul_delta_time) << " " << error << " " << casted_error << std::endl;
     variable_delta_time += casted_error;
-    cumul_delta_time += variable_delta_time;
     // std::cout << std::endl << "EUH BONJOUR: " << it.time << " " << it.event_type << " " << it.infos.midiPitch << std::endl;
     // std::cout << relative_time << " - " << last_time << " => " << delta_time << std::endl;
     unsigned char key = it.infos.midiPitch + transpo;
@@ -380,6 +378,7 @@ void append_track(MyMapCollector* collector, char* output, unsigned long& offset
     append_value(key, track_data, offset_track);
     append_value(velocity, track_data, offset_track);
     last_time = relative_time;
+    cumul_delta_time += variable_delta_time;
   }
   // end of track
   append_variable_length(0, track_data, offset_track);
@@ -412,7 +411,7 @@ void generate_midi(MyMapCollector* collector, const std::string& output_midi_fil
   // unsigned short division = 59176; // many Pulses (i.e. clocks) Per Quarter Note (abbreviated as PPQN)
   // unsigned short division = 42000; // many Pulses (i.e. clocks) Per Quarter Note (abbreviated as PPQN)
   unsigned short division = 96 * 32 * 3 * 2;
-
+  
   append_value(header_length, output, offset);
   append_value(format, output, offset);
   append_value(ntracks, output, offset);
