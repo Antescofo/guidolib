@@ -13,14 +13,22 @@ int parse_int(std::string& content, int& off) {
   return num;
 }
 
+bool sort_by_time(Element& a, Element& b)
+{
+  return (a.time < b.time);
+}
+
+
 bool sort_by_date(Element& a, Element& b)
 {
   float af = to_float(a.date);
   float bf = to_float(b.date);
+  /*
   if (abs(af - bf) < 0.00001) {
     if (a.event_type == 2) return 1;
     return 0;
   }
+  */
   return (af < bf);
 }
 
@@ -152,7 +160,9 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
   auto itrecording = date_to_time.begin();
   double timeoffset = 0;
   bool first = true;
-
+  long last_measure = 0;
+  double last_time = 0.0;
+  double last_bdate = 0.0;
   for (auto it = map_collector.begin(); it != map_collector.end(); ++it) {
     float bdate = to_float(it->date);
 
@@ -173,7 +183,31 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
         }
       }
     }
+
     it->time = itrecording->second + (bdate - to_float(*itrecording->first)) / bps;
+    /*
+    std::cout << "OH:"
+              << it->event_type << " "
+              << it->time << " "
+              << it->date << " " << bdate << " " << it->measure << std::endl;
+    if (it->measure < last_measure) {
+      std::cout << "SHOULD NOT GO BEHIND MEASURE" << std::endl;
+      throw "huhuhu";
+    }
+    if (it->time < last_time) {
+      std::cout << "SHOULD NOT GO BEHIND TIME" << std::endl;
+      throw "huhuhu";
+    }
+    if (bdate < last_bdate) {
+      std::cout << "SHOULD NOT GO BEHIND BDATE" << std::endl;
+      throw "huhuhu";
+    }
+    */
+
+    last_bdate = bdate;
+    last_measure = it->measure;
+    last_time = it->time;
+
   }
 }
 
@@ -200,7 +234,7 @@ MyMapCollector* get_map_collector_from_guido(std::string& guido,
     map_collector->page = npage;
     GuidoGetMap(gr, npage, width, height, kGuidoBarAndEvent, *map_collector);
   }
-  // std::sort(map_collector->begin(), map_collector->end(), sort_by_date);
+  std::sort(map_collector->begin(), map_collector->end(), sort_by_date);
 
   interpolate(date_to_time, *map_collector);
   return map_collector;
@@ -255,11 +289,6 @@ void append_variable_length(unsigned long value, char* output, unsigned long& of
   }
 }
 
-
-bool sort_by_time(Element& a, Element& b)
-{
-  return (a.time < b.time);
-}
 
 void append_track(MyMapCollector* collector, char* output, unsigned long& offset, float preview_audio_begin, unsigned long division) {
   output[offset++] = 'M';
@@ -411,7 +440,7 @@ void generate_midi(MyMapCollector* collector, const std::string& output_midi_fil
   // unsigned short division = 59176; // many Pulses (i.e. clocks) Per Quarter Note (abbreviated as PPQN)
   // unsigned short division = 42000; // many Pulses (i.e. clocks) Per Quarter Note (abbreviated as PPQN)
   unsigned short division = 96 * 32 * 3 * 2;
-  
+
   append_value(header_length, output, offset);
   append_value(format, output, offset);
   append_value(ntracks, output, offset);
