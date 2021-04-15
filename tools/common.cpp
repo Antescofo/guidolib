@@ -15,6 +15,9 @@ int parse_int(std::string& content, int& off) {
 
 bool sort_by_time(Element& a, Element& b)
 {
+  if (fabs(a.time - b.time) < 0.00001) {
+    return (a.event_type > b.event_type);
+  }
   return (a.time < b.time);
 }
 
