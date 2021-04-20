@@ -442,7 +442,7 @@ void generate_midi(MyMapCollector* collector, const std::string& output_midi_fil
   unsigned short ntracks = 1;
   // unsigned short division = 59176; // many Pulses (i.e. clocks) Per Quarter Note (abbreviated as PPQN)
   // unsigned short division = 42000; // many Pulses (i.e. clocks) Per Quarter Note (abbreviated as PPQN)
-  unsigned short division = 96 * 32 * 3 * 2;
+  unsigned short division = 96 * 2;
 
   append_value(header_length, output, offset);
   append_value(format, output, offset);
