@@ -543,8 +543,8 @@ void GRPage::finishPage( bool islastpage )
         if (islastpage) {
             dist = settings.systemsDistance;
         }else {
-            // If there is only ONE system on page, and we are NOT on last page, try centering it vertically
-            if (mSystems.size()==1) {
+            // If there is only ONE system on page, and we are NOT on last page and we are NOT on a page with title, try centering it vertically
+            if ((mSystems.size()==1)&&(headerOffset == 0.0)) {
                 headerOffset += (pagesizey - m_totalsystemheight)/2.0;
             }
         }

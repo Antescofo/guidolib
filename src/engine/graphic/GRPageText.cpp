@@ -123,7 +123,7 @@ void GRPageText::calcPosition()
 	else if (second == 'b' || second == '7')mPosition.y = (pageHeight);
     
     // Calculate y-distance from top-margin which depends on the second attribute, BB, and position
-    offsetFromTopMargin = mBoundingBox.bottom - fDy;
+    offsetFromTopMargin = mBoundingBox.Height() - fDy;
 }
 
 bool GRPageText::isRelativeToTopMargin() const {

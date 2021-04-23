@@ -743,11 +743,10 @@ void GRBowing::OnDraw( VGDevice & hdc) const
 	if (mColRef) hdc.PopFillColor();
     
     // Note: AC: To draw the BB for debug, one should use the override method and not the GObject mBoundingBox
-	
-//	hdc.Frame(fStartBox.left, fStartBox.top, fStartBox.right, fStartBox.bottom);
-//	hdc.Frame(fEndBox.left, fEndBox.top, fEndBox.right, fEndBox.bottom);
-//	hdc.Frame(fMidBox.left, fMidBox.top, fMidBox.right, fMidBox.bottom);
-//cerr << "GRBowing::OnDraw high : " << fMidBox.TopLeft() << " low: " << fMidBox.BottomRight() << endl;
+//    hdc.PushPen( VGColor(250, 0, 0), 4);
+//    NVRect r = getBoundingBox(getGRStaff());
+//    hdc.Frame(r.left, r.top, r.right, r.bottom);
+//    hdc.PopPen();
 }
 
 // -----------------------------------------------------------------------------
