@@ -133,7 +133,13 @@ bool parse_asco(const std::string& asco_file, std::vector<std::pair<GuidoDate*, 
     GuidoDate* date = new GuidoDate();
     date->num = cumul.getNumerator();
     date->denom = cumul.getDenominator();
+    if ((date_to_time.size() == 0) && (date->num != 0)) {
+      GuidoDate* fdate = new GuidoDate();
+      fdate->num = 0;
+      fdate->denom = 4;
+      date_to_time.push_back(std::pair<GuidoDate*, float>(fdate, 0));
 
+    }
     date_to_time.push_back(std::pair<GuidoDate*, float>(date, time));
     //std::cout << "Time:" << time
     //<< " @" << cumul.getNumerator() << "/" << cumul.getDenominator()
@@ -168,7 +174,6 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
   double last_bdate = 0.0;
   for (auto it = map_collector.begin(); it != map_collector.end(); ++it) {
     float bdate = to_float(it->date);
-
     // update itrecording
     auto lnext = itrecording + 1;
     if (first || ((lnext != date_to_time.end()) && (bdate >= to_float(*lnext->first)))) {
@@ -188,6 +193,12 @@ void interpolate(std::vector<std::pair<GuidoDate*, float> >& date_to_time, MyMap
     }
 
     it->time = itrecording->second + (bdate - to_float(*itrecording->first)) / bps;
+
+    if (it->time < 0) {
+      std::cout << "Negative time, something wents wrong with the asco: "
+                << it->time << " " << itrecording->second << " " << bdate << " " << to_float(*itrecording->first) << " " << bps << std::endl;
+      throw "HOY";
+    }
     /*
     std::cout << "OH:"
               << it->event_type << " "
@@ -350,10 +361,8 @@ void append_track(MyMapCollector* collector, char* output, unsigned long& offset
     // it.midiPitch
     double relative_time = it.time - preview_audio_begin;
     double delta_time = relative_time - last_time;
-
     unsigned long variable_delta_time = division * 2.0 * delta_time; // * bpm or shit like that
     double real_target = division * 2.0 * relative_time;
-
     double error = real_target - (cumul_delta_time + variable_delta_time);
     double casted_error = floor(error);
     variable_delta_time += casted_error;
