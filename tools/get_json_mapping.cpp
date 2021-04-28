@@ -99,17 +99,15 @@ int main(int argc, char* argv[]) {
   if (has_begin_bar) computed_begin_bar = begin_bar;
   if (has_end_bar) computed_end_bar = end_bar;
 
-  if (has_begin_bar) {
-    for (auto it : *map_collector) {
-      if (it.voice <= 0) continue;
+  for (auto it : *map_collector) {
+    if (it.voice <= 0) continue;
 
-      if (it.event_type != 2) {
-        if ((it.measure <= computed_end_bar) && (it.measure >= computed_begin_bar)) {
-          preview_audio_begin = it.time;
-          num_offset_preview = it.date.num;
-          deno_offset_preview = it.date.denom;
-          break;
-        }
+    if (it.event_type != 2) {
+      if ((it.measure <= computed_end_bar) && (it.measure >= computed_begin_bar)) {
+        preview_audio_begin = it.time;
+        num_offset_preview = it.date.num;
+        deno_offset_preview = it.date.denom;
+        break;
       }
     }
   }
@@ -200,6 +198,10 @@ int main(int argc, char* argv[]) {
     }
     ret += "}";
   }
+  // We add half sec margin
+  preview_audio_begin -= 0.5;
+  preview_audio_end += 0.5;
+  if (preview_audio_begin < 0) preview_audio_begin = 0;
 
   ret += ", \"num_offset_preview\": " + to_string(num_offset_preview);
   ret += ", \"deno_offset_preview\": " + to_string(deno_offset_preview);
