@@ -61,8 +61,6 @@ int main(int argc, char* argv[]) {
   int max_sec = stoi(argv[6]);
   int begin_bar = stoi(begin_bar_str);
   int end_bar = stoi(end_bar_str);
-  bool has_begin_bar = (begin_bar > 1);
-  bool has_end_bar = (end_bar > 0);
   guidohttpd::makeApplication(argc, argv);
   guidohttpd::startEngine();
 
@@ -75,15 +73,12 @@ int main(int argc, char* argv[]) {
   std::stringstream guido;
 
   getline(ifs, content_xml, '\0');
-  if (!has_begin_bar) begin_bar = 0;
-  if (!has_end_bar) end_bar = 0;
   MusicXML2::musicxmlstring2guidoOnPart(content_xml.c_str(), true, part_filter, guido);
   std::string guidostr = guido.str();
   // We can post process things here we do not want in th guido
   preclean_guido(guidostr);
 
   MyMapCollector* map_collector = get_map_collector_from_guido(guidostr, date_to_time);
-
   std::string whole_guido = guidostr;
   int num_offset_preview = 0;
   int deno_offset_preview = 1;
@@ -93,13 +88,11 @@ int main(int argc, char* argv[]) {
   float preview_audio_end = 0;
 
   int computed_end_bar = 99999;
-  int computed_begin_bar = 1;
-  if (has_begin_bar) computed_begin_bar = begin_bar;
-  if (has_end_bar) computed_end_bar = end_bar;
-
+  int computed_begin_bar = begin_bar;
+  if (end_bar > 0) computed_end_bar = end_bar;
+  
   for (auto it : *map_collector) {
     if (it.voice <= 0) continue;
-
     if (it.event_type != 2) {
       if ((it.measure <= computed_end_bar) && (it.measure >= computed_begin_bar)) {
         preview_audio_begin = it.time;
@@ -110,7 +103,6 @@ int main(int argc, char* argv[]) {
       }
     }
   }
-
   for (auto it : *map_collector) {
     if (it.voice <= 0) continue;
     if ((it.measure <= computed_end_bar) && (it.measure >= computed_begin_bar) && ((it.measure == end_bar) || ((it.time - preview_audio_begin) <= max_sec))) {
@@ -218,6 +210,7 @@ int main(int argc, char* argv[]) {
 
   // ret += ", \"preview_midi\": \"" + macaron::Base64().Encode(generate_midi(preview_map_collector, preview_audio_begin)) + "\"";
 
+  std::cout << preview_guido << std::endl;
   ret += ", \"preview_guido_b64\": \"" + base64_guido(preview_guido) + "\"";
   if (whole_guido_too)
     ret += ", \"guido_b64\": \"" + base64_guido(guidostr) + "\"";

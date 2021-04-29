@@ -235,7 +235,18 @@ MyMapCollector* get_map_collector_from_guido(std::string& guido,
   std::string svg_font_file = "/app/src/guido2.svg";
   guidohttpd::guidosession* currentSession = new guidohttpd::guidosession(svg_font_file, guido, "1shauishauis.gmm");
   // currentSession->updateGRH(guidohttpd::guidosession::sDefaultScoreParameters);
+  int min_measure = 1;
 
+  size_t last_pos = 0;
+  while (1) {
+    size_t start_pos = guido.find("(* meas. ", last_pos);
+    if(start_pos == std::string::npos)
+      break;
+    int found_measure = stoi(guido.substr(start_pos + 9, 4));
+    if (found_measure < min_measure) min_measure = found_measure;
+    last_pos = start_pos + 2;
+
+  }
   CGRHandler gr = currentSession->getGRHandler();
 
   int pageCount = GuidoGetPageCount(gr);
@@ -243,13 +254,12 @@ MyMapCollector* get_map_collector_from_guido(std::string& guido,
 
   int width = 1280;
   int height = 720;
-
+  map_collector->min_measure = min_measure;
   for (int npage = 1; npage <= pageCount; ++npage) {
     map_collector->page = npage;
     GuidoGetMap(gr, npage, width, height, kGuidoBarAndEvent, *map_collector);
   }
   std::sort(map_collector->begin(), map_collector->end(), sort_by_date);
-
   interpolate(date_to_time, *map_collector);
   return map_collector;
 }

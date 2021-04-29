@@ -60,6 +60,7 @@ class MyMapCollector : public MapCollector, public std::vector<Element> {
 public:
   int transpo = 0;
   int page = 1;
+  int min_measure = 1;
   std::map<int, PageInfo> page_infos;
   std::map<int, int> voice_to_measure;
   virtual void Graph2TimeMap( const FloatRect& box, const TimeSegment& dates, const GuidoElementInfos& infos ) {
@@ -74,9 +75,8 @@ public:
     inf.max_y = std::max(inf.max_y, box.bottom);
     page_infos[this->page] = PageInfo(inf.min_y, inf.max_y);
     if (voice_to_measure.find(infos.voiceNum) == voice_to_measure.end()) {
-      voice_to_measure[infos.voiceNum] = 1;
+      voice_to_measure[infos.voiceNum] = min_measure;
     }
-
     if (infos.type == kBar) {
       voice_to_measure[infos.voiceNum] += 1;
     }
