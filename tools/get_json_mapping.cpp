@@ -89,8 +89,11 @@ int main(int argc, char* argv[]) {
 
   int computed_end_bar = 99999;
   int computed_begin_bar = begin_bar;
-  if (end_bar > 0) computed_end_bar = end_bar;
-  
+  bool has_end_bar = false;
+  if (end_bar > 0) {
+    computed_end_bar = end_bar;
+    has_end_bar = true;
+  }
   for (auto it : *map_collector) {
     if (it.voice <= 0) continue;
     if (it.event_type != 2) {
@@ -105,7 +108,7 @@ int main(int argc, char* argv[]) {
   }
   for (auto it : *map_collector) {
     if (it.voice <= 0) continue;
-    if ((it.measure <= computed_end_bar) && (it.measure >= computed_begin_bar) && ((it.measure == end_bar) || ((it.time - preview_audio_begin) <= max_sec))) {
+    if ((it.measure <= computed_end_bar) && (it.measure >= computed_begin_bar) && (has_end_bar || (it.measure == end_bar) || ((it.time - preview_audio_begin) <= max_sec))) {
       // std::cout << "OH:" << it.measure << " " << it.time << " " << it.event_type << " " << it.staff << " " << it.voice << std::endl;
       preview_audio_end = it.time;
       end_bar = it.measure;
