@@ -213,7 +213,6 @@ int main(int argc, char* argv[]) {
 
   // ret += ", \"preview_midi\": \"" + macaron::Base64().Encode(generate_midi(preview_map_collector, preview_audio_begin)) + "\"";
 
-  std::cout << preview_guido << std::endl;
   ret += ", \"preview_guido_b64\": \"" + base64_guido(preview_guido) + "\"";
   if (whole_guido_too)
     ret += ", \"guido_b64\": \"" + base64_guido(guidostr) + "\"";
