@@ -24,17 +24,17 @@ std::string base64_guido(std::string& guido) {
 }
 
 int main(int argc, char* argv[]) {
-  if (argc < 6) {
+  if (argc < 7) {
     cerr << "Usage: "
          << argv[0]
-         << " musicxml_file asco_file part_filter begin_bar end_bar"
+         << " musicxml_file asco_file part_filter begin_bar end_bar max_sec"
          << endl;
     return 1;
   }
 
   bool whole_guido_too = false;
   bool export_debug = false;
-  if (argc >= 7) {
+  if (argc >= 8) {
     std::string addparam = argv[6];
     if (addparam == "--whole") {
       whole_guido_too = true;
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
       export_debug = true;
     }
   }
-  if (argc >= 8) {
+  if (argc >= 9) {
     std::string addparam = argv[7];
     if (addparam == "--whole") {
       whole_guido_too = true;
@@ -58,6 +58,7 @@ int main(int argc, char* argv[]) {
   int part_filter = stoi(argv[3]);
   string begin_bar_str = argv[4];
   string end_bar_str = argv[5];
+  int max_sec = stoi(argv[6]);
   int begin_bar = stoi(begin_bar_str);
   int end_bar = stoi(end_bar_str);
   bool has_begin_bar = (begin_bar > 1);
@@ -76,9 +77,6 @@ int main(int argc, char* argv[]) {
   getline(ifs, content_xml, '\0');
   if (!has_begin_bar) begin_bar = 0;
   if (!has_end_bar) end_bar = 0;
-  std::ostringstream preview_guido_stream;
-  MusicXML2::musicxmlfile2guido(musicxml_file.c_str(), true, begin_bar, end_bar, part_filter, preview_guido_stream);
-  std::string preview_guido = preview_guido_stream.str();
   MusicXML2::musicxmlstring2guidoOnPart(content_xml.c_str(), true, part_filter, guido);
   std::string guidostr = guido.str();
   // We can post process things here we do not want in th guido
@@ -105,6 +103,7 @@ int main(int argc, char* argv[]) {
     if (it.event_type != 2) {
       if ((it.measure <= computed_end_bar) && (it.measure >= computed_begin_bar)) {
         preview_audio_begin = it.time;
+        begin_bar = it.measure;
         num_offset_preview = it.date.num;
         deno_offset_preview = it.date.denom;
         break;
@@ -114,9 +113,10 @@ int main(int argc, char* argv[]) {
 
   for (auto it : *map_collector) {
     if (it.voice <= 0) continue;
-    if ((it.measure <= computed_end_bar) && (it.measure >= computed_begin_bar)) {
+    if ((it.measure <= computed_end_bar) && (it.measure >= computed_begin_bar) && ((it.measure == end_bar) || ((it.time - preview_audio_begin) <= max_sec))) {
       // std::cout << "OH:" << it.measure << " " << it.time << " " << it.event_type << " " << it.staff << " " << it.voice << std::endl;
       preview_audio_end = it.time;
+      end_bar = it.measure;
       num_preview_end = it.date.num;
       deno_preview_end = it.date.denom;
     }
@@ -161,6 +161,9 @@ int main(int argc, char* argv[]) {
   gdate->num = offset.getNumerator();
   gdate->denom = offset.getDenominator();
   preview_date_to_time.push_back(std::pair<GuidoDate*, float>(gdate, preview_audio_end));
+  std::ostringstream preview_guido_stream;
+  MusicXML2::musicxmlfile2guido(musicxml_file.c_str(), true, begin_bar, end_bar, part_filter, preview_guido_stream);
+  std::string preview_guido = preview_guido_stream.str();
   MyMapCollector* preview_map_collector = get_map_collector_from_guido(preview_guido, preview_date_to_time);
 
   for (auto it : *preview_map_collector) {
@@ -206,6 +209,8 @@ int main(int argc, char* argv[]) {
   ret += ", \"num_offset_preview\": " + to_string(num_offset_preview);
   ret += ", \"deno_offset_preview\": " + to_string(deno_offset_preview);
   ret += ", \"preview_audio_begin\": " + to_string(preview_audio_begin);
+  ret += ", \"preview_end_bar\": " + to_string(end_bar);
+  ret += ", \"preview_begin_bar\": " + to_string(begin_bar);
 
   ret += ", \"num_preview_end\": " + to_string(num_preview_end);
   ret += ", \"deno_preview_end\": " + to_string(deno_preview_end);
