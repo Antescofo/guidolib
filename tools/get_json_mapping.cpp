@@ -1,17 +1,25 @@
 #include <map>
 #include <iostream>
 #include <cstring>
+#include <unistd.h>
 #include <iomanip>
 #include <stdexcept>
 #include <algorithm>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <locale>
+#include <codecvt>
+#include <iostream>
+#include <fcntl.h>
 #include <libmusicxml/libmusicxml.h>
 #include "engine.h"
 #include "Base64.h"
 #include "common.hh"
-
+#define ENCODING_ASCII      0
+#define ENCODING_UTF8       1
+#define ENCODING_UTF16LE    2
+#define ENCODING_UTF16BE    3
 using namespace std;
 
 
@@ -21,6 +29,74 @@ std::string base64_guido(std::string& guido) {
   replace(guido, "\t", " ");
   replace(guido, "  ", " ");
   return macaron::Base64().Encode(guido);
+}
+
+std::string readFile(std::string path)
+{
+  std::string result;
+  std::ifstream ifs(path.c_str(), std::ios::binary);
+  std::stringstream ss;
+  int encoding = ENCODING_ASCII;
+
+  if (!ifs.is_open()) {
+    // Unable to read file
+    result.clear();
+    return result;
+  }
+  else if (ifs.eof()) {
+    result.clear();
+  }
+  else {
+    int ch1 = ifs.get();
+    int ch2 = ifs.get();
+    if (ch1 == 0xff && ch2 == 0xfe) {
+      // The file contains UTF-16LE BOM
+      encoding = ENCODING_UTF16LE;
+    }
+    else if (ch1 == 0xfe && ch2 == 0xff) {
+      // The file contains UTF-16BE BOM
+      encoding = ENCODING_UTF16BE;
+    }
+    else {
+      int ch3 = ifs.get();
+      if (ch1 == 0xef && ch2 == 0xbb && ch3 == 0xbf) {
+        // The file contains UTF-8 BOM
+        encoding = ENCODING_UTF8;
+      }
+      else {
+        // The file does not have BOM
+        encoding = ENCODING_ASCII;
+        ifs.seekg(0);
+      }
+    }
+  }
+  ss << ifs.rdbuf() << '\0';
+  if (encoding == ENCODING_UTF16LE) {
+    std::string ret = "";
+    auto st = ss.str();
+    for (int k = 0; k < st.size(); k += 2) {
+      ret += st[k];
+    }
+    result = ret;
+    // std::wstring_convert<std::codecvt_utf8<wchar_t, 0x10ffff, std::little_endian> > conv2;
+    //std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > utfconv;
+    // result = conv2.to_bytes(std::wstring((wchar_t *)ss.str().c_str()));
+    //result = utfconv.to_bytes(std::wstring((wchar_t *)ss.str().c_str()));
+  }
+  else if (encoding == ENCODING_UTF16BE) {
+    std::string src = ss.str();
+    std::string dst = src;
+    swab(&src[0u], &dst[0u], src.size() + 1);
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t> > utfconv;
+    result = utfconv.to_bytes(std::wstring((wchar_t *)dst.c_str()));
+  }
+  else if (encoding == ENCODING_UTF8) {
+    result = ss.str();
+  }
+  else {
+    result = ss.str();
+  }
+  return result;
 }
 
 int main(int argc, char* argv[]) {
@@ -68,11 +144,12 @@ int main(int argc, char* argv[]) {
 
   parse_asco(asco_file, date_to_time);
 
-  std::ifstream ifs(musicxml_file.c_str());
-  std::string content_xml;
+  // std::ifstream ifs(musicxml_file.c_str(), std::ios::binary);
+  std::string content_xml = readFile(musicxml_file);
+  //getline(ifs, content_xml, '\0');
+
   std::stringstream guido;
 
-  getline(ifs, content_xml, '\0');
   MusicXML2::musicxmlstring2guidoOnPart(content_xml.c_str(), true, part_filter, guido);
   std::string guidostr = guido.str();
   // We can post process things here we do not want in th guido
