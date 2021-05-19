@@ -501,6 +501,21 @@ int extract_transpo(std::string& content_xml) {
   return std::atoi(chromatic.c_str());
 }
 
+void remove_process_instructions(std::string& content_xml) {
+  int last_pos = 0;
+  while (1) {
+    size_t start_pos = content_xml.find("<?", last_pos);
+    if(start_pos == std::string::npos)
+      break;
+    size_t end_pos = content_xml.find("?>", start_pos);
+    if(end_pos == std::string::npos)
+      break;
+    content_xml.erase(start_pos, 2 + end_pos - start_pos);
+    last_pos = start_pos;
+  }
+}
+
+
 MyMapCollector* get_map_collector_from_xml_and_asco(const std::string& musicxml_file,
                                                     const std::string& asco_file,
                                                     int part_filter) {
@@ -513,6 +528,8 @@ MyMapCollector* get_map_collector_from_xml_and_asco(const std::string& musicxml_
   getline(ifs, content_xml, '\0');
   parse_asco(asco_file, date_to_time);
   int transpo = extract_transpo(content_xml);
+
+  remove_process_instructions(content_xml);
   MusicXML2::musicxmlstring2guidoOnPart(content_xml.c_str(), true, part_filter, guidostream);
   guido = guidostream.str();
   preclean_guido(guido);

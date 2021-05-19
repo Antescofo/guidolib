@@ -115,4 +115,5 @@ MyMapCollector* get_map_collector_from_xml_and_asco(const std::string& musicxml_
 
 void generate_midi(MyMapCollector* collector, const std::string& outfile, float preview_audio_begin = 0);
 std::string preclean_guido(std::string& guido);
+void remove_process_instructions(std::string& content_xml);
 #endif

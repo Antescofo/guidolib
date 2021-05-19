@@ -146,6 +146,7 @@ int main(int argc, char* argv[]) {
 
   // std::ifstream ifs(musicxml_file.c_str(), std::ios::binary);
   std::string content_xml = readFile(musicxml_file);
+  remove_process_instructions(content_xml);
   //getline(ifs, content_xml, '\0');
 
   std::stringstream guido;
