@@ -127,7 +127,7 @@ void GRDynamics::tellPosition(GObject *caller, const NVPoint & newPosition)
 NVRect GRDynamics::getBoundingBox(const GRSystem* system) const {
     NVRect r = NVRect(0, 0, 0, 0);
     GRSystemStartEndStruct * sse = getSystemStartEndStruct(system);
-    if (sse == 0) return;
+    if (sse == 0) return r;
     const TXSegment* segment = getSegment (sse->grsystem);
     if (segment) {
         float y1 = segment->fy - fWidth/2;
