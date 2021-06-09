@@ -371,13 +371,13 @@ void GRBowing::updateBow( GRStaff * inStaff, bool grace )
 
 NVRect GRBowing::getBoundingBox(GRStaff * grstaff) const {
     GRSystemStartEndStruct * sse = getSystemStartEndStruct( grstaff->getGRSystem());
-    if ( sse == 0 ) return;
-
-    GRBowingSaveStruct * bowInfos = (GRBowingSaveStruct *)sse->p;
-    if( bowInfos == 0 ) return;
-    
     NVRect r = NVRect(0, 0, 0, 0);
 
+    if ( sse == 0 ) return r;
+
+    GRBowingSaveStruct * bowInfos = (GRBowingSaveStruct *)sse->p;
+    if( bowInfos == 0 ) return r;
+    
     // - Update bounding box
     r.left = bowInfos->offsets[0].x + bowInfos->position.x;        // middle point might be smaller.
     r.right = bowInfos->offsets[2].x + bowInfos->position.x;        // middle point might be larger.
