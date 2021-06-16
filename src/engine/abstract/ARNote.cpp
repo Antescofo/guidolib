@@ -288,3 +288,29 @@ string ARNote::getGMNName () const
 	return s.str();
 }
 
+string ARNote::getPitchName () const
+{
+    std::string accidental = "";
+    switch (getAccidentals()) {
+        case -1:
+            accidental = "b";
+            break;
+        case 1:
+            accidental = "#";
+            break;
+        case 2:
+            accidental = "##";
+        case -2:
+            accidental = "bb";
+        default:
+            break;
+    }
+    if (!isEmptyNote()) {
+        stringstream s;
+        s << getName() << accidental << getOctave()+3;
+        return s.str();
+    }
+    else
+        return "";
+}
+

@@ -57,6 +57,7 @@ typedef struct {
 	int			     staffNum;	///< the element staff number or 0 when na
 	int			     voiceNum;	///< the element voice number or 0 when na
     int              midiPitch; ///< the element midi pitch, or -1 when na
+    std::string      noteName;  ///< the element American standard pitch name (A4 for 440Hz, C4 for MIDI 60), or empty when na
 } GuidoElementInfos;
 
 

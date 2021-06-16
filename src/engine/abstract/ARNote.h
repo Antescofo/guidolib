@@ -46,6 +46,7 @@ class ARNote : public ARMusicalEvent
 		virtual const char*	getParamsStr() const	{ return ""; };
 		virtual const char*	getTagName() const		{ return "ARNote"; };
 		virtual std::string getGMNName() const;
+        std::string getPitchName() const;
 
 		virtual void browse(TimeUnwrap& mapper) const;
 
