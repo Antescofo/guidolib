@@ -114,8 +114,6 @@ int gd_noteName2pc(const char *name);
 #endif
 #define trace1Method(method)		cout << (void*)this << " GRStaff::" << method << endl
 
-#define EXTENDEDBB
-
 // ===========================================================================
 //		MeasureAccidentals
 // ===========================================================================
@@ -273,9 +271,10 @@ GRStaffState & GRStaffState::operator=(const GRStaffState & state)
 //		GRStaff
 // ===========================================================================
 
-GRStaff::GRStaff( GRSystemSlice * systemslice, float propRender )
+GRStaff::GRStaff( GRSystemSlice * systemslice, float propRender, bool extendedBBsetting )
 						: mGrSystem(NULL), mGrSystemSlice( systemslice ), fLastSystemBarChecked(-1,1), fProportionnalRendering(propRender)
 {
+    extendedBB = extendedBBsetting;
 	mLength = 0;
 	setRelativeTimePosition(systemslice->getRelativeTimePosition());
 	
@@ -1899,22 +1898,23 @@ void GRStaff::FinishStaff()
 void GRStaff::boundingBoxPreview()
 {
     traceMethod("boundingBoxPreview");
-#ifdef EXTENDEDBB
-	updateBoundingBox();
-    
-    // AC: calculate noteOnlyBoundingBox for AutoPos
-    noteOnlyBoundingBox.Set (0,0,0,0);
-    GuidoPos pos2 = mCompElements.GetHeadPosition();
-    while (pos2)
-    {
-        GRNotationElement * e = mCompElements.GetNext(pos2);
-        NVRect eltBox (e->getBoundingBox());
-        eltBox += e->getPosition();
-        noteOnlyBoundingBox.Merge( eltBox );
-     }
-    
-	return;
-#endif
+    if (extendedBB) {
+        updateBoundingBox();
+        
+        // AC: calculate noteOnlyBoundingBox for AutoPos
+        noteOnlyBoundingBox.Set (0,0,0,0);
+        GuidoPos pos2 = mCompElements.GetHeadPosition();
+        while (pos2)
+        {
+            GRNotationElement * e = mCompElements.GetNext(pos2);
+            NVRect eltBox (e->getBoundingBox());
+            eltBox += e->getPosition();
+            noteOnlyBoundingBox.Merge( eltBox );
+         }
+        
+        return;
+    }
+	
     mBoundingBox.Set (0,0,0,0);
 	GuidoPos pos = mCompElements.GetHeadPosition();
 	while (pos)
@@ -1942,59 +1942,59 @@ void GRStaff::updateBoundingBox()
     while (pos) {
         GRNotationElement * e = mCompElements.GetNext(pos);
         if (e) {
-#ifdef EXTENDEDBB
-            /// AC: 2021: It is NOT a good idea to include Slurs in the bounding box! This will create uneven system distribution on page! One should play around with minimum system distribution instead!
-//            GRBowing * bowTag = dynamic_cast<GRBowing *>(e);
-//			if (bowTag) {
-//                // Note: we use the dynamic BB here which depends on the staff
-//                tmp = bowTag->getBoundingBox(this);
-//				if (tmp.Height() < 1000 && tmp.Height() > 0) {
-//					if (r.top > tmp.top) 		r.top = tmp.top;
-//					if (r.bottom < tmp.bottom)	r.bottom = tmp.bottom;
-//				}
-//			}
-            
-            const GRDynamics * dynTag = e->isGRDynamic();
-            if (dynTag) {
-                // Note: we use the dynamic BB here which depends on the staff. It can be empty depending on the construction stage!
-                tmp = dynTag->getBoundingBox(getGRSystem());
-                if (tmp.Height() < 1000 && tmp.Height() > 0) {
+            if (extendedBB) {
+                /// AC: 2021: It is NOT a good idea to include Slurs in the bounding box! This will create uneven system distribution on page! One should play around with minimum system distribution instead!
+    //            GRBowing * bowTag = dynamic_cast<GRBowing *>(e);
+    //            if (bowTag) {
+    //                // Note: we use the dynamic BB here which depends on the staff
+    //                tmp = bowTag->getBoundingBox(this);
+    //                if (tmp.Height() < 1000 && tmp.Height() > 0) {
+    //                    if (r.top > tmp.top)         r.top = tmp.top;
+    //                    if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+    //                }
+    //            }
+                
+                const GRDynamics * dynTag = e->isGRDynamic();
+                if (dynTag) {
+                    // Note: we use the dynamic BB here which depends on the staff. It can be empty depending on the construction stage!
+                    tmp = dynTag->getBoundingBox(getGRSystem());
+                    if (tmp.Height() < 1000 && tmp.Height() > 0) {
+                        if (r.top > tmp.top)         r.top = tmp.top;
+                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    }
+                }
+                
+                const GRArticulation * artTag = e->isGRArticulation();
+                if (artTag) {
+                    tmp = e->getBoundingBox() + e->getPosition() + e->getOffset();
                     if (r.top > tmp.top)         r.top = tmp.top;
                     if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
                 }
-            }
-            
-            const GRArticulation * artTag = e->isGRArticulation();
-            if (artTag) {
-                tmp = e->getBoundingBox() + e->getPosition() + e->getOffset();
-                if (r.top > tmp.top)         r.top = tmp.top;
-                if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
-            }
 
-			GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
-			if (ptag) {
-				if (e->isText()) { // || e->isGRHarmony()) {
-					tmp = e->getBoundingBox() + e->getPosition();
-					if (r.top > tmp.top) 		r.top = tmp.top;
-					if (r.bottom < tmp.bottom)	r.bottom = tmp.bottom;
-				}
-				continue;
-			}
+                GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
+                if (ptag) {
+                    if (e->isText()) { // || e->isGRHarmony()) {
+                        tmp = e->getBoundingBox() + e->getPosition();
+                        if (r.top > tmp.top)         r.top = tmp.top;
+                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    }
+                    continue;
+                }
 
-			const GRSingleNote * note = e->isSingleNote();
-			if (note) {
-				NVRect b = note->getEnclosingBox(true, true, true);
-				if (b.Height() < 500) {
-					if (r.top > b.top) 			r.top = b.top;
-					if (r.bottom < b.bottom)	r.bottom = b.bottom;
-				}
-			}
-#else
-			GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
-			if (ptag) {
-				continue;
-			}
-#endif
+                const GRSingleNote * note = e->isSingleNote();
+                if (note) {
+                    NVRect b = note->getEnclosingBox(true, true, true);
+                    if (b.Height() < 500) {
+                        if (r.top > b.top)             r.top = b.top;
+                        if (r.bottom < b.bottom)    r.bottom = b.bottom;
+                    }
+                }
+            }else {
+                GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
+                if (ptag) {
+                    continue;
+                }
+            }
             tmp = e->getBoundingBox();
             p = getPosition();
             p.y = 0;
@@ -2066,42 +2066,43 @@ GRStaff * GRStaff::getNextStaff() const
 */
 float GRStaff::getStaffBottom() const
 {
-#ifdef EXTENDEDBB
-    // AC: To preserve AUtoPOS with extended bounding boxes, noteOnlyBoundingBox behaves like before
-    float bottom = noteOnlyBoundingBox.bottom;
+    float bottom;
+    if (extendedBB) {
+        // AC: To preserve AutoPOS with extended bounding boxes, noteOnlyBoundingBox behaves like before
+        bottom = noteOnlyBoundingBox.bottom;
 
-    const GRStaff* prev = getPreviousStaff();
-    while (prev) {
-        if (prev->noteOnlyBoundingBox.bottom > bottom)
-            bottom = prev->noteOnlyBoundingBox.bottom;
-        prev = prev->getPreviousStaff();
+        const GRStaff* prev = getPreviousStaff();
+        while (prev) {
+            if (prev->noteOnlyBoundingBox.bottom > bottom)
+                bottom = prev->noteOnlyBoundingBox.bottom;
+            prev = prev->getPreviousStaff();
+        }
+
+        const GRStaff* next = getNextStaff();
+        while (next) {
+            if (next->noteOnlyBoundingBox.bottom > bottom)
+                bottom = next->noteOnlyBoundingBox.bottom;
+            next = next->getNextStaff();
+        }
+    }else {
+        bottom = mBoundingBox.bottom;
+
+        const GRStaff* prev = getPreviousStaff();
+        while (prev) {
+            if (prev->getBoundingBox().bottom > bottom)
+                bottom = prev->getBoundingBox().bottom;
+            prev = prev->getPreviousStaff();
+        }
+
+        const GRStaff* next = getNextStaff();
+        while (next) {
+            if (next->getBoundingBox().bottom > bottom)
+                bottom = next->getBoundingBox().bottom;
+            next = next->getNextStaff();
+        }
     }
 
-    const GRStaff* next = getNextStaff();
-    while (next) {
-        if (next->noteOnlyBoundingBox.bottom > bottom)
-            bottom = next->noteOnlyBoundingBox.bottom;
-        next = next->getNextStaff();
-    }
     return bottom;
-#else
-    float bottom = mBoundingBox.bottom;
-
-	const GRStaff* prev = getPreviousStaff();
-	while (prev) {
-		if (prev->getBoundingBox().bottom > bottom)
-			bottom = prev->getBoundingBox().bottom;
-		prev = prev->getPreviousStaff();
-	}
-
-	const GRStaff* next = getNextStaff();
-	while (next) {
-		if (next->getBoundingBox().bottom > bottom)
-			bottom = next->getBoundingBox().bottom;
-		next = next->getNextStaff();
-	}
-	return bottom;
-#endif
 }
 
 // ----------------------------------------------------------------------------

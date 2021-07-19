@@ -304,6 +304,11 @@ typedef struct GuidoLayoutSettings
     /** used to check lyrics and resolve collisions (default value is false)
 	*/
 	bool checkLyricsCollisions;
+    
+    /**
+                Defines whether we extend bounding boxes beyond notes (default value: false)
+     */
+    bool useExtendedBoundingBox;
 	
 } GuidoLayoutSettings;
 

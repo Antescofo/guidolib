@@ -532,7 +532,7 @@ void GRStaffManager::prepareStaff(int staff)
 {
 	GRStaff * curstaff = mMyStaffs->Get(staff);
     if (curstaff == NULL) {
-		curstaff = new GRStaff(mGrSystemSlice, settings.proportionalRenderingForceMultiplicator);
+		curstaff = new GRStaff(mGrSystemSlice, settings.proportionalRenderingForceMultiplicator, settings.useExtendedBoundingBox);
 		if (mStaffStateVect) {
 			// this just copies the stateinformation ...
 			GRStaffState * myss = mStaffStateVect->Get(staff);
@@ -2028,7 +2028,7 @@ void GRStaffManager::BreakAtPBS(GuidoPos pbpos)
 			// The Staff-numbers are equal to
 			// the staff-vector at the  breaktime.
 			
-			GRStaff * newstaff = new GRStaff(mGrSystemSlice, settings.proportionalRenderingForceMultiplicator);
+			GRStaff * newstaff = new GRStaff(mGrSystemSlice, settings.proportionalRenderingForceMultiplicator, settings.useExtendedBoundingBox);
 			mGrSystem->addStaff(newstaff,i);
 			
 			
@@ -3304,7 +3304,7 @@ GRSystemSlice * GRStaffManager::CreateBeginSlice(const GRSystemSlice * lastslice
 		if (sas)
 		{
 			// The Staff-numbers are equal to the staff-vector at the breaktime.			
-			GRStaff * newstaff = new GRStaff(beginslice, settings.proportionalRenderingForceMultiplicator);
+			GRStaff * newstaff = new GRStaff(beginslice, settings.proportionalRenderingForceMultiplicator, settings.useExtendedBoundingBox);
 			beginslice->addStaff(newstaff,i);
             
             // We apply potential staff size defined with GuidoSetStaffSize API call

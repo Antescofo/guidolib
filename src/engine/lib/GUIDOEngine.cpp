@@ -507,6 +507,7 @@ GUIDOAPI void GuidoGetDefaultLayoutSettings (GuidoLayoutSettings *settings)
     settings->resizePage2Music      = kSettingDefaultResizePage2Music;
     settings->proportionalRenderingForceMultiplicator = kSettingDefaultProportionalRendering;
     settings->checkLyricsCollisions = kSettingDefaultCheckLyricsCollisions;
+    settings->useExtendedBoundingBox = kSettingDefaultExtendedBoundingBox;
 }
 
 // --------------------------------------------------------------------------
