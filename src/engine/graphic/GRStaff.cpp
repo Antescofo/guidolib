@@ -1954,6 +1954,10 @@ void GRStaff::updateBoundingBox()
     //                }
     //            }
                 
+                if (e->isPedal()) {
+                    continue;
+                }
+                
                 const GRDynamics * dynTag = e->isGRDynamic();
                 if (dynTag) {
                     // Note: we use the dynamic BB here which depends on the staff. It can be empty depending on the construction stage!

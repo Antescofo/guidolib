@@ -162,6 +162,13 @@ public:
     virtual const GRHarmony *	isGRHarmony() const 	{ return 0; }
     virtual const GROctava *    isGROctava() const      { return 0; }
     virtual const GRArticulation *    isGRArticulation() const      { return 0; }
+    const bool isPedal() const {
+        if (mSymbol == 0) {
+            return false;
+        }else {
+            return ((mSymbol == kPedalUpSymbol)||(mSymbol == kPedalSymbol));
+        }
+    }
 
 protected:
 	
