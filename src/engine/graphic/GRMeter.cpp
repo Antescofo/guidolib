@@ -69,6 +69,15 @@ GRMeter::GRMeter( const ARMeter * ar, GRStaff * curstaff, bool p_ownsAR )
 			mPosition.y += fCurLSPACE * linesOffset / 2;
 	}
 }
+
+// -----------------------------------------------------------------------------
+void GRMeter::setHPosition( float inX )
+{
+	GRTagARNotationElement::setHPosition(inX);
+	mMapping = mBoundingBox;
+	mMapping += mPosition + getOffset();
+}
+
 // -----------------------------------------------------------------------------
 void GRMeter::accept (GRVisitor& visitor)
 {
@@ -242,7 +251,7 @@ float GRMeter::DrawNumericSingle(VGDevice & hdc, const string& num, const string
 	float lspace = LSPACE;
 	float my = 2 * fCurLSPACE;			// the staff middle line
 	float hr = LSPACE / fCurLSPACE;		// a ratio to compensate the staff size and mTagSize
-	float space = 0.15 * fCurLSPACE;	// the space above and below the middle line
+	float space = 0.15f * fCurLSPACE;	// the space above and below the middle line
 	float y = my - space - fNumericHeight * mTagSize * hr;
 	DrawNumericSymbols (hdc, num.c_str(), xpos, y, mTagSize);
 	xpos = x + offsets.second;
@@ -306,3 +315,12 @@ void GRMeter::OnDraw(VGDevice & hdc) const
 //-------------------------------------------------------------------------------------
 const ARMeter*	GRMeter::getARMeter() const		{ return static_cast<const ARMeter*>(getAbstractRepresentation()); }
 
+
+// ----------------------------------------------------------------------------
+/** \brief Retrieves the mapping
+*/
+void GRMeter::GetMap( GuidoElementSelector sel, MapCollector& f, MapInfos& infos ) const
+{
+	if (sel == kMeterSel)
+		SendMap (f, getRelativeTimePosition(), getDuration(), kMeter, infos);
+}
