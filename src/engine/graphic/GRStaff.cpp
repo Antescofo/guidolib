@@ -1907,6 +1907,10 @@ void GRStaff::boundingBoxPreview()
         while (pos2)
         {
             GRNotationElement * e = mCompElements.GetNext(pos2);
+            GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
+            if (ptag || e->isPedal()) {
+                continue;
+            }
             NVRect eltBox (e->getBoundingBox());
             eltBox += e->getPosition();
             noteOnlyBoundingBox.Merge( eltBox );
@@ -1955,6 +1959,10 @@ void GRStaff::updateBoundingBox()
     //            }
                 
                 if (e->isPedal()) {
+                    // Note: using offset here will result to bad BBs!
+                    tmp = e->getBoundingBox() + e->getPosition();
+                    if (r.top > tmp.top)         r.top = tmp.top;
+                    if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
                     continue;
                 }
                 
