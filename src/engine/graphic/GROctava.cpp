@@ -62,6 +62,16 @@ GROctava::~GROctava()
 {
 }
 
+void GROctava::accept (GRVisitor& visitor)
+{
+    visitor.visitStart (this);
+    visitor.visitEnd (this);
+}
+
+int GROctava::getStaffNumber() {
+    return fStaff->getStaffNumber();
+}
+
 bool GROctava::DeleteStaff(GRStaff * grstaff)
 {
 	delete mAssociated;		// makes sure that associated notes are deleted before the GROctava
@@ -176,6 +186,7 @@ void GROctava::OnDraw( VGDevice & hdc) const
 	NVRect r = getExtensionLine (getAssociations(), drawingstate);
 	VGColor savedColor = hdc.GetFontColor();
 	VGColor color;	// custom or black
+    auto mColRef = GRTag::getColRef();
    if (mColRef) {
 		color = VGColor(mColRef);
 		hdc.SetFontColor(color);

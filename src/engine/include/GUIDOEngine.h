@@ -456,7 +456,7 @@ representations.
         Marks notes, chords and associated elements on the staff with given Color parameter
         \param gr the handler to the graphic representation.
         \param staffnum the target staff number
-        \param params a string corresponding to the Color value in Guido tag format (e.g. "gray")
+        \param params a string corresponding to the Color value in Guido tag format (e.g. "gray") or html color codes
         \return a Guido error code.
     */
     GUIDOAPI GuidoErrCode    GuidoMarkStaff( GRHandler gr, int staffnum, std::string params);

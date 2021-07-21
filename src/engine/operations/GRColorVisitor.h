@@ -29,6 +29,8 @@ class GRColorVisitor : public GRVisitor
     virtual void visitStart (GRBeam* o);
     virtual void visitStart (GRSlur* o);
     virtual void visitStart (GRTie* o);
+    virtual void visitStart (GRArpeggio* o);
+    virtual void visitStart (GROctava* o);
 };
 
 #endif /* GRColorVisitor_h */

@@ -16,6 +16,8 @@
 #include "GRFingering.h"
 #include "GRTuplet.h"
 #include "GRSlur.h"
+#include "GRArpeggio.h"
+#include "GROctava.h"
 
 using namespace std;
 
@@ -44,8 +46,30 @@ void GRColorVisitor::visitStart(GRSingleNote *o) {
                 if (tp) {
                     tp->GRTag::setColor(params.c_str());
                 }
+
+                next->setColor(params.c_str());
             }
         }
+    }
+}
+
+void GRColorVisitor::visitStart(GRArpeggio *o) {
+    const NEPointerList * nelist = o->getAssociations();
+    if (nelist) {
+        GuidoPos pos = nelist->GetHeadPosition();
+        while(pos) {
+            auto next = nelist->GetNext(pos);
+            if (next->getStaffNumber() == staffNumber) {
+                o->GRTag::setColor(params.c_str());
+                break;
+            }
+        }
+    }
+}
+
+void GRColorVisitor::visitStart(GROctava *o) {
+    if (o->getStaffNumber()==staffNumber) {
+        o->GRTag::setColor(params.c_str());
     }
 }
 

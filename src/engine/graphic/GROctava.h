@@ -40,6 +40,9 @@ class GROctava : public GRARNotationElement, public GRPositionTag
 		virtual bool DeleteStaff(GRStaff * grstaff);
         virtual const GROctava *    isGROctava() const      { return this; }
 
+    virtual void accept   (GRVisitor& visitor);
+    
+    virtual int getStaffNumber();
 	
 	private:
 		int		countSegments();
