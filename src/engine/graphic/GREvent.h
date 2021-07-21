@@ -76,7 +76,12 @@ class GREvent : public GRARCompositeNotationElement
 		virtual const NVPoint & getOffset() const  { return mOffset; }
 
 	    virtual const NVstring & getStyle() const	{ return mStyle; }
-		virtual const unsigned char * getColRef() const { return mColRef;  }
+		virtual const unsigned char * getColRef() const {
+            if (mAssignedColRef) {
+                return mAssignedColRef;
+            }
+            return mColRef;
+        }
 
 		virtual void	setSize(float nsize)  { mSize = nsize; }
 		
@@ -141,6 +146,9 @@ class GREvent : public GRARCompositeNotationElement
 		virtual 	  GREvent *	isGREvent() 			{ return this; }
 
 		GRNoteDot *		getDot();
+    
+    
+    virtual void setColor(const char * cp); // used for ColorVisitor
 
   protected:
 		int		mArticulationFlags;
@@ -157,6 +165,8 @@ class GREvent : public GRARCompositeNotationElement
 	  
 	  bool		mFillsBar;
 	  bool		stemChanged;
+    
+    unsigned char * mAssignedColRef;    // Color assigned from GRColorVisitor
 
 	private:
 		GRNEList	mArtilist;	// our list of articulations.

@@ -78,6 +78,7 @@ GRBowing::GRBowing(GRStaff * grstaff, GRNotationElement * startEl, GRNotationEle
 	else if ( startElement )
 		setRelativeTimePosition (startElement->getRelativeTimePosition());
 	mBoundingBox.Set( 0, 0, 0, 0 );
+    mAssignedColRef = 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -115,6 +116,7 @@ GRSystemStartEndStruct * GRBowing::initGRBowing( GRStaff * grstaff )
 	st->offsets[0].y = 0;
 
 	sse->p = (void *)st;
+    mAssignedColRef = 0;
 	return sse;
 }
 
@@ -123,6 +125,8 @@ GRBowing::~GRBowing()
 {
 	assert(mStartEndList.GetCount() == 0);
 	FreeAssociatedList();
+    delete [] mAssignedColRef;
+    mAssignedColRef = 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -705,6 +709,14 @@ GRNotationElement * GRBowing::getEndElement(GRStaff * grstaff) const
 	return 0;
 }
 
+void GRBowing::setColor(const char * cp) {
+    if (!mAssignedColRef)
+        mAssignedColRef = new unsigned char[4];
+    TagParameterString* color = new TagParameterString(cp);
+    color->setName("color");
+    color->getRGB(mAssignedColRef);
+}
+
 // -----------------------------------------------------------------------------
 void GRBowing::OnDraw( VGDevice & hdc) const
 {
@@ -722,7 +734,10 @@ void GRBowing::OnDraw( VGDevice & hdc) const
 	GRBowingSaveStruct * bowInfos = (GRBowingSaveStruct *)sse->p;
 	assert(bowInfos);
 
-	if (mColRef) hdc.PushFillColor( VGColor( mColRef ) );
+    auto mColRef = getColRef();
+    if (mColRef) {
+        hdc.PushFillColor( VGColor( mColRef ) );
+    }
 
 	const float x = bowInfos->position.x;
 	const float y = bowInfos->position.y;

@@ -58,8 +58,6 @@ public:
 	virtual const char*  getFontAttrib() const   { return fFontAttrib.c_str(); }
 	virtual int          getFontSize() const     { return fFontSize; }
 
-	virtual const unsigned char *   getColRef() const       { return mColRef; }
-
 	virtual void        setSConst(float val)		{ sconst = val; }
             void		setTagType(TAGTYPE ntyp)	{ fTagType = ntyp; }
             TAGTYPE		getTagType() const      	{ return fTagType; }
@@ -69,6 +67,16 @@ public:
 	virtual void StaffFinished(GRStaff * grstaff = 0);
 	virtual void StaffBegin(GRStaff * grstaff = 0);
 	virtual void RangeEnd(GRStaff * grstaff = 0);
+    
+    /// Used for GRColorVisitor
+    virtual void setColor(const char * cp);
+    
+    virtual const unsigned char * getColRef() const {
+        if (mAssignedColRef) {
+            return mAssignedColRef;
+        }
+        return mColRef;
+    }
 
 protected:
 	int 	isautotag;
@@ -84,6 +92,9 @@ protected:
 	NVPoint mTagOffset;
 
 private:
+    
+    unsigned char * mAssignedColRef;    // Color assigned from GRColorVisitor
+    
 	int 	fError		= 0;
 	TAGTYPE fTagType	= VOICETAG;
 };

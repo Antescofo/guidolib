@@ -29,7 +29,12 @@ public:
 	virtual       void     setOffset(const NVPoint &noff) { mOffset = noff; }
 	virtual       void     addToOffset(const NVPoint &pt) { mOffset += pt; }
 	virtual       float    getSize() const                { return mSize; }
-	virtual const unsigned char *getColRef() const        { return mColRef; }
+    virtual const unsigned char * getColRef() const        {
+        if (mAssignedColRef) {
+            return mAssignedColRef;
+        }
+        return mColRef;
+    }
 
 protected:
     NVPoint mOffset;

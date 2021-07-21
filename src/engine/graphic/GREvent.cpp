@@ -57,6 +57,7 @@ GREvent::GREvent(GRStaff * inStaff, const ARMusicalEvent * ar, bool p_ownsAR)
 		mSize = 1.0f;
 		mCurLSPACE = LSPACE;
 	}
+    mAssignedColRef = NULL;
 }
 
 // ----------------------------------------------------------------------------
@@ -95,6 +96,7 @@ GREvent::GREvent( GRStaff * inStaff, const ARMusicalEvent * ar, const TYPE_TIMEP
 	// ATTENTION, this can be bad for Chords ...
 	// Graphical-Elements are longer than the
 	// abstract-representations!
+    mAssignedColRef = NULL;
 }
 
 GREvent::~GREvent()
@@ -105,6 +107,8 @@ GREvent::~GREvent()
 	mArtilist.clear();
 	delete [] mColRef;
     mColRef = 0;
+    delete [] mAssignedColRef;
+    mAssignedColRef = 0;
 }
 
 /* 
@@ -416,5 +420,14 @@ GREvent::isSyncopated() const
 bool GREvent::hasArticulation( int inArticulationFlag ) const
 {
 	return (( mArticulationFlags & inArticulationFlag ) != 0 );
+}
+
+void GREvent::setColor(const char * cp)
+{
+    TagParameterString* color = new TagParameterString(cp);
+    color->setName("color");
+    if (!mAssignedColRef)
+        mAssignedColRef = new unsigned char[4];
+    color->getRGB(mAssignedColRef);
 }
 

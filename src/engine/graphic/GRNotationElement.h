@@ -95,7 +95,6 @@ public:
 
 			void addToBoundingBox( GRNotationElement * in );
 
-
 	
 	// - Drawing	
 	virtual void OnDraw( VGDevice & hdc ) const;
@@ -169,6 +168,9 @@ public:
             return ((mSymbol == kPedalUpSymbol)||(mSymbol == kPedalSymbol));
         }
     }
+    
+    /// Used for GRColorVisitor
+    virtual void setColor(const char * cp);
 
 protected:
 	
@@ -186,9 +188,19 @@ protected:
 
 	TYPE_DURATION mDurationOfGR;
 	NEPointerList * mAssociated;
+    
+    unsigned char * mAssignedColRef;    // Color assigned from GRColorVisitor
 
 private:
 	TYPE_TIMEPOSITION mRelativeTimePositionOfGR;
+    
+    /// Private method prefering visitor assigned color if available
+    const unsigned char * getColorRef() const {
+        if (mAssignedColRef) {
+            return mAssignedColRef;
+        }
+        return getColRef();
+    }
 };
 
 std::ostream& operator<< (std::ostream& os, const GRNotationElement& e);

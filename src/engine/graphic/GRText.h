@@ -73,6 +73,11 @@ class GRText : public GRPTagARNotationElement
 		virtual bool	isLyrics() const;
 		virtual const GRText*	isText() const			{ return this; }
         virtual GRText *    isGRLyrics()    { return (isLyrics() ? this : 0); }
+    
+    virtual void setColor(const char * cp) {
+        GRTag::setColor(cp);
+    }
+
 
 
 	protected:

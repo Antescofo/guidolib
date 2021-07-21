@@ -67,6 +67,7 @@ using namespace std;
 
 #include "guido2.h"
 #include "GRShowVisitor.h"
+#include "GRColorVisitor.h"
 #include "TagParametersMaps.h"
 
 //#include "GMNCodePrintVisitor.h"
@@ -379,6 +380,16 @@ GUIDOAPI GuidoErrCode	GuidoShowElement( GRHandler gr, GRElement elt, bool status
 	GRShowVisitor v(elt, status);
 	gr->grmusic->accept (v);
 	return guidoNoErr;
+}
+
+GUIDOAPI GuidoErrCode    GuidoMarkStaff( GRHandler gr, int staffnum, std::string params)
+{
+    if ( !gr )            return guidoErrInvalidHandle;
+    if ( !gr->grmusic )    return guidoErrInvalidHandle;
+
+    GRColorVisitor v(params, staffnum);
+    gr->grmusic->accept (v);
+    return guidoNoErr;
 }
 
 // --------------------------------------------------------------------------

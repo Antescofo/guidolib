@@ -176,6 +176,7 @@ void GRDynamics::DrawDynamic( VGDevice & hdc, bool cresc) const
 	if (sse == 0) return;
 
 //    const VGColor prevTextColor = hdc.GetFontColor();
+    auto mColRef = getColRef();
     if (mColRef) {
         hdc.PushPenColor(VGColor(mColRef));
         hdc.PushFillColor(VGColor(mColRef));
