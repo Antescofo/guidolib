@@ -78,6 +78,8 @@ class GRGlobalStem : public GRPTagARNotationElement, public GRSystemTagInterface
 		virtual int			getNumFaehnchen() const;
 	
 		void			setBeam( GRBeam* beam)			{ fBeam = beam; }
+    
+    void setColor(const char * cp);
 
 	protected:
 		bool		fFlagOnOff;

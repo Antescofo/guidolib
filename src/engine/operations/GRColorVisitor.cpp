@@ -18,6 +18,7 @@
 #include "GRSlur.h"
 #include "GRArpeggio.h"
 #include "GROctava.h"
+#include "GRGlobalStem.h"
 
 using namespace std;
 
@@ -45,6 +46,11 @@ void GRColorVisitor::visitStart(GRSingleNote *o) {
                 GRTuplet *tp = dynamic_cast<GRTuplet *>(next);
                 if (tp) {
                     tp->GRTag::setColor(params.c_str());
+                }
+                
+                GRGlobalStem *st = dynamic_cast<GRGlobalStem *>(next);
+                if (st) {
+                    st->setColor(params.c_str());
                 }
 
                 next->setColor(params.c_str());
