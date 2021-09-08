@@ -1961,8 +1961,10 @@ void GRStaff::updateBoundingBox()
                 if (e->isPedal()) {
                     // Note: using offset here will result to bad BBs!
                     tmp = e->getBoundingBox() + e->getPosition();
-                    if (r.top > tmp.top)         r.top = tmp.top;
-                    if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    if (tmp.Height()>0.0) {
+                        if (r.top > tmp.top)         r.top = tmp.top;
+                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    }
                     continue;
                 }
                 
@@ -1979,8 +1981,19 @@ void GRStaff::updateBoundingBox()
                 const GRArticulation * artTag = e->isGRArticulation();
                 if (artTag) {
                     tmp = e->getBoundingBox() + e->getPosition() + e->getOffset();
-                    if (r.top > tmp.top)         r.top = tmp.top;
-                    if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    if (tmp.Height()>0.0) {
+                        if (r.top > tmp.top)         r.top = tmp.top;
+                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    }
+                }
+                
+                const GRFingering * finTag = e->isGRFingering();
+                if (finTag) {
+                    tmp = e->getBoundingBox() + e->getPosition() + e->getOffset();
+                    if (tmp.Height()>0.0) {
+                        if (r.top > tmp.top)         r.top = tmp.top;
+                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    }
                 }
 
                 GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
@@ -1996,7 +2009,7 @@ void GRStaff::updateBoundingBox()
                 const GRSingleNote * note = e->isSingleNote();
                 if (note) {
                     NVRect b = note->getEnclosingBox(true, true, true);
-                    if (b.Height() < 500) {
+                    if (b.Height()>0.0 && b.Height() < 500) {
                         if (r.top > b.top)             r.top = b.top;
                         if (r.bottom < b.bottom)    r.bottom = b.bottom;
                     }
