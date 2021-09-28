@@ -117,11 +117,13 @@ void GRFingering::tellPositionEnd(GRSingleNote * note, const NVPoint & inPositio
 		FloatRect r = getTextMetrics (*gGlobalSettings.gDevice, staff);
         r.ShiftY(-1.0*getOffset().y); // remove dy offset. it'll be handled during Draw
 		NVRect ebb = note->getEnclosingBox(false, false, true);
-		NVPoint spos = staff->getPosition();
 		float xpos = note->getPosition().x - r.Width()/2;
         
         // AC: take into account multiple fingerings
         float height = r.Height() * (fing->countFingerings());
+        
+        NVRect bb (0, 0, r.Width(), height);
+        mBoundingBox = bb;
 
 		switch (placement) {
 			// here positionning takes account of the implicit dy=1 inherited from ARText (see TagParameterStrings.cpp)
@@ -133,14 +135,12 @@ void GRFingering::tellPositionEnd(GRSingleNote * note, const NVPoint & inPositio
 				break;
 			default:
                 float ypos = r.top;
-                if (getOffset().y > 0) // below
-                {
+                ypos -= (r.Height()/2.0 + hspace) ;
+                if (getOffset().y > 0) { // downwards
                     ypos += hspace;
                 }
+                
                 setPosition (NVPoint(xpos, ypos));
 		}
-        
-		NVRect bb (0, 0, r.Width(), height);
-        mBoundingBox = bb;
 	}
 }
