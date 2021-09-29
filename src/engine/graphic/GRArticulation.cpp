@@ -474,6 +474,17 @@ void GRArticulation::placeBowAbove( const GREvent * inParent, NVPoint & ioPos )
 	ioPos.y = (float)resolveCollisionAbove(inParent, topMax, space, 0); //kFlagFermataUp | kFlagMarcato | kFlagMarcatoUp);
 }
 
+void GRArticulation::placeBowWithoutPlacement     ( const GREvent * inParent, NVPoint & ioPos ) {
+    // choose minimum from note head (excluding Stem) and staff top
+    GRStaff * staff = inParent->getGRStaff();
+    float space = staff->getStaffLSPACE();
+    const float hspace = staff->getStaffLSPACE() / 2.0;
+    double topMax = min(-1.0*space, double(inParent->getPosition().y - hspace));
+    
+    ioPos.y = topMax;
+}
+
+
 // ----------------------------------------------------------------------------
 void GRArticulation::placeBowBelow( const GREvent * inParent, NVPoint & ioPos )
 {
@@ -494,8 +505,19 @@ void GRArticulation::placeBow( const GREvent * inParent, NVPoint & ioPos )
 {
 	const ARBow* bow = dynamic_cast<const ARBow*>(getAbstractRepresentation());
 	if (! bow) return;
-	if (bow->getArticulationPosition() == ARArticulation::kBelow) placeBowBelow (inParent, ioPos);
-	else placeBowAbove (inParent, ioPos);
+    
+    switch (bow->getArticulationPosition()) {
+        case ARArticulation::kBelow:
+            placeBowBelow (inParent, ioPos);
+            break;
+            
+        case ARArticulation::kAbove:
+            placeBowAbove (inParent, ioPos);
+            break;
+            
+        default:
+            placeBowWithoutPlacement(inParent, ioPos);
+    }
 }
 
 // ----------------------------------------------------------------------------
