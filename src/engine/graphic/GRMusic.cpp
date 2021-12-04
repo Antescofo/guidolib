@@ -771,6 +771,24 @@ int GRMusic::getPageNum(int num, int denom) const
 	return guidoErrActionFailed;	
 }
 
+float GRMusic::getGROffsetForEvent(int num, int denom, int midiPitch, int steps) const
+{
+    // we have to find the position of the elements
+    for( VoiceList::const_iterator ptr = mVoiceList.begin(); ptr != mVoiceList.end(); ++ptr )
+    {
+        GRVoice * voice = *ptr;
+        if (voice)
+        {
+            float pos = voice->getGROffsetForEvent(num, denom, midiPitch, steps);
+            if( pos == -10000.0 )
+                continue;
+            else
+                return pos;
+        }
+    }
+    return -10000.0;
+}
+
 // --------------------------------------------------------------------------
 /** \brief Finds the page which contains input time pos.
 

@@ -58,6 +58,8 @@ class GRVoice : public GRARCompositeNotationElement
 				GRPage * getPageForTimePos( int num, int denom ) const;
 				GRRod * getLastRod() const	{ return lastrod; }
 				GRRod * getFirstRod() const	{ return firstrod; }
+    
+    float getGROffsetForEvent(int num,int denom, int midiPitch, int steps);
 
 		virtual GuidoPos AddTail(GRNotationElement * el);
 

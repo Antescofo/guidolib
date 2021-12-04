@@ -62,6 +62,7 @@ class GRMusic : public GREvent
 	  	virtual	int			getPageIndex( const GRPage * inPage ) const;
 		virtual	bool 		getRTPofPage( int inPageNum, int * num, int * denom ) const;
 		virtual	int 		getPageNum( int num, int denom ) const;		// must match an existing element
+        virtual float       getGROffsetForEvent(int num, int denom, int midiPitch, int steps) const;
 		virtual	int 		getPageNumForTimePos( int num, int denom ) const;
 
 		virtual int 		getNumPages() const;

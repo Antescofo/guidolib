@@ -582,6 +582,18 @@ GUIDOAPI int GuidoFindEventPage( CGRHandler inHandleGR, const GuidoDate & date )
 	return inHandleGR->grmusic ? inHandleGR->grmusic->getPageNum(date.num, date.denom) : 0;
 }
 
+GUIDOAPI GuidoErrCode GuidoFindEventTransposedOffset( CGRHandler inHandleGR, const GuidoDate & date, int midiPitch, int midiOffset, float *pos )
+{
+    if ( !inHandleGR || !inHandleGR->grmusic )
+        return guidoErrInvalidHandle;
+    float v = inHandleGR->grmusic->getGROffsetForEvent(date.num, date.denom, midiPitch, midiOffset);
+    if (v!=-10000.0) {
+        *pos = v;
+        return guidoNoErr;
+    }
+    return guidoErrBadParameter;
+}
+
 // --------------------------------------------------------------------------
 // was GuidoFindPageNumForDate
 GUIDOAPI int GuidoFindPageAt( CGRHandler inHandleGR, const GuidoDate & date )

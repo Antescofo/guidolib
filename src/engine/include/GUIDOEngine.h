@@ -572,6 +572,18 @@ as by date. Page numbers start at 1.
 	*/
 	GUIDOAPI int	GuidoFindEventPage( CGRHandler inHandleGR, const GuidoDate& date );
 
+/** \brief Finds the event corresponding to date and midiPitch, and returns its vertical position offset on staff if transposed by given chromatic interval.
+
+    \param inHandleGR a Guido opaque handle to a GR structure.
+    \param date the target date.
+    \param midiPitch the target event's midiPitch
+    \param offset chromatic offset to be applied to the event
+    \param pos on output: the pitch position  offset is zero or new pitch position on the staff.
+    \return a Guido error code.
+*/
+GUIDOAPI GuidoErrCode GuidoFindEventTransposedOffset( CGRHandler inHandleGR, const GuidoDate & date, int midiPitch, int offset, float *pos );
+
+
 	/** \brief Finds the page which contain a given date.
 
 		\bug returns page + 1 when input date falls on the last system.
