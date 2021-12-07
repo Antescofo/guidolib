@@ -175,6 +175,9 @@ void GROctava::OnDraw( VGDevice & hdc) const
 
 	if (sse->startflag == GRSystemStartEndStruct::OPENLEFT && (nsegments == 1))
 		return;		// nothing to do : this is due to the bar before the octava change
+    
+    if (!getAssociations())
+        return;     // nothing to do: no association! (can occur when closing occurs right after openning or on Empty tags due to multi-voice!)
 	
 	bool endSegment =   (sse->endflag == GRSystemStartEndStruct::NOTKNOWN) || (nsegments == 1);
 	float space = fStaff->getStaffLSPACE() / 2;
