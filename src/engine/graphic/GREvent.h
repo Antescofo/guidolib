@@ -145,10 +145,9 @@ class GREvent : public GRARCompositeNotationElement
 		virtual const GREvent *	isGREvent() const		{ return this; }
 		virtual 	  GREvent *	isGREvent() 			{ return this; }
 
-		GRNoteDot *		getDot();
-    
-    
-    virtual void setColor(const char * cp); // used for ColorVisitor
+		GRNoteDot *		getDot() const;
+
+        virtual void setColor(const char * cp); // used for ColorVisitor
 
   protected:
 		int		mArticulationFlags;
@@ -173,5 +172,3 @@ class GREvent : public GRARCompositeNotationElement
 };
 
 #endif
-
-

@@ -2,7 +2,13 @@ GUIDO Engine history
 
 
 ----------------------------------------------------------------
+  version 1.7.2
+- octava add support for dx
+- fix incorrect octava rendering (issue #134)
+
+----------------------------------------------------------------
   version 1.7.1
+- add 'hidden' attribute to \octava
 - fix incorrect volta placement 
 - fix incorrect repeatEnd length with non 5 lines staves
 

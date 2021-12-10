@@ -60,16 +60,19 @@ if(APPLE)
 		set (CMAKE_XCODE_EFFECTIVE_PLATFORMS "iPhoneOS")
 		#set (CMAKE_OSX_ARCHITECTURES "arm64 x86_64")
 		set (CMAKE_OSX_SYSROOT "iphoneos")
+		set (CMAKE_LINK_LIBRARY_FLAG -fembed-bitcode)
+		set (CMAKE_C_FLAGS -fembed-bitcode)
+		set (CMAKE_CXX_FLAGS -fembed-bitcode)
 		set (libtype STATIC)
 		set(IOS_DEPLOYMENT_TARGET 13.0) 
 		set (FMWK "true")
 		set (CMAKE_MACOSX_RPATH 1)
 	else ()
 		message (STATUS "Generates Mac OS project- Use -DIOS=yes to change.")
-		set (CMAKE_C++_FLAGS -mmacosx-version-min=10.13)
-		set (CMAKE_LDFLAGS -mmacosx-version-min=10.13)
+		set (CMAKE_CXX_FLAGS -mmacosx-version-min=10.13)
+#		set (CMAKE_LDFLAGS -mmacosx-version-min=10.13)
 		set (CMAKE_OSX_DEPLOYMENT_TARGET 10.13)
-		set (MACOSX_DEPLOYMENT_TARGET 10.13)
+#		set (MACOSX_DEPLOYMENT_TARGET 10.13)
 	endif ()
 endif()
 
@@ -351,7 +354,7 @@ install (
 	DIRECTORY ${GMN} DESTINATION ${INSTALL_SAMPLES}
 	FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
 	DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-	FILES_MATCHING PATTERN "*.gmn"
+#	FILES_MATCHING PATTERN "*.gmn"
 	PATTERN "SheetMusic" EXCLUDE
 )
 
