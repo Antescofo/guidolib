@@ -592,8 +592,12 @@ size_t GRStaff::getLyrics (vector<const GRNotationElement*>& list) const
 // ----------------------------------------------------------------------------
 GRClef * GRStaff::AddClef(const ARClef * arclef)
 {
-	// To do: look, whether the clef really is a clef-
-	// change. If not, do nothing!!!!
+	// look, whether the clef really is a clef-change. If not, do nothing!!!!
+    if (mStaffState.curclef != NULL) {
+        if (*arclef == *(mStaffState.curclef)) {
+            return NULL;
+        }
+    }
 	GRClef * grclef = new GRClef(arclef, this);
 	TYPE_TIMEPOSITION tmp = getRelativeTimePosition();
 	GRNotationElement * el = mCompElements.GetTail();
