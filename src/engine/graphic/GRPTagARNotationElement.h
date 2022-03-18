@@ -48,7 +48,7 @@ public:
 			{ return GRPositionTag::getFontSize(); }
 	
 	const unsigned char * getColRef() const
-			{ return GRPositionTag::getColRef(); }
+            { return GRTag::getColRef(); }
 			
 	virtual void addAssociation( GRNotationElement * grnot );
 	virtual void removeAssociation( GRNotationElement * el );

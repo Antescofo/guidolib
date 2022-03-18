@@ -61,11 +61,14 @@ void GRFingering::OnDraw( VGDevice & hdc ) const
 
 	size_t flen = fing->countFingerings();
 	const vector<string> & list = fing->fingerings();
-	float ypos = mPosition.y;
-	if (fing->getFingeringPosition() != ARFingering::kAbove)
+	float ypos = mPosition.y + getOffset().y;
+    float xpos = mPosition.x + getOffset().x;
+    
+	if ((fing->getFingeringPosition() != ARFingering::kAbove) && (getOffset().y >= 0.0))
 		ypos += offset * (fing->countFingerings() - 1);
+    
 	for (size_t i = 0; i<flen; i++) {
-	    hdc.DrawString( mPosition.x, ypos, list[i].c_str(), (int)list[i].size());
+	    hdc.DrawString( xpos, ypos, list[i].c_str(), (int)list[i].size());
 	    ypos -= offset;
 	}
 	endDraw (hdc, textColor);
@@ -81,7 +84,6 @@ void GRFingering::tellPosition(GObject * caller, const NVPoint & inPosition)
 // -----------------------------------------------------------------------------
 void GRFingering::tellPositionEnd(GRSingleNote * note, const NVPoint & inPosition)
 {
-//	GRSingleNote * note =  dynamic_cast<GRSingleNote *>(caller);
 	if( note == 0 ) {
 		mDraw = false;
 		return;
@@ -111,34 +113,34 @@ void GRFingering::tellPositionEnd(GRSingleNote * note, const NVPoint & inPositio
 		if (fing->countFingerings() > 1) st->text = text = fing->fingerings()[0].c_str();
 		else if (text) st->text = text;
 		int placement = fing->getFingeringPosition ();
-		float dy = fing->getDY()->getValue( staff->getStaffLSPACE() );
-		float dx = fing->getDX()->getValue( staff->getStaffLSPACE() );
 
 		FloatRect r = getTextMetrics (*gGlobalSettings.gDevice, staff);
+        r.ShiftY(-1.0*getOffset().y); // remove dy offset. it'll be handled during Draw
 		NVRect ebb = note->getEnclosingBox(false, false, true);
-		NVPoint spos = staff->getPosition();
-		float xpos = note->getPosition().x - r.Width()/2 + dx;
+		float xpos = note->getPosition().x - r.Width()/2;
         
         // AC: take into account multiple fingerings
-        float height = 0.0;
-        if (fing->getFingeringPosition() == ARFingering::kAbove)
-            height -= r.Height() * (fing->countFingerings());
-        else
-            height += r.Height() * fing->countFingerings();
+        float height = r.Height() * (fing->countFingerings());
+        
+        NVRect bb (0, 0, r.Width(), height);
+        mBoundingBox = bb;
 
 		switch (placement) {
 			// here positionning takes account of the implicit dy=1 inherited from ARText (see TagParameterStrings.cpp)
 			case ARFingering::kAbove:
-				setPosition (NVPoint(xpos, min(ebb.top, 0.f) - hspace - r.Height() - dy));
+				setPosition (NVPoint(xpos, min(ebb.top, 0.f) - hspace - r.Height()));
 				break;
 			case ARFingering::kBelow:
-				setPosition (NVPoint(xpos, max(ebb.bottom, staff->getDredgeSize()) - dy ));
+				setPosition (NVPoint(xpos, max(ebb.bottom, staff->getDredgeSize())));
 				break;
 			default:
-				setPosition (NVPoint(xpos, r.top) );
+                float ypos = r.top;
+                ypos -= (r.Height()/2.0 + hspace) ;
+                if (getOffset().y > 0) { // downwards
+                    ypos += hspace;
+                }
+                
+                setPosition (NVPoint(xpos, ypos));
 		}
-        
-		NVRect bb (0, 0, r.Width(), height);
-        mBoundingBox = bb;// + NVPoint(0,dy);
 	}
 }

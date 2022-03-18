@@ -47,8 +47,13 @@ class GRAccidental : public GRNotationElement
 
 
 	 virtual const NVPoint & getOffset() const			{ return offset; }
-	 virtual const unsigned char * getColRef() const	{ return mColRef; }
-	 virtual float getSize() const						{ return mAccidentalSize; }
+    virtual const unsigned char * getColRef() const        {
+        if (mAssignedColRef) {
+            return mAssignedColRef;
+        }
+        return mColRef;
+    }
+    virtual float getSize() const						{ return mAccidentalSize; }
 
 	 virtual void setOffsetX(float x)			{ offsetset = true; offset.x = x; }	
 	 virtual void setOffsetY(float y)			{ offsetset = true; offset.y = y; }	

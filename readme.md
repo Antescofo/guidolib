@@ -1,7 +1,4 @@
-Welcome to the Guido project
-
-======================================================================
-
+# Welcome to the Guido project
 [Grame](http://www.grame.fr) - Centre National de Création Musicale
 ----------------------------------------------------------------------
 
@@ -9,17 +6,18 @@ The Guido project is an open source project that encompasses a music notation fo
 
 The Guido engine runs on the main operating systems: Linux, MacOS, iOS, Windows, Android.
 
-See [Guido page](http://guidolib.sourceforge.net/) for more information.
+See the [Guido page](http://guido.grame.fr/) for more information.  
+See the [Guido documentation](http://guidodoc.grame.fr/) for the Guido language documentation.  
+See the [Guido online editor](http://guidoeditor.grame.fr/) to test the system.  
+See the [Guido wiki](https://github.com/grame-cncm/guidolib/wiki) for building instructions.
 
-See [Guido wiki](https://github.com/grame-cncm/guidolib/wiki) for building instructions.
 
-
----
-
-Travis build status:  <a href="https://travis-ci.org/grame-cncm/guidolib"><img src="https://travis-ci.org/grame-cncm/guidolib.svg?branch=dev"></a>  
-GitHub Actions docker build: ![Docker](https://github.com/grame-cncm/guidolib/workflows/Docker/badge.svg?branch=dev)
-
-----------------------------------------------------------------------
+-------------
+Build status : ![Ubuntu](https://github.com/grame-cncm/guidolib/workflows/Ubuntu/badge.svg)
+![MacOS](https://github.com/grame-cncm/guidolib/workflows/MacOS/badge.svg)
+![Windows](https://github.com/grame-cncm/guidolib/workflows/Windows/badge.svg)
+![Docker](https://github.com/grame-cncm/guidolib/workflows/Docker/badge.svg?branch=dev)
+-------------
 
 ## Acknowledgments
 

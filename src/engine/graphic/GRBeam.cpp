@@ -94,8 +94,10 @@ void GRBeam::OnDraw( VGDevice & hdc) const
 	GRBeamSaveStruct * st = (GRBeamSaveStruct *)sse->p;
 	assert(st);
 
-	if (mColRef) {
-		VGColor color ( mColRef ); 	// custom or black
+    const unsigned char * colref = getColRef();  // <- Prefers assigned ColorRef from ColorVisitor
+
+	if (colref) {
+		VGColor color ( colref ); 	// custom or black
 		hdc.PushFillColor( color );
 		hdc.PushPen( color, 1);
 	}
@@ -144,7 +146,7 @@ void GRBeam::OnDraw( VGDevice & hdc) const
         hdc.PopPenWidth();
 	}
 
-	if (mColRef)
+	if (colref)
     {
 		hdc.PopPen();
 		hdc.PopFillColor();

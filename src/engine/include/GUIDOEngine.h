@@ -304,6 +304,11 @@ typedef struct GuidoLayoutSettings
     /** used to check lyrics and resolve collisions (default value is false)
 	*/
 	bool checkLyricsCollisions;
+    
+    /**
+                Defines whether we extend bounding boxes beyond notes (default value: false)
+     */
+    bool useExtendedBoundingBox;
 	
 } GuidoLayoutSettings;
 
@@ -447,6 +452,16 @@ representations.
     */
     GUIDOAPI GuidoErrCode	GuidoShowElement( GRHandler gr, GRElement elt, bool status);
 
+    /*!
+        Marks notes, chords and associated elements on the staff with given Color parameter
+        \param gr the handler to the graphic representation.
+        \param staffnum the target staff number
+        \param params a string corresponding to the Color value in Guido tag format (e.g. "gray") or html color codes
+        \return a Guido error code.
+    */
+    GUIDOAPI GuidoErrCode    GuidoMarkStaff( GRHandler gr, int staffnum, std::string params);
+
+
 	/*!
 		Gives the notes density.
 		
@@ -556,6 +571,18 @@ as by date. Page numbers start at 1.
                 0 if no page found,
 	*/
 	GUIDOAPI int	GuidoFindEventPage( CGRHandler inHandleGR, const GuidoDate& date );
+
+/** \brief Finds the event corresponding to date and midiPitch, and returns its vertical position offset on staff if transposed by given chromatic interval.
+
+    \param inHandleGR a Guido opaque handle to a GR structure.
+    \param date the target date.
+    \param midiPitch the target event's midiPitch
+    \param offset chromatic offset to be applied to the event
+    \param pos on output: the pitch position  offset is zero or new pitch position on the staff.
+    \return a Guido error code.
+*/
+GUIDOAPI GuidoErrCode GuidoFindEventTransposedOffset( CGRHandler inHandleGR, const GuidoDate & date, int midiPitch, int offset, float *pos );
+
 
 	/** \brief Finds the page which contain a given date.
 

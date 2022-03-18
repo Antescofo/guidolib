@@ -69,5 +69,8 @@ void GRSimpleBeam::OnDraw( VGDevice & hdc ) const
 
 const unsigned char * GRSimpleBeam::getColRef() const
 {
+    if (mAssignedColRef) {
+        return mAssignedColRef;
+    }
 	return fParent ? fParent->getColRef() : 0;
 }

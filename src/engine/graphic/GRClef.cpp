@@ -22,6 +22,7 @@
 #include "GRDefine.h"
 #include "GRMusic.h"
 #include "FontManager.h"
+#include "TagParameterFloat.h"
 
 #include "VGDevice.h"
 
@@ -253,6 +254,22 @@ void GRClef::setHPosition( float inX )
 {
 //	cerr << (void*)this << " GRClef::setHPosition " << inX << endl;
 	GRTagARNotationElement::setHPosition(inX);
+	mMapping = mBoundingBox;
+	float h = mBoundingBox.Height();
+	float hr = h * mTagSize;
+	float diff = (hr - h)/2;
+	mMapping.top -= diff;
+	mMapping.bottom += diff;
+	mMapping += mPosition + getOffset();
+}
+
+// ----------------------------------------------------------------------------
+/** \brief Retrieves the mapping
+*/
+void GRClef::GetMap( GuidoElementSelector sel, MapCollector& f, MapInfos& infos ) const
+{
+	if (sel == kClefSel)
+		SendMap (f, getRelativeTimePosition(), getDuration(), kClef, infos);
 }
 
 // -----------------------------------------------------------------------------

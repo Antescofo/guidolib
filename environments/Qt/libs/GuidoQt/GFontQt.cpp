@@ -15,6 +15,13 @@
 
 #include <QFontMetrics>
 #include <iostream>
+#include <QtGlobal>
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+ #define width(metrics, str) metrics.horizontalAdvance( str )
+#else
+ #define width(metrics, str) metrics.width( str )
+#endif
 
 using namespace std;
 
@@ -35,7 +42,7 @@ void GFontQt::GetExtent( const char * s, int , float * outWidth, float * outHeig
 		return;
 	}
 	QFontMetrics fontMetrics(*mNativeFont);	
-	*outWidth  = fontMetrics.width( QString(s) );
+	*outWidth  = width (fontMetrics, QString(s) );
 	*outHeight = fontMetrics.height();
 }
 
@@ -43,7 +50,7 @@ void GFontQt::GetExtent( const char * s, int , float * outWidth, float * outHeig
 void GFontQt::GetExtent( int c, float * outWidth, float * outHeight, VGDevice * ) const
 {
 	QFontMetrics fontMetrics(*mNativeFont);	
-	*outWidth  = fontMetrics.width( QString(Symbol(c)) ); 
+	*outWidth  = width (fontMetrics, QString(Symbol(c)) );
 	*outHeight = fontMetrics.height();
 	
 };

@@ -82,7 +82,8 @@ class GRArticulation : public GRTagARNotationElement
 		void	placeHarmonic	 ( const GREvent * inParent, NVPoint & ioPos);
 		void 	placeBow		 ( const GREvent * inParent, NVPoint & ioPos );
 		void 	placeBowBelow	 ( const GREvent * inParent, NVPoint & ioPos );
-		void 	placeBowAbove	 ( const GREvent * inParent, NVPoint & ioPos );
+        void    placeBowAbove     ( const GREvent * inParent, NVPoint & ioPos );
+        void 	placeBowWithoutPlacement	 ( const GREvent * inParent, NVPoint & ioPos );
 
 		int		getPlacement( const GREvent * inParent ) const;		// gives an ARArticulation placement
 

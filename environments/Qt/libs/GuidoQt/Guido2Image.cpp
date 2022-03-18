@@ -23,7 +23,9 @@
 #include <string>
 
 #include <QPainter>
+#if !defined(__MOBILE__)
 #include <QPrinter>
+#endif
 #include <QImage>
 #include <QRectF>
 #include <QRect>
@@ -31,6 +33,7 @@
 #include <QString>
 #include <QFile>
 #include <QDebug>
+#include <QtGlobal>
 
 #include "QGuidoPainter.h"
 #include "QGuidoGraphicsItem.h"
@@ -238,8 +241,13 @@ Guido2ImageErrorCodes Guido2Image::guidoPainterToImage(QGuidoPainter * guidoPain
 
 #define PDF_FORMAT				QString(".pdf")
 //----------------------------------------------------------------------------
-#ifdef IOS
+#if defined(__MOBILE__)
 Guido2ImageErrorCodes Guido2Image::writePDF( QGuidoPainter * guidoPainter, int pageIndex, const char * fname )
+{
+	return GUIDO_2_IMAGE_OUTPUT_IS_NULL;
+}
+
+Guido2ImageErrorCodes Guido2Image::writePianoRollPDF(QGuidoPainter *guidoPainter, const char *fname, PianoRoll *pianoRoll, int width, int height)
 {
 	return GUIDO_2_IMAGE_OUTPUT_IS_NULL;
 }
@@ -253,11 +261,17 @@ Guido2ImageErrorCodes Guido2Image::writePDF( QGuidoPainter * guidoPainter, int p
 //	printer.setFullPage(true);
 	printer.setOutputFormat( QPrinter::PdfFormat );
 	printer.setOutputFileName( QString(fileName) );
+#if QT_VERSION >= QT_VERSION_CHECK(5, 3, 0)
+	printer.setPageSize( QPageSize(QPageSize::A4) );
+#else
 	printer.setPaperSize( QPrinter::A4 );
-
+#endif
 	QSizeF firstPageSize = guidoPainter->pageSizeMM(1);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 3, 0)
+	printer.setPageSize( QPageSize(firstPageSize, QPageSize::Millimeter) );
+#else
 	printer.setPaperSize( firstPageSize, QPrinter::Millimeter );
-
+#endif
 	QPainter painter(&printer);
 	painter.setRenderHint( QPainter::Antialiasing );
 	painter.setWindow( QRect( 0 , 0 , firstPageSize.width() , firstPageSize.height() ) );
@@ -295,8 +309,11 @@ Guido2ImageErrorCodes Guido2Image::writePianoRollPDF(QGuidoPainter *guidoPainter
 	printer.setOutputFileName(QString(fileName));
 
     printer.setFullPage(true);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 3, 0)
+	printer.setPageSize( QPageSize(QSizeF(width, height), QPageSize::Point) );
+#else
     printer.setPaperSize(QSizeF(width, height), QPrinter::DevicePixel);
-
+#endif
 	QPainter painter(&printer);
 	painter.setRenderHint(QPainter::Antialiasing);
 	painter.setWindow(QRect(0, 0, width, height));
@@ -417,4 +434,5 @@ bool Guido2Image::save(QPaintDevice * paintDevice, const Params& p)
 	}
 	else if (p.device)
 		return pic->save( p.device, imageFormatToStr(p.format) );
+	return false;
 }

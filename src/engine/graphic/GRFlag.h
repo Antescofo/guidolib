@@ -61,8 +61,13 @@ public:
 	void setFlagOnOff(bool p);
 
 	virtual float getSize() const		{ return mSize; }
-	virtual const unsigned char * getColRef() const	{ return mColRef; }
-	void setStraight(bool nstr)			{ mStraight = nstr; }
+    virtual const unsigned char * getColRef() const        {
+        if (mAssignedColRef) {
+            return mAssignedColRef;
+        }
+        return mColRef;
+    }
+    void setStraight(bool nstr)			{ mStraight = nstr; }
 	bool getStraight() const			{ return mStraight; }
 
 	virtual void OnDraw(VGDevice & hdc ) const;

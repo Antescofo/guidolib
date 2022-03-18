@@ -34,6 +34,8 @@ class GRArpeggio : public GRPTagARNotationElement
 
 		virtual void	OnDraw( VGDevice & hdc) const;
 		virtual void	tellPosition( GObject * caller,const NVPoint & np );
+    
+    virtual void accept   (GRVisitor& visitor);
 
 	private:
 		float fDx, fDy, fLSpace;

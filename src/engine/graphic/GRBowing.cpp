@@ -78,6 +78,7 @@ GRBowing::GRBowing(GRStaff * grstaff, GRNotationElement * startEl, GRNotationEle
 	else if ( startElement )
 		setRelativeTimePosition (startElement->getRelativeTimePosition());
 	mBoundingBox.Set( 0, 0, 0, 0 );
+    mAssignedColRef = 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -115,6 +116,7 @@ GRSystemStartEndStruct * GRBowing::initGRBowing( GRStaff * grstaff )
 	st->offsets[0].y = 0;
 
 	sse->p = (void *)st;
+    mAssignedColRef = 0;
 	return sse;
 }
 
@@ -123,6 +125,8 @@ GRBowing::~GRBowing()
 {
 	assert(mStartEndList.GetCount() == 0);
 	FreeAssociatedList();
+    delete [] mAssignedColRef;
+    mAssignedColRef = 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -705,6 +709,14 @@ GRNotationElement * GRBowing::getEndElement(GRStaff * grstaff) const
 	return 0;
 }
 
+void GRBowing::setColor(const char * cp) {
+    if (!mAssignedColRef)
+        mAssignedColRef = new unsigned char[4];
+    TagParameterString* color = new TagParameterString(cp);
+    color->setName("color");
+    color->getRGB(mAssignedColRef);
+}
+
 // -----------------------------------------------------------------------------
 void GRBowing::OnDraw( VGDevice & hdc) const
 {
@@ -722,7 +734,10 @@ void GRBowing::OnDraw( VGDevice & hdc) const
 	GRBowingSaveStruct * bowInfos = (GRBowingSaveStruct *)sse->p;
 	assert(bowInfos);
 
-	if (mColRef) hdc.PushFillColor( VGColor( mColRef ) );
+    auto mColRef = getColRef();
+    if (mColRef) {
+        hdc.PushFillColor( VGColor( mColRef ) );
+    }
 
 	const float x = bowInfos->position.x;
 	const float y = bowInfos->position.y;
@@ -788,7 +803,7 @@ void drawSlur(VGDevice & hdc, float x1, float y1, float x2, float y2, float x3, 
 
     const bool upward = (y1 + x2*ratio)>y2;
 
-    const float arcHalfWidth = sqrt(pow(x1-x3,2)+pow(y1-y3,2))/2;
+    const float arcHalfWidth = (float)sqrt(pow(x1-x3,2)+pow(y1-y3,2))/2;
     const float arcHeight = (y2-y1)*cosPhi - (x2-x1)*sinPhi;
     const float inflexionCurveControl = 4; // Arbitrary, control the minimum inflexion under which the curve flattens
     const float inflexionH = arcHalfWidth * exp(-inflexion/8 ) * 4/5;

@@ -83,6 +83,7 @@ const bool	kSettingDefaultOptimalPageFill       = 1;
 const bool  kSettingDefaultResizePage2Music      = 1;
 const float kSettingDefaultProportionalRendering = 0;
 const bool  kSettingDefaultCheckLyricsCollisions = false;
+const bool  kSettingDefaultExtendedBoundingBox   = false;
 
 // - Notes *must* stay in this order. Several algorithms rely on it
 enum

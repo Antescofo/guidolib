@@ -15,6 +15,7 @@
 #include "TagParameterStrings.h"
 #include "TagParameterString.h"
 #include "TagParameterFloat.h"
+#include "FontManager.h"
 
 using namespace std;
 
@@ -30,6 +31,9 @@ void ARFontAble::setTagParameters (const TagParameterMap& params)
 {
 	fTextFormat = getParameter<TagParameterString>(kTextFormatStr, true)->getValue();
 	fFontName	= getParameter<TagParameterString>(kFontStr, true)->getValue();
+    if (fFontName.empty()) {
+        fFontName = FontManager::kDefaultTextFont;
+    }
 	fFontSize	= getParameter<TagParameterFloat>(kFSizeStr, true)->getValue();
 	fTextAttributes = getParameter<TagParameterString>(kFAttributesStr, true)->getValue();
 }
