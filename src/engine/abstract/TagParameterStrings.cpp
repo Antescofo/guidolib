@@ -18,7 +18,7 @@
 //---------------------------------------------
 // common tags parameters strings
 const char* kCommonParams		= "S,color,black,o;U,dx,0,o;U,dy,0,o;F,size,1.0,o";
-const char* kARFontAbleParams	= "S,textformat,rc,o;S,font,Times,o;U,fsize,9pt,o;S,fattrib,,o";
+const char* kARFontAbleParams	= "S,textformat,rc,o;S,font,,o;U,fsize,9pt,o;S,fattrib,,o";
 
 //---------------------------------------------
 // specific tags parameters strings
@@ -48,7 +48,7 @@ const char* kARDisplayDurationParams ="I,n,,r;I,d,,r;I,ndots,0,o";
 const char* kARDynamicParams	= "U,dx1,0,o;U,dx2,0,o;U,deltaY,3,o;U,thickness,0.16,o;S,autopos,off,o";
 const char* kARFeatheredBeamParams= "S,durations,,o;S,drawDuration,false,o";
 const char* kARFermataParams	= "S,type,,o;S,position,above,o";
-const char* kARFingeringParams	= "S,position,,o;U,fsize,10pt,o;";
+const char* kARFingeringParams	= "S,position,,o;U,fsize,12pt,o;S,fattrib,b,o;";
 const char* kARFooterParams		= "S,text,,r;S,pageformat,c6,o;S,font,Times,o;U,fsize,10pt,o;S,textformat,cc,o";
 const char* kARGlissandoParams	= "U,dx1,0,o;U,dy1,0,o;U,dx2,0,o;U,dy2,0,o;S,fill,false,o;U,thickness,0.3,o";
 const char* kARGraceParams		= "I,i,,o";
@@ -57,12 +57,12 @@ const char* kARInstrumentParams	= "S,name,,r;S,transp,,o;S,autopos,off,o";
 const char* kARIntensParams		= "S,type,,r;S,before,,o;S,after,,o;S,font,Times,o;U,fsize,10pt,o;S,fattrib,i,o;S,autopos,off,o";
 const char* kARJumpParams		= "S,m,,o;I,id,0,o";
 const char* kARKeyParams		= "S,key,,r;S,hideNaturals,false,o;S,free,,o";
-const char* kARLyricsParams		= "S,text,,r;U,dy,-3,o;S,textformat,ct,o;U,fsize,12pt,o;S,autopos,off,o";
-const char* kARMarkParams		= "S,text,,r;S,enclosure,none,o;U,dy,0,o";
+const char* kARLyricsParams		= "S,text,,r;U,dy,-3,o;S,textformat,ct,o;U,fsize,14pt,o;S,autopos,off,o";
+const char* kARMarkParams		= "S,text,,r;S,enclosure,none,o;U,fsize,12pt,o;U,dy,0,o";
 const char* kARMeterParams		= "S,type,4/4,r;S,autoBarlines,on,o;S,autoMeasuresNum,off,o;S,group,off,o";
 const char* kARMMRestParams		= "I,count,,r";
 const char* kARNoteFormatParams	= "S,style,standard,o";
-const char* kAROctavaParams		= "I,i,,r";
+const char* kAROctavaParams		= "I,i,,r;S,hidden,off,o";
 const char* kARPageFormatParams	= "S,type,,r;U,w,,r;U,h,,r;U,lm,2cm,o;U,tm,5cm,o;U,rm,2cm,o;U,bm,3cm,o";
 const char* kARPizzicatoParams	= "S,type,lefthand,o;S,position,,o";
 const char* kARRitardandoParams	= "S,before,,o;S,after,,o;U,dx2,0hs,o;S,font,Times New Roman,o;U,fsize,10pt,o;S,textformat,lc,o";
@@ -72,7 +72,7 @@ const char* kARStaccatoParams	= "S,type,,o;S,position,,o";
 const char* kARStaffFormatParams= "S,style,standard,o;U,size,3pt,o;F,lineThickness,0.08,o;U,distance,0hs,o";
 const char* kARStaffParams		= "I,id,,r";
 const char* kARSymbolParams		= "S,file,,r;S,position,mid,o;I,w,,o;I,h,,o";
-const char* kARTempoParams		= "S,tempo,,r;S,bpm,,o;S,font,Times New Roman,o;S,textformat,lc,o;U,fsize,11pt,o";
+const char* kARTempoParams		= "S,tempo,,r;S,bpm,,o;S,font,,o;S,textformat,lc,o;U,fsize,14pt,o;S,fattrib,b,s";
 const char* kARTextParams		= "S,text,,r;U,dy,-1,o;S,textformat,lt,o;U,fsize,12pt,o";
 const char* kARTitleParams		= "S,name,,r;S,pageformat,c3,o;U,dy,0,o;S,font,Times,o;U,fsize,24pt,o;S,textformat,cc,o";
 const char* kARTremoloParams	= "S,style,///,o;I,speed,32,o;S,pitch,,o;U,thickness,0.75,o;S,text,,o";

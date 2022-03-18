@@ -93,6 +93,8 @@ using namespace std;
 #include "GRSlur.h"
 #include "GRBowing.h"
 
+#include "GRDynamics.h"
+
 #include "kf_ivect.h"
 #include "TCollisions.h"
 
@@ -111,8 +113,6 @@ int gd_noteName2pc(const char *name);
 #define traceMethod(method)	
 #endif
 #define trace1Method(method)		cout << (void*)this << " GRStaff::" << method << endl
-
-#define EXTENDEDBB
 
 // ===========================================================================
 //		MeasureAccidentals
@@ -271,9 +271,10 @@ GRStaffState & GRStaffState::operator=(const GRStaffState & state)
 //		GRStaff
 // ===========================================================================
 
-GRStaff::GRStaff( GRSystemSlice * systemslice, float propRender )
+GRStaff::GRStaff( GRSystemSlice * systemslice, float propRender, bool extendedBBsetting )
 						: mGrSystem(NULL), mGrSystemSlice( systemslice ), fLastSystemBarChecked(-1,1), fProportionnalRendering(propRender)
 {
+    extendedBB = extendedBBsetting;
 	mLength = 0;
 	setRelativeTimePosition(systemslice->getRelativeTimePosition());
 	
@@ -591,8 +592,12 @@ size_t GRStaff::getLyrics (vector<const GRNotationElement*>& list) const
 // ----------------------------------------------------------------------------
 GRClef * GRStaff::AddClef(const ARClef * arclef)
 {
-	// To do: look, whether the clef really is a clef-
-	// change. If not, do nothing!!!!
+	// look, whether the clef really is a clef-change. If not, do nothing!!!!
+    if (mStaffState.curclef != NULL) {
+        if (*arclef == *(mStaffState.curclef)) {
+            return NULL;
+        }
+    }
 	GRClef * grclef = new GRClef(arclef, this);
 	TYPE_TIMEPOSITION tmp = getRelativeTimePosition();
 	GRNotationElement * el = mCompElements.GetTail();
@@ -1071,14 +1076,11 @@ GRRepeatBegin * GRStaff::AddRepeatBegin(ARRepeatBegin *arrb)
 {
     assert(arrb);
 	if (mStaffState.curbarfrmt) arrb->setRanges (mStaffState.curbarfrmt->getRanges());
-//	GRRepeatBegin * tmp = new GRRepeatBegin(arrb, this, arrb->getRelativeTimePosition());
-	GRRepeatBegin * tmp = new GRRepeatBegin(arrb);
+	GRRepeatBegin * tmp = new GRRepeatBegin(arrb, this);
 	if (mStaffState.curbarfrmt && (mStaffState.curbarfrmt->getStyle() == ARBarFormat::kStyleSystem))
 		mGrSystemSlice->addRepeatBegin(tmp, mStaffState.curbarfrmt->getRanges(), this);
 
 	addNotationElement(tmp);
-	tmp->setGRStaff(this);
-	tmp->updateBoundingBox();
     // repeatBegin must reset the keyState, jfk, 9/2015
     mStaffState.reset2key ();
 	return tmp;
@@ -1089,19 +1091,16 @@ GRRepeatBegin * GRStaff::AddRepeatBegin(ARRepeatBegin *arrb)
 */
 GRRepeatEnd * GRStaff::AddRepeatEnd( ARRepeatEnd * arre )
 {
-//	if (arre->getNumRepeat() == 0 || !arre->getRange())
-	{
-        assert (arre);
-		if (mStaffState.curbarfrmt) arre->setRanges(mStaffState.curbarfrmt->getRanges());
-		GRRepeatEnd * tmp = new GRRepeatEnd(arre, this, arre->getRelativeTimePosition(), fProportionnalRendering);
-		if (mStaffState.curbarfrmt && (mStaffState.curbarfrmt->getStyle() == ARBarFormat::kStyleSystem))
-			mGrSystemSlice->addRepeatEnd(tmp, mStaffState.curbarfrmt->getRanges(), this);
-		addNotationElement(tmp);
-         // repeatBegin must reset the keyState, jfk, 9/2015
-        mStaffState.reset2key ();
-		return tmp;
-	}
-	return NULL;
+	assert (arre);
+	if (mStaffState.curbarfrmt) arre->setRanges(mStaffState.curbarfrmt->getRanges());
+	GRRepeatEnd * tmp = new GRRepeatEnd(arre, this, arre->getRelativeTimePosition(), fProportionnalRendering);
+	if (mStaffState.curbarfrmt && (mStaffState.curbarfrmt->getStyle() == ARBarFormat::kStyleSystem))
+		mGrSystemSlice->addRepeatEnd(tmp, mStaffState.curbarfrmt->getRanges(), this);
+	addNotationElement(tmp);
+	tmp->updateBoundingBox();
+	 // repeatBegin must reset the keyState, jfk, 9/2015
+	mStaffState.reset2key ();
+	return tmp;
 }
 
 // ----------------------------------------------------------------------------
@@ -1903,22 +1902,27 @@ void GRStaff::FinishStaff()
 void GRStaff::boundingBoxPreview()
 {
     traceMethod("boundingBoxPreview");
-#ifdef EXTENDEDBB
-	updateBoundingBox();
-    
-    // AC: calculate noteOnlyBoundingBox for AutoPos
-    noteOnlyBoundingBox.Set (0,0,0,0);
-    GuidoPos pos2 = mCompElements.GetHeadPosition();
-    while (pos2)
-    {
-        GRNotationElement * e = mCompElements.GetNext(pos2);
-        NVRect eltBox (e->getBoundingBox());
-        eltBox += e->getPosition();
-        noteOnlyBoundingBox.Merge( eltBox );
-     }
-    
-	return;
-#endif
+    if (extendedBB) {
+        updateBoundingBox();
+        
+        // AC: calculate noteOnlyBoundingBox for AutoPos
+        noteOnlyBoundingBox.Set (0,0,0,0);
+        GuidoPos pos2 = mCompElements.GetHeadPosition();
+        while (pos2)
+        {
+            GRNotationElement * e = mCompElements.GetNext(pos2);
+            GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
+            if (ptag || e->isPedal()) {
+                continue;
+            }
+            NVRect eltBox (e->getBoundingBox());
+            eltBox += e->getPosition();
+            noteOnlyBoundingBox.Merge( eltBox );
+         }
+        
+        return;
+    }
+	
     mBoundingBox.Set (0,0,0,0);
 	GuidoPos pos = mCompElements.GetHeadPosition();
 	while (pos)
@@ -1946,47 +1950,80 @@ void GRStaff::updateBoundingBox()
     while (pos) {
         GRNotationElement * e = mCompElements.GetNext(pos);
         if (e) {
-#ifdef EXTENDEDBB
-            GRBowing * bowTag = dynamic_cast<GRBowing *>(e);
-			if (bowTag) {
-				tmp = bowTag->getBoundingBox() + bowTag->getPosition();
-				if (tmp.Height() < 1000 && tmp.Height() > 0) {
-					if (r.top > tmp.top) 		r.top = tmp.top;
-					if (r.bottom < tmp.bottom)	r.bottom = tmp.bottom;
-				}
-			}
-            
-            const GRArticulation * artTag = e->isGRArticulation();
-            if (artTag) {
-                tmp = e->getBoundingBox() + e->getPosition() + e->getOffset();
-                if (r.top > tmp.top)         r.top = tmp.top;
-                if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+            if (extendedBB) {
+                /// AC: 2021: It is NOT a good idea to include Slurs in the bounding box! This will create uneven system distribution on page! One should play around with minimum system distribution instead!
+    //            GRBowing * bowTag = dynamic_cast<GRBowing *>(e);
+    //            if (bowTag) {
+    //                // Note: we use the dynamic BB here which depends on the staff
+    //                tmp = bowTag->getBoundingBox(this);
+    //                if (tmp.Height() < 1000 && tmp.Height() > 0) {
+    //                    if (r.top > tmp.top)         r.top = tmp.top;
+    //                    if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+    //                }
+    //            }
+                
+                if (e->isPedal()) {
+                    // Note: using offset here will result to bad BBs!
+                    tmp = e->getBoundingBox() + e->getPosition();
+                    if (tmp.Height()>0.0) {
+                        if (r.top > tmp.top)         r.top = tmp.top;
+                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    }
+                    continue;
+                }
+                
+                const GRDynamics * dynTag = e->isGRDynamic();
+                if (dynTag) {
+                    // Note: we use the dynamic BB here which depends on the staff. It can be empty depending on the construction stage!
+                    tmp = dynTag->getBoundingBox(getGRSystem());
+                    if (tmp.Height() < 1000 && tmp.Height() > 0) {
+                        if (r.top > tmp.top)         r.top = tmp.top;
+                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    }
+                }
+                
+                const GRArticulation * artTag = e->isGRArticulation();
+                if (artTag) {
+                    tmp = e->getBoundingBox() + e->getPosition() + e->getOffset();
+                    if (tmp.Height()>0.0) {
+                        if (r.top > tmp.top)         r.top = tmp.top;
+                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    }
+                }
+                
+                const GRFingering * finTag = e->isGRFingering();
+                if (finTag) {
+                    tmp = e->getBoundingBox() + e->getPosition() + e->getOffset();
+                    if (tmp.Height()>0.0) {
+                        if (r.top > tmp.top)         r.top = tmp.top;
+                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    }
+                }
+
+                GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
+                if (ptag) {
+                    if (e->isText()) { // || e->isGRHarmony()) {
+                        tmp = e->getBoundingBox() + e->getPosition();
+                        if (r.top > tmp.top)         r.top = tmp.top;
+                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    }
+                    continue;
+                }
+
+                const GRSingleNote * note = e->isSingleNote();
+                if (note) {
+                    NVRect b = note->getEnclosingBox(true, true, true);
+                    if (b.Height()>0.0 && b.Height() < 500) {
+                        if (r.top > b.top)             r.top = b.top;
+                        if (r.bottom < b.bottom)    r.bottom = b.bottom;
+                    }
+                }
+            }else {
+                GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
+                if (ptag) {
+                    continue;
+                }
             }
-
-			GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
-			if (ptag) {
-				if (e->isText()) { // || e->isGRHarmony()) {
-					tmp = e->getBoundingBox() + e->getPosition();
-					if (r.top > tmp.top) 		r.top = tmp.top;
-					if (r.bottom < tmp.bottom)	r.bottom = tmp.bottom;
-				}
-				continue;
-			}
-
-			const GRSingleNote * note = e->isSingleNote();
-			if (note) {
-				NVRect b = note->getEnclosingBox(true, true, true);
-				if (b.Height() < 500) {
-					if (r.top > b.top) 			r.top = b.top;
-					if (r.bottom < b.bottom)	r.bottom = b.bottom;
-				}
-			}
-#else
-			GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
-			if (ptag) {
-				continue;
-			}
-#endif
             tmp = e->getBoundingBox();
             p = getPosition();
             p.y = 0;
@@ -2058,42 +2095,43 @@ GRStaff * GRStaff::getNextStaff() const
 */
 float GRStaff::getStaffBottom() const
 {
-#ifdef EXTENDEDBB
-    // AC: To preserve AUtoPOS with extended bounding boxes, noteOnlyBoundingBox behaves like before
-    float bottom = noteOnlyBoundingBox.bottom;
+    float bottom;
+    if (extendedBB) {
+        // AC: To preserve AutoPOS with extended bounding boxes, noteOnlyBoundingBox behaves like before
+        bottom = noteOnlyBoundingBox.bottom;
 
-    const GRStaff* prev = getPreviousStaff();
-    while (prev) {
-        if (prev->noteOnlyBoundingBox.bottom > bottom)
-            bottom = prev->noteOnlyBoundingBox.bottom;
-        prev = prev->getPreviousStaff();
+        const GRStaff* prev = getPreviousStaff();
+        while (prev) {
+            if (prev->noteOnlyBoundingBox.bottom > bottom)
+                bottom = prev->noteOnlyBoundingBox.bottom;
+            prev = prev->getPreviousStaff();
+        }
+
+        const GRStaff* next = getNextStaff();
+        while (next) {
+            if (next->noteOnlyBoundingBox.bottom > bottom)
+                bottom = next->noteOnlyBoundingBox.bottom;
+            next = next->getNextStaff();
+        }
+    }else {
+        bottom = mBoundingBox.bottom;
+
+        const GRStaff* prev = getPreviousStaff();
+        while (prev) {
+            if (prev->getBoundingBox().bottom > bottom)
+                bottom = prev->getBoundingBox().bottom;
+            prev = prev->getPreviousStaff();
+        }
+
+        const GRStaff* next = getNextStaff();
+        while (next) {
+            if (next->getBoundingBox().bottom > bottom)
+                bottom = next->getBoundingBox().bottom;
+            next = next->getNextStaff();
+        }
     }
 
-    const GRStaff* next = getNextStaff();
-    while (next) {
-        if (next->noteOnlyBoundingBox.bottom > bottom)
-            bottom = next->noteOnlyBoundingBox.bottom;
-        next = next->getNextStaff();
-    }
     return bottom;
-#else
-    float bottom = mBoundingBox.bottom;
-
-	const GRStaff* prev = getPreviousStaff();
-	while (prev) {
-		if (prev->getBoundingBox().bottom > bottom)
-			bottom = prev->getBoundingBox().bottom;
-		prev = prev->getPreviousStaff();
-	}
-
-	const GRStaff* next = getNextStaff();
-	while (next) {
-		if (next->getBoundingBox().bottom > bottom)
-			bottom = next->getBoundingBox().bottom;
-		next = next->getNextStaff();
-	}
-	return bottom;
-#endif
 }
 
 // ----------------------------------------------------------------------------

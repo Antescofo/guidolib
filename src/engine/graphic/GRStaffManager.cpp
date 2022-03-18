@@ -532,7 +532,7 @@ void GRStaffManager::prepareStaff(int staff)
 {
 	GRStaff * curstaff = mMyStaffs->Get(staff);
     if (curstaff == NULL) {
-		curstaff = new GRStaff(mGrSystemSlice, settings.proportionalRenderingForceMultiplicator);
+		curstaff = new GRStaff(mGrSystemSlice, settings.proportionalRenderingForceMultiplicator, settings.useExtendedBoundingBox);
 		if (mStaffStateVect) {
 			// this just copies the stateinformation ...
 			GRStaffState * myss = mStaffStateVect->Get(staff);
@@ -888,9 +888,9 @@ int GRStaffManager::AddPageTag(GRNotationElement * grel, GRStaff * grstaff,int v
 	mGrPage->AddTail(grel);
     // AC: Add to pageHeaderHeight if the element is hooked to topMargin
     if (grpgtxt->isRelativeToTopMargin()) {
-        float bottom = grpgtxt->getPosition().y + grpgtxt->getBoundingBox().bottom;
-        if (bottom > mGrPage->mPageheaderHeight) {
-            mGrPage->mPageheaderHeight = bottom;
+        float offset = grpgtxt->offsetFromTopMargin;
+        if (offset > mGrPage->mPageheaderHeight) {
+            mGrPage->mPageheaderHeight = offset;
         }
     }
     // END OF AC
@@ -2028,7 +2028,7 @@ void GRStaffManager::BreakAtPBS(GuidoPos pbpos)
 			// The Staff-numbers are equal to
 			// the staff-vector at the  breaktime.
 			
-			GRStaff * newstaff = new GRStaff(mGrSystemSlice, settings.proportionalRenderingForceMultiplicator);
+			GRStaff * newstaff = new GRStaff(mGrSystemSlice, settings.proportionalRenderingForceMultiplicator, settings.useExtendedBoundingBox);
 			mGrSystem->addStaff(newstaff,i);
 			
 			
@@ -2563,7 +2563,6 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
     
 	int count = -1;
 	GuidoPos pos = mSystemSlices->GetHeadPosition();		// then I just iterate through the systemslices ....
-    GRFixVisitor ffix;  // AC: For fixing Bounding Boxes before they propagate
 	while (pos)
 	{
 		// no longer needed because of sliceheight
@@ -2592,10 +2591,6 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 		}
 		
 		GRSystemSlice * begslice = mSystemSlices->GetAt(pos);	// this is the beginning slice of the potential line.
-        // AC: Fix BBs before propagation
-        begslice->accept(ffix);
-        begslice->FinishSlice();
-        // END OF AC
 		GRBeginSpaceForceFunction2 * begsff = 0;
 		// this gets the SpaceForceFunction of the beginning-elemnts 
 		// that would be needed, if the break would really occur at this location.
@@ -2619,12 +2614,6 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 		while (tmppos) {
 			tmpcount++;
 			GRSystemSlice * slc = mSystemSlices->GetNext(tmppos);
-            // AC: Fix BBs before propagation
-            //cerr<<"SliceHeight="<<slc->getBoundingBox().Height(); //<<endl;
-            slc->accept(ffix);
-            slc->FinishSlice();
-            //cerr<<"\t ---> SliceHeight="<<slc->getBoundingBox().Height()<<endl;
-            // END OF AC
 			if (slc)
 			{
                 float optconst = 0;
@@ -2645,7 +2634,7 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 				    curxmin += slc->mPossibleBreakState->sff->getXminOpt(); // we also just add the curxmin-value ....
 
 				// we have to deal with the height ...
-				sliceheight.AddSystemSlice(slc);
+				sliceheight.AddSystemSlice(slc, 1); // AC: added ability to update BBs in the process
 				const float slcheight = slc->mBoundingBox.Height();
 								
 				if (slcheight > curheight)
@@ -3315,7 +3304,7 @@ GRSystemSlice * GRStaffManager::CreateBeginSlice(const GRSystemSlice * lastslice
 		if (sas)
 		{
 			// The Staff-numbers are equal to the staff-vector at the breaktime.			
-			GRStaff * newstaff = new GRStaff(beginslice, settings.proportionalRenderingForceMultiplicator);
+			GRStaff * newstaff = new GRStaff(beginslice, settings.proportionalRenderingForceMultiplicator, settings.useExtendedBoundingBox);
 			beginslice->addStaff(newstaff,i);
             
             // We apply potential staff size defined with GuidoSetStaffSize API call

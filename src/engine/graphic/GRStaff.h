@@ -182,7 +182,7 @@ class GRStaff : public GRCompositeNotationElement
 	friend class GRVoiceManager;
 
 	public:
-						 GRStaff(GRSystemSlice * systemslice, float propRender);
+						 GRStaff(GRSystemSlice * systemslice, float propRender, bool extendedBBsetting);
 		virtual 		~GRStaff();
 
 		float           getDistance() const;
@@ -329,6 +329,7 @@ class GRStaff : public GRCompositeNotationElement
 		std::map<float, float> fPositions;
 		bool			isNextOn;
 		bool			firstOnOffSetting;
+        bool            extendedBB;
 
 		float			fProportionnalRendering;
     

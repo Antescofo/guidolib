@@ -631,7 +631,12 @@ void GDeviceOSX::DrawString( float x, float y, const char * s, int inCharCount )
     
     // Create an attributed string
     GFontOSX *font = (GFontOSX *)mCurrTextFont;
-    CFDictionaryRef attributes = font->GetCTFontDictionary();
+    CFMutableDictionaryRef attributes = CFDictionaryCreateMutableCopy(kCFAllocatorDefault, 0, font->GetCTFontDictionary());
+    CGFloat c[4];
+    MakeCGColor(VGColor(mTextColor.mRed, mTextColor.mGreen, mTextColor.mBlue, mTextColor.mAlpha), c);
+    CGColorRef cgcolor = CGColorCreateSRGB(c[0], c[1], c[2], c[3]);
+    CFDictionaryAddValue(attributes, kCTForegroundColorAttributeName, cgcolor);
+    
     CFStringRef string = CFStringCreateWithBytes(NULL, (const UInt8 *)s, inCharCount, kCFStringEncodingUTF8, false);
     CFAttributedStringRef attributedOverlayText = CFAttributedStringCreate(kCFAllocatorDefault, string, attributes);
 
@@ -695,6 +700,8 @@ void GDeviceOSX::DrawString( float x, float y, const char * s, int inCharCount )
     CFRelease(attributedOverlayText);
     CFRelease(mutableAttributes);
     CFRelease(paragraphStyle);
+    CFRelease(cgcolor);
+    CFRelease(attributes);
 
     // Restore the state of the contexte
     CGContextRestoreGState(mContext);

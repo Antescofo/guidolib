@@ -60,6 +60,8 @@ class GRArticulation : public GRTagARNotationElement
 		static bool  compare (GRArticulation* i, GRArticulation* j) 	{ return (i->getArticulationOrder() < j->getArticulationOrder()); }
     
         virtual const GRArticulation *    isGRArticulation() const      { return this; }
+    
+    bool isBow() const { return (mArticulationFlag == kFlagBow); };
 
 	protected:
 		void	placeStaccato( const GREvent * inParent, NVPoint & ioPos );
@@ -80,7 +82,8 @@ class GRArticulation : public GRTagARNotationElement
 		void	placeHarmonic	 ( const GREvent * inParent, NVPoint & ioPos);
 		void 	placeBow		 ( const GREvent * inParent, NVPoint & ioPos );
 		void 	placeBowBelow	 ( const GREvent * inParent, NVPoint & ioPos );
-		void 	placeBowAbove	 ( const GREvent * inParent, NVPoint & ioPos );
+        void    placeBowAbove     ( const GREvent * inParent, NVPoint & ioPos );
+        void 	placeBowWithoutPlacement	 ( const GREvent * inParent, NVPoint & ioPos );
 
 		int		getPlacement( const GREvent * inParent ) const;		// gives an ARArticulation placement
 

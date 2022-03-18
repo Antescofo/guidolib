@@ -623,9 +623,9 @@ void GRMusic::createGR (const ARPageFormat * inPageFormat, const GuidoLayoutSett
 	fLyricsChecked = false;
 
 	// intended to fix tellPosition order issues
-	GRFixVisitor ffix;
+	//GRFixVisitor ffix;
     //cerr<<"\t GRMUSIC FFIX"<<endl;
-	this->accept( ffix );
+	//this->accept( ffix );
 
 //cerr << "GRMusic: ---------- visit ---------" << endl;
 	GRTrillLinker v;
@@ -720,28 +720,6 @@ int GRMusic::getVoiceNum(ARMusicalVoice * arv) const
 }
 
 // --------------------------------------------------------------------------
-void GRMusic::getGuido() const
-{
-	const ARMusic * arm = getconstARMusic();
-
-	ostringstream os;		// was ostrstream os; (deprecated)
-
-  // no AUTO-tags !
-    arm->print(os);
-	size_t charCount = os.str().size(); // was: os.pcount();
-	char * s = new char[ charCount +  2];
-
-	const char * guidoString = os.str().c_str();
-	if( guidoString && charCount)
-		strncpy( s, guidoString, charCount );
-
-	s[ charCount ] = '\n';
-	s[ charCount ] = 0;
-
-  delete [] s;
-}
-
-// --------------------------------------------------------------------------
 /** \brief Not yet implemented.
 */
 void GRMusic::MarkVoice(int voicenum, int numfrom, int denomfrom, int numlength, int denomlength, unsigned char red, unsigned char green, unsigned char blue)
@@ -769,6 +747,24 @@ int GRMusic::getPageNum(int num, int denom) const
 		}
 	}
 	return guidoErrActionFailed;	
+}
+
+float GRMusic::getGROffsetForEvent(int num, int denom, int midiPitch, int steps) const
+{
+    // we have to find the position of the elements
+    for( VoiceList::const_iterator ptr = mVoiceList.begin(); ptr != mVoiceList.end(); ++ptr )
+    {
+        GRVoice * voice = *ptr;
+        if (voice)
+        {
+            float pos = voice->getGROffsetForEvent(num, denom, midiPitch, steps);
+            if( pos == -10000.0 )
+                continue;
+            else
+                return pos;
+        }
+    }
+    return -10000.0;
 }
 
 // --------------------------------------------------------------------------

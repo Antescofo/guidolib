@@ -22,12 +22,15 @@
 #include <QPainter>
 #include <QPaintDevice>
 #include <QWidget>
+#ifndef __MOBILE__
 #include <QPrinter>
+#endif
 #include <QImage>
 #include <QBuffer>
 
 #include <QVariant>
 #include <QtDebug>
+#include <QtGlobal>
 
 #include <assert.h>
 #include <iostream>
@@ -739,8 +742,11 @@ void setXY( float * x , float * y , int alignMode , const QFontMetrics& metrics 
 {
 	if ( alignMode == VGDevice::kAlignBaseLeft )
 		return;
-
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+	float w = metrics.horizontalAdvance( str );
+#else
 	float w = metrics.width( str );
+#endif
 	float descent = metrics.descent();
 	float ascent = metrics.ascent();
 	
@@ -898,7 +904,7 @@ unsigned int GDeviceQt::GetFontAlign() const
 //--------------------------------------------------------------------
 void GDeviceQt::SetDPITag( float )
 {
-#ifndef IOS
+#if !defined(__MOBILE__)
 	QPrinter * device = dynamic_cast<QPrinter *>( mQPainter->device() );
 	if ( device != 0 )
 	{
@@ -910,7 +916,7 @@ void GDeviceQt::SetDPITag( float )
 //--------------------------------------------------------------------
 float GDeviceQt::GetDPITag()const
 {  
-#ifndef IOS
+#if !defined(__MOBILE__)
 	QPrinter * device = dynamic_cast<QPrinter *>( mQPainter->device() );
 	if ( device != 0 )
 	{

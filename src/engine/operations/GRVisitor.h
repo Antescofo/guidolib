@@ -35,6 +35,10 @@ class GRSystem;
 class GRText;
 class GRTrill;
 class GRVoice;
+class GRBreathMark;
+class GRTie;
+class GRArpeggio;
+class GROctava;
 
 class GRVisitor
 {
@@ -105,6 +109,18 @@ class GRVisitor
 
 		virtual void visitStart (GRSingleRest* o)	{}
 		virtual void visitEnd   (GRSingleRest* o)	{}
+
+    virtual void visitStart (GRBreathMark* o)    {}
+    virtual void visitEnd   (GRBreathMark* o)    {}
+    
+    virtual void visitStart (GRTie* o)    {}
+    virtual void visitEnd   (GRTie* o)    {}
+    
+    virtual void visitStart (GRArpeggio* o)    {}
+    virtual void visitEnd   (GRArpeggio* o)    {}
+    
+    virtual void visitStart (GROctava* o)    {}
+    virtual void visitEnd   (GROctava* o)    {}
 };
 
 #endif

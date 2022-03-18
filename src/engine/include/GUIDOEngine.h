@@ -247,7 +247,7 @@ enum GuidoMapping {
 
 
 enum { kAutoDistrib = 1, kAlwaysDistrib = 2, kNeverDistrib = 3 };
-enum GRElement { kGRSlur=1, kGRDynamics, kGRArticulations, kGRText, kGRLyrics };
+enum GRElement { kGRSlur=1, kGRDynamics, kGRArticulations, kGRText, kGRLyrics, kGRFingering, kGRBow, kGRBreathMark };
 
 /**
     \brief Engine settings for the graphic score layout.
@@ -304,6 +304,11 @@ typedef struct GuidoLayoutSettings
     /** used to check lyrics and resolve collisions (default value is false)
 	*/
 	bool checkLyricsCollisions;
+    
+    /**
+                Defines whether we extend bounding boxes beyond notes (default value: false)
+     */
+    bool useExtendedBoundingBox;
 	
 } GuidoLayoutSettings;
 
@@ -447,6 +452,16 @@ representations.
     */
     GUIDOAPI GuidoErrCode	GuidoShowElement( GRHandler gr, GRElement elt, bool status);
 
+    /*!
+        Marks notes, chords and associated elements on the staff with given Color parameter
+        \param gr the handler to the graphic representation.
+        \param staffnum the target staff number
+        \param params a string corresponding to the Color value in Guido tag format (e.g. "gray") or html color codes
+        \return a Guido error code.
+    */
+    GUIDOAPI GuidoErrCode    GuidoMarkStaff( GRHandler gr, int staffnum, std::string params);
+
+
 	/*!
 		Gives the notes density.
 		
@@ -557,6 +572,18 @@ as by date. Page numbers start at 1.
 	*/
 	GUIDOAPI int	GuidoFindEventPage( CGRHandler inHandleGR, const GuidoDate& date );
 
+/** \brief Finds the event corresponding to date and midiPitch, and returns its vertical position offset on staff if transposed by given chromatic interval.
+
+    \param inHandleGR a Guido opaque handle to a GR structure.
+    \param date the target date.
+    \param midiPitch the target event's midiPitch
+    \param offset chromatic offset to be applied to the event
+    \param pos on output: the pitch position  offset is zero or new pitch position on the staff.
+    \return a Guido error code.
+*/
+GUIDOAPI GuidoErrCode GuidoFindEventTransposedOffset( CGRHandler inHandleGR, const GuidoDate & date, int midiPitch, int offset, float *pos );
+
+
 	/** \brief Finds the page which contain a given date.
 
 		\bug returns page + 1 when input date falls on the last system.
@@ -606,7 +633,7 @@ as by date. Page numbers start at 1.
 
 	/** \brief Releases a meters array..
 
-		\param meters: a meters array.
+		\param meters a meters array.
 		\return a Guido error code.
 	*/
 	GUIDOAPI GuidoErrCode GuidoFreeMeters (GuidoMeters meters);
@@ -627,7 +654,7 @@ as by date. Page numbers start at 1.
 
 	/** \brief Releases a tempo array..
 
-		\param tempi: a tempo array.
+		\param tempi a tempo array.
 		\return a Guido error code.
 	*/
 	GUIDOAPI GuidoErrCode GuidoFreeTempoList (GuidoTempoList tempi);
@@ -844,7 +871,6 @@ The number of version functions is due to historical reasons.
 		\param major on output: the major revision number.
 		\param minor on ouput: the minor revision number.
 		\param sub on ouput: the sub revision number.
-		\return a Guido error code.
 	*/
 	GUIDOAPI void GuidoGetVersionNums(int * major, int * minor, int * sub);
 

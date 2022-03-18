@@ -97,6 +97,21 @@ void GRSingleNote::doCreateNote( const TYPE_DURATION & p_durtemplate )
 	createNote(p_durtemplate);
 }
 
+unsigned char* GRSingleNote::getColorRef() const {
+    if (mAssignedColRef) {
+        return mAssignedColRef;
+    }
+    return mColRef;
+}
+
+unsigned char* GRSingleNote::getStaffFormatColorRef() const {
+    if (mAssignedColRef)
+        return mAssignedColRef;
+    if (mGrStaff->getStffrmtColRef())
+        return mGrStaff->getStffrmtColRef();
+    return NULL;
+}
+
 //____________________________________________________________________________________
 void GRSingleNote::GetMap( GuidoElementSelector sel, MapCollector& f, MapInfos& infos ) const
 {
@@ -146,8 +161,10 @@ void GRSingleNote::OnDraw( VGDevice & hdc) const
     }
 
 	const VGColor prevFontColor = hdc.GetFontColor();
-    if (mGrStaff->getStffrmtColRef())
-        hdc.SetFontColor(VGColor(mGrStaff->getStffrmtColRef()));
+    const unsigned char * staffcolref = getStaffFormatColorRef();
+    if (staffcolref) {
+        hdc.SetFontColor(VGColor(staffcolref));
+    }
 
     // draw ledger lines
 #ifdef SMUFL
@@ -158,14 +175,16 @@ void GRSingleNote::OnDraw( VGDevice & hdc) const
     for (int i = 0; i < sum; ++i, posy += incy)
         GRNote::DrawSymbol(hdc, kLedgerLineSymbol, ledXPos, (posy - mPosition.y)); // REM: the ledger line width can't change with staffFormat width
                                                                                    //      because it's drawn with the font, not with a line
-    if (mGrStaff->getStffrmtColRef())
+    if (staffcolref)
         hdc.SetFontColor(prevFontColor);
 	if (fCluster)
 		getNoteHead()->setHaveToBeDrawn(false);
 
 	const VGColor oldcolor = hdc.GetFontColor();
-	if (mColRef)
-        hdc.SetFontColor(VGColor(mColRef));
+    const unsigned char * colref = getColorRef();
+    if (colref) {
+        hdc.SetFontColor(VGColor(colref));
+    }
 
 	// - Draw elements (stems, dots...)
     if (getARNote()->haveSubElementsToBeDrawn())
@@ -178,7 +197,7 @@ void GRSingleNote::OnDraw( VGDevice & hdc) const
 		el->OnDraw(hdc);
 	}
 
-	if (mColRef) 						hdc.SetFontColor(oldcolor);
+	if (colref) 						hdc.SetFontColor(oldcolor);
 	if (gBoundingBoxesMap & kEventsBB) 	DrawBoundingBox(hdc, kEventBBColor);
 	if (fClusterHaveToBeDrawn) 			fCluster->OnDraw(hdc);
 	
@@ -540,7 +559,7 @@ NVRect GRSingleNote::getEnclosingBox(bool includeAccidentals, bool includeSlurs,
 		if (includeSlurs) {
 			const GRSlur * slur = dynamic_cast<const GRSlur *>(el);
 			if (slur) {
-				NVRect r = slur->getBoundingBox();
+                NVRect r = slur->getBoundingBox(getGRStaff());
 				if (r.top < outrect.top) outrect.top = r.top;
 				if (r.bottom > outrect.bottom) outrect.bottom = r.bottom;
 			}

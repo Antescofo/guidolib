@@ -2,8 +2,7 @@
 # CMAKE guidotools
 #######################################
 project(guidotools)
-cmake_minimum_required(VERSION 2.6)
-cmake_policy(VERSION 2.6)
+cmake_minimum_required(VERSION 3.4)
 
 set (CMAKE_BUILD_TYPE Release)
 
@@ -73,16 +72,6 @@ foreach(tool ${TOOLS})
 		RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BINDIR})
 	add_dependencies(${tool} ${target})
 endforeach(tool)
-
-if (PACK)
-	set (CMAKE_INSTALL_PREFIX .)
-endif()
-
-#######################################
-# install setup
-install ( TARGETS ${TOOLS}
-    	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-)
 
 
 

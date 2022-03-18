@@ -40,12 +40,19 @@ class GRPageText : public GRTagARNotationElement
     
     // Returns true if the y-position is relative to top-margin (for header position calculation)
     virtual bool            isRelativeToTopMargin() const;
+    
+    virtual std::string getText() const { return fPageText; }
+    
+    virtual float getYOffset() const;
+    
+    float offsetFromTopMargin;
 
 	protected:
 		GRPage *	fGRPage;
 		std::string fPageText;
 		std::string fLocation;
-
+        float fDy;
+    
 		unsigned int fTextalign;
 };
 

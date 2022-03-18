@@ -474,14 +474,25 @@ void GRArticulation::placeBowAbove( const GREvent * inParent, NVPoint & ioPos )
 	ioPos.y = (float)resolveCollisionAbove(inParent, topMax, space, 0); //kFlagFermataUp | kFlagMarcato | kFlagMarcatoUp);
 }
 
+void GRArticulation::placeBowWithoutPlacement     ( const GREvent * inParent, NVPoint & ioPos ) {
+    // choose minimum from note head (excluding Stem) and staff top
+    GRStaff * staff = inParent->getGRStaff();
+    float space = staff->getStaffLSPACE();
+    const float hspace = staff->getStaffLSPACE() / 2.0;
+    double topMax = min(-1.0*space, double(inParent->getPosition().y - hspace));
+    
+    ioPos.y = topMax;
+}
+
+
 // ----------------------------------------------------------------------------
 void GRArticulation::placeBowBelow( const GREvent * inParent, NVPoint & ioPos )
 {
 	GRStaff * staff = inParent->getGRStaff();
 	float space = staff->getStaffLSPACE();
-	const float minSpace = space *  (mSymbol == kBowUpBSymbol ?  1.5 : 1.0f);;
+	const float minSpace = space *  (mSymbol == kBowUpBSymbol ?  1.5f : 1.0f);;
 
-	const double bottom = staffBottom(staff) + space * (mSymbol == kBowUpBSymbol ?  1.5 : 0.6f);
+	const double bottom = staffBottom(staff) + space * (mSymbol == kBowUpBSymbol ?  1.5f : 0.6f);
 	double bottomMin = max((float)bottom, inParent->getStemEndPos().y + space);
 	bottomMin = max(bottomMin, double(inParent->getPosition().y + minSpace));
 	// + space * (mSymbol == kBowUpBSymbol ?  1.5 : 0.6f);
@@ -494,8 +505,19 @@ void GRArticulation::placeBow( const GREvent * inParent, NVPoint & ioPos )
 {
 	const ARBow* bow = dynamic_cast<const ARBow*>(getAbstractRepresentation());
 	if (! bow) return;
-	if (bow->getArticulationPosition() == ARArticulation::kBelow) placeBowBelow (inParent, ioPos);
-	else placeBowAbove (inParent, ioPos);
+    
+    switch (bow->getArticulationPosition()) {
+        case ARArticulation::kBelow:
+            placeBowBelow (inParent, ioPos);
+            break;
+            
+        case ARArticulation::kAbove:
+            placeBowAbove (inParent, ioPos);
+            break;
+            
+        default:
+            placeBowWithoutPlacement(inParent, ioPos);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -649,14 +671,14 @@ NVPoint GRArticulation::getReferencePosition (unsigned int symbol) const
 		case kMarcatoUpSymbol:			return NVPoint(-mLeftSpace, height * 0.5478f);
 
 		case kBowUpBSymbol:
-		case kBowDownBSymbol:			return NVPoint(-mLeftSpace, height * 1.2);
+		case kBowDownBSymbol:			return NVPoint(-mLeftSpace, height * 1.2f);
 		case kMarcatoDownSymbol:		return NVPoint(-mLeftSpace, height * 1.162f);
 
 		case kFermataUpSymbol:			return NVPoint(-mLeftSpace, height * -0.3f);
 		case kFermataDownSymbol:		return NVPoint(-mLeftSpace, height * -0.2f);
 
 		case kShortFermataUpSymbol:		return NVPoint(-mLeftSpace, height * -0.34f);
-		case kShortFermataDownSymbol:	return NVPoint(-mLeftSpace, height * 1.5);
+		case kShortFermataDownSymbol:	return NVPoint(-mLeftSpace, height * 1.5f);
 
 		case kLongFermataUpSymbol:		return NVPoint(-mLeftSpace, height * -0.2f);
 		case kLongFermataDownSymbol :	return NVPoint(-mLeftSpace, height);

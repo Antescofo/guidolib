@@ -87,7 +87,6 @@ class GRBowing : public GRPTagARNotationElement
 
 		GRPositionTag::GRSaveStruct * getNewGRSaveStruct();
 		virtual void OnDraw( VGDevice & hdc ) const;
-		virtual void updateBoundingBox();
 										
 		virtual void setOffset(int n_point, const NVPoint & p);
 		virtual void removeAssociation(GRNotationElement * el );
@@ -97,7 +96,22 @@ class GRBowing : public GRPTagARNotationElement
 		virtual void					tellPosition(GObject * caller, const NVPoint & newPosition);
 		virtual GRNotationElement *		getStartElement(GRStaff * grstaff) const;
 		virtual GRNotationElement *		getEndElement(GRStaff * grstaff) const;
-	
+    
+        /// Override getBoundingBox since for this GR they depend on the staff and need to be dynamically calculated. (AC: 2021/03)
+        NVRect getBoundingBox(GRStaff * grstaff) const;
+    
+    /// Used for GRColorVisitor, overrides base class mColor
+    virtual void setColor(const char * cp);
+    
+    const unsigned char * getColRef() const {
+        if (mAssignedColRef) {
+            return mAssignedColRef;
+        }else {
+            return GRPTagARNotationElement::getColRef();
+        }
+    }
+
+
 	protected:
 		virtual void automaticCurveDirection	( GRBowingContext * context, const ARBowing * arBow, GRSystemStartEndStruct * sse );
 		virtual void automaticAnchorPoints		( const GRBowingContext * context, const ARBowing * arBow, GRSystemStartEndStruct * sse );
@@ -121,6 +135,9 @@ class GRBowing : public GRPTagARNotationElement
 		virtual void applyAnchorPointsOffsets	( const GRBowingContext * context, const ARBowing * arBow, GRSystemStartEndStruct * sse );
 
 		GRSystemStartEndStruct * initGRBowing( GRStaff * grstaff );
+    
+    unsigned char * mAssignedColRef;    // Color assigned from GRColorVisitor
+
 };
 
 #endif

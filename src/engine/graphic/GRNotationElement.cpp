@@ -39,6 +39,8 @@
 #include "FontManager.h"
 #include "VGFont.h"
 
+#include "TagParameterString.h"
+
 using namespace std;
 
 GRNotationElement::GRNotationElement()
@@ -53,6 +55,7 @@ GRNotationElement::GRNotationElement()
 	mDraw = true;
 	mShow = true;
     mIsInHeader = false;
+    mAssignedColRef = NULL;
 }
 
 GRNotationElement::~GRNotationElement()
@@ -71,7 +74,9 @@ GRNotationElement::~GRNotationElement()
 		}
 		delete mAssociated;
 		mAssociated = 0;
-  } 
+  }
+    delete [] mAssignedColRef;
+    mAssignedColRef = 0;
   // previously: no delete only set to NULL ... associated = NULL;
 }
 
@@ -103,6 +108,7 @@ void GRNotationElement::SendMap (const NVRect& map, MapCollector& f, TYPE_TIMEPO
 
     const ARNote *arNote = dynamic_cast<const ARNote *>(ar);
     inf.midiPitch = (arNote ? arNote->getMidiPitch() : -1);
+    inf.noteName = (arNote ? arNote->getPitchName() : "");
 
 	f.Graph2TimeMap (r, dates, inf);
 }
@@ -143,6 +149,14 @@ GRNotationElement::addToBoundingBox( GRNotationElement * in )
 	mBoundingBox.Merge( box );
 }
 
+void GRNotationElement::setColor(const char * cp) {
+    if (!mAssignedColRef)
+        mAssignedColRef = new unsigned char[4];
+    TagParameterString* color = new TagParameterString(cp);
+    color->setName("color");
+    color->getRGB(mAssignedColRef);
+}
+
 // -------------------------------------------------------------------------
 void GRNotationElement::OnDrawText( VGDevice & hdc, NVPoint pos, const char * text, int inCharCount ) const
 {
@@ -150,7 +164,7 @@ void GRNotationElement::OnDrawText( VGDevice & hdc, NVPoint pos, const char * te
 	
 	const VGFont* hmyfont = FontManager::gFontText;
 	const int size = getFontSize();
-	const unsigned char * colref = getColRef();
+	const unsigned char * colref = getColorRef(); // <- Prefers assigned ColorRef from ColorVisitor
 	
 	if (getFont())
 		hmyfont = FontManager::FindOrCreateFont( size, getFont(), getFontAttrib());
@@ -194,7 +208,8 @@ void GRNotationElement::OnDrawSymbol( VGDevice & hdc, unsigned int inSymbol, flo
 	if(!mDraw || !mShow)
 		return;
 
-	const unsigned char * colref = getColRef();
+    const unsigned char * colref = getColorRef(); // <- Prefers assigned ColorRef from ColorVisitor
+
 	const VGColor prevFontColor = hdc.GetFontColor();
   	if (colref)
 		hdc.SetFontColor( VGColor( colref ));

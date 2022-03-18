@@ -23,6 +23,8 @@
 #include "GRSpringForceIndex.h"
 #include "GRSpacingMatrix.h"
 #include "GRClef.h"
+#include "GRSingleNote.h"
+#include "ARNote.h"
 #include "GRStaff.h"
 #include "kf_list.h"
 
@@ -540,6 +542,49 @@ GRPage * GRVoice::getPageNum(int num,int denom)
 		}
 	}
 	return NULL;
+}
+
+float GRVoice::getGROffsetForEvent(int num, int denom, int midiPitch, int steps)
+{
+    float errVal = -10000;
+
+    const TYPE_TIMEPOSITION tpsearch ( num,denom );
+    GuidoPos pos = First();
+    while (pos)
+    {
+        GRNotationElement * el = GetNext(pos);
+        const GRSingleNote * grn = el->isSingleNote();
+        if (grn)
+        {
+            const ARNote* note = grn->getARNote();
+            if ( (note) && (grn->getRelativeTimePosition() == tpsearch) &&
+                (note->getMidiPitch() == midiPitch) )
+            {
+                // get original pitch
+                int pitch, original_pitch;
+                int octave, original_oct;
+                int acc;
+                grn->getPitchAndOctave( &pitch, &octave, &acc );
+                original_oct = octave;
+                original_pitch = pitch;
+                // offset pitch with steps
+                ARNote::transpose(&pitch, &octave, acc, steps);
+                
+                GRStaff * stf = grn->getGRStaff();
+                if (!stf) {
+                    std::cerr<<"\t<<< UI EV NO STAFF!!!"<<std::endl;
+                    return errVal;
+                }
+                float verticalPos = stf->getNotePosition(pitch, octave);
+                
+                float v_original = stf->getNotePosition(original_pitch, original_oct);
+                return (verticalPos - v_original);
+            }
+            else if (grn->getRelativeTimePosition() > tpsearch)
+                return errVal;
+        }
+    }
+    return errVal;
 }
 
 /** \brief Returns a page corresponding to a time position.

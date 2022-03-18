@@ -172,16 +172,18 @@ const VGColor GRText::startDraw( VGDevice & hdc ) const
 	hdc.SetTextFont( fFont );
 
 	const VGColor prevTextColor = hdc.GetFontColor();
-	if( mColRef )
-		hdc.SetFontColor( VGColor( mColRef ));
+    const unsigned char * colorRef = getColRef();
+    if( colorRef ) {
+		hdc.SetFontColor( VGColor( colorRef ));
+    }
 	hdc.SetFontAlign( mTextAlign );
 	return prevTextColor;
 }
 
 void GRText::endDraw( VGDevice & hdc, const VGColor textcolor) const
 {
-	
-	if( mColRef )
+    const unsigned char * colorRef = getColRef();
+	if( colorRef )
 		hdc.SetFontColor( textcolor );
 }
 

@@ -142,6 +142,9 @@ private:
         
     // Used when dispNote param is set on \tuplet-tag to force note appearance
     NVstring mNoteAppearance;
+    
+    unsigned char* getColorRef() const;
+    unsigned char* getStaffFormatColorRef() const;
 };
 
 #endif

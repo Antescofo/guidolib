@@ -17,8 +17,9 @@
 
 
 #include "GRBowing.h"
+#include "ARTie.h"
 
-class ARTie;
+//class ARTie;
 class GRStaff;
 
 /** \brief Graphical representation of a tie.

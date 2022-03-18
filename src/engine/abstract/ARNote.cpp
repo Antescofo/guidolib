@@ -104,6 +104,81 @@ void ARNote::browse(TimeUnwrap& mapper) const
 	mapper.AtPos (this, TimeUnwrap::kNote);
 }
 
+void ARNote::transpose(int *pitch, int *octave, int accidental, int fChromaticSteps) {
+    
+    int rangechange = fChromaticSteps / 12;
+    int fTableShift = fChromaticSteps % 12;
+    if (fTableShift < 0) fTableShift = 12 + fTableShift;    // works only on positive values
+
+    int sharps = 0;
+    int curstep = 0;
+    while (curstep != fTableShift) {
+        curstep += 7;             // add a fifth
+        curstep %= 12;            // modulus an octave
+        sharps++;
+    }
+    fTableShift = (sharps >= 6 ? sharps - 12 : sharps);    // simplest key is chosen here
+
+    // construct table of fifths
+    std::vector<std::pair<int,int> >    fFifthCycle;    // the fifth cycle table
+    for (int i=-2; i<=2; i++) {
+        fFifthCycle.push_back(make_pair(NOTE_F, i));
+        fFifthCycle.push_back(make_pair(NOTE_C, i));
+        fFifthCycle.push_back(make_pair(NOTE_G, i));
+        fFifthCycle.push_back(make_pair(NOTE_D, i));
+        fFifthCycle.push_back(make_pair(NOTE_A, i));
+        fFifthCycle.push_back(make_pair(NOTE_E, i));
+        fFifthCycle.push_back(make_pair(NOTE_H, i));
+    }
+    int alter = 0;
+    int npitch = *pitch;
+    int octaveChange = 0;
+
+    
+    switch (*pitch) {
+        case NOTE_CIS:
+        case NOTE_DIS:
+        case NOTE_FIS:
+        case NOTE_GIS:
+        case NOTE_AIS:
+            npitch = *pitch - 7; // ex. CIS to C, DIS to D etc
+            alter = 1;
+            break;
+        default:
+            break;
+    }
+    alter += accidental;
+
+    
+    // retrieve first the normaized pitch integer class
+    int pitch1 = npitch;
+    // then browse the fifth cycle table
+    for (int i=0; i < fFifthCycle.size(); i++) {
+        // until we find the same pitch spelling (ie including name and accident)
+        if ((fFifthCycle[i].second == alter) && (fFifthCycle[i].first == npitch)) {
+            // then we shift into the table
+            i += fTableShift;
+            // make possible adjustments
+            if (i > fFifthCycle.size()) i -= 12;
+            else if (i < 0) i += 12;
+            // and retrieve the resulting transposed pitch
+            npitch = fFifthCycle[i].first;
+            alter = fFifthCycle[i].second;
+            // check now fro octave changes
+            int pitch2 = npitch;
+            // if pitch is lower but transposition is up: then increase octave
+            if ((pitch2 < pitch1) && (fChromaticSteps > 0))
+                octaveChange++;
+            // if pitch is higher but transposition is down: then decrease octave
+            else if ((pitch2 > pitch1) && (fChromaticSteps < 0))
+                octaveChange--;
+            *pitch = npitch;
+            *octave += octaveChange;
+            return;
+        }
+    }
+}
+
 int ARNote::getMidiPitch() const
 {
 	int oct = 12 * (fOctave+4);
@@ -286,5 +361,31 @@ string ARNote::getGMNName () const
     else
         s << getName() << "*" << getDuration();
 	return s.str();
+}
+
+string ARNote::getPitchName () const
+{
+    std::string accidental = "";
+    switch (getAccidentals()) {
+        case -1:
+            accidental = "b";
+            break;
+        case 1:
+            accidental = "#";
+            break;
+        case 2:
+            accidental = "##";
+        case -2:
+            accidental = "bb";
+        default:
+            break;
+    }
+    if (!isEmptyNote()) {
+        stringstream s;
+        s << getName() << accidental << getOctave()+3;
+        return s.str();
+    }
+    else
+        return "";
 }
 

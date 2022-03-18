@@ -440,6 +440,18 @@ void GRGlobalStem::RangeEnd( GRStaff * inStaff)
 	}
 }
 
+void GRGlobalStem::setColor(const char * cp)
+{
+    GRTag::setColor(cp);
+    GRNotationElement::setColor(cp);
+    if (fStem) {
+        fStem->setColRef(getColRef());
+    }
+    if (fFlag) {
+        fFlag->setColRef(getColRef());
+    }
+}
+
 
 //----------------------------------------------------------------
 void GRGlobalStem::updateGlobalStem(const GRStaff * inStaff)

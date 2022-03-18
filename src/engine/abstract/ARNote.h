@@ -46,6 +46,7 @@ class ARNote : public ARMusicalEvent
 		virtual const char*	getParamsStr() const	{ return ""; };
 		virtual const char*	getTagName() const		{ return "ARNote"; };
 		virtual std::string getGMNName() const;
+        std::string getPitchName() const;
 
 		virtual void browse(TimeUnwrap& mapper) const;
 
@@ -91,7 +92,8 @@ class ARNote : public ARMusicalEvent
 													  bool inHaveToBeCreated = false);
 
 		static int	detune2Quarters(float detune);
-	
+        static void transpose(int *pitch, int *octave, int accidental, int interval);
+
 		// Used when dispNote param is set on \tuplet-tag to force note appearance
 		void forceNoteAppearance(NVstring noteAppearance);
 

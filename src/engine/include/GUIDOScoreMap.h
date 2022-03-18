@@ -38,13 +38,13 @@
 //------------------------------------------------------------------------------
 // graphic elements selector definitions
 typedef enum { 
-	kGuidoPage, kGuidoSystem, kGuidoSystemSlice, kGuidoStaff, /*kGuidoMeasure,*/ kGuidoBar, kGuidoBarAndEvent, kGuidoEvent,
+	kGuidoPage, kGuidoSystem, kGuidoSystemSlice, kGuidoStaff, /*kGuidoMeasure,*/ kGuidoBar, kGuidoBarAndEvent, kGuidoEvent, kClefSel, kMeterSel,
 	kGuidoScoreElementEnd
 } GuidoElementSelector;
 
 // graphic elements type definitions
 typedef enum { 
-	kNote = 1, kRest, kEmpty, kBar, kRepeatBegin, kRepeatEnd, kStaff, kSystemSlice, kSystem, kPage, kGraceNote
+	kNote = 1, kRest, kEmpty, kBar, kRepeatBegin, kRepeatEnd, kStaff, kSystemSlice, kSystem, kPage, kGraceNote, kClef, kMeter
 } GuidoElementType;
 
 
@@ -57,6 +57,7 @@ typedef struct {
 	int			     staffNum;	///< the element staff number or 0 when na
 	int			     voiceNum;	///< the element voice number or 0 when na
     int              midiPitch; ///< the element midi pitch, or -1 when na
+    std::string      noteName;  ///< the element American standard pitch name (A4 for 440Hz, C4 for MIDI 60), or empty when na
 } GuidoElementInfos;
 
 
@@ -318,7 +319,7 @@ GUIDOAPI GuidoErrCode	GuidoGetSVGMap( GRHandler gr, int pagenum, GuidoElementSel
 
 /** \brief Retrieves the rolled to unrolled time mapping
 
-	\param gr a Guido opaque handle to a GR structure.
+	\param ar a Guido opaque handle to a AR structure.
 	\param f a TimeMapCollector object that will be called for each time segment.
 	\return an error code.
 */
