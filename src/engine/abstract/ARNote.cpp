@@ -347,16 +347,16 @@ string ARNote::getGMNName () const
     const char* accidental = "";
     switch (getAccidentals()) {
 		case -1:
-			accidental = "#";
+			accidental = "&";
 			break;
 		case 1:
-			accidental = "b";
+			accidental = "#";
 			break;
 		default:
 			break;
     }
 	stringstream s;
-	if (isEmptyNote())
+	if (!isEmptyNote())
 		s << getName() << accidental << getOctave() << "*" << getDuration();
     else
         s << getName() << "*" << getDuration();

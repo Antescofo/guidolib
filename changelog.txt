@@ -4,7 +4,11 @@ GUIDO Engine history
 ----------------------------------------------------------------
   version 1.7.2
 - octava add support for dx
+- improve \mark spacing
 - fix incorrect octava rendering (issue #134)
+- fix ledger line width with chords and heads reversed (issue #135)
+- fix incorrect accidental rendering with chords (issue #144 and #81)
+- fix fontalign state after text drawing
 
 ----------------------------------------------------------------
   version 1.7.1
