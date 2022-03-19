@@ -104,7 +104,6 @@ void GRBeam::OnDraw( VGDevice & hdc) const
 		
 	float ax [4] = { st->p[0].x, st->p[1].x, st->p[3].x, st->p[2].x };
 	float ay [4] = { st->p[0].y, st->p[1].y, st->p[3].y, st->p[2].y };
-	
 	// This does the drawing!
 	hdc.Polygon(ax, ay, 4);
 	
@@ -869,6 +868,7 @@ float GRBeam::setStemEndPos (GRSystemStartEndStruct * sse, PosInfos& infos, bool
 		GREvent * sn = GREvent::cast(mAssociated->GetNext(pos));
 		if (sn)
 		{
+			bool empty = (sn->isEmpty() && sn->getDuration());
 			float rx = sn->getStemStartPos().x - st->p[0].x;
 			if (getTagType() == SYSTEMTAG)
 				rx += sn->getGRStaff()->getPosition().x;
@@ -926,7 +926,10 @@ float GRBeam::setStemEndPos (GRSystemStartEndStruct * sse, PosInfos& infos, bool
 				ly = -ly;
 			}
 			else if (needsadjust) {
-				if (adjustdir == dirUP) {
+				if (empty) {
+					offsetbeam = 0;
+				}
+				else if (adjustdir == dirUP) {
 					const float newoffs = ly + offbase;
 					if (newoffs > offsetbeam) {
 						if (offsetbeam < 0) {
@@ -950,7 +953,7 @@ float GRBeam::setStemEndPos (GRSystemStartEndStruct * sse, PosInfos& infos, bool
 			}
 			// adjusted - DF sept 15 2009
 			sn->changeStemLength( ly - infos.currentLSPACE/20 );
-			// so that the possible next featherd beam knows that he is chained (and musn't change its slope)
+			// so that the possible next featherd beam knows that he is chained (and dont change its slope)
 			sn->setStemChanged();
 		}
 		if (oldpos == sse->endpos) break;
