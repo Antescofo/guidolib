@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include "GRVisitor.h"
 #include "GRPTagARNotationElement.h"
 
 class ARHarmony;
@@ -55,6 +56,9 @@ public:
     const ARHarmony * 	getARHarmony() const;
 
     virtual unsigned int getTextAlign() const { return mTextAlign; }
+
+    virtual FloatRect getTextMetrics(VGDevice & hdc, const GRStaff* staff) const;
+    virtual void    accept (GRVisitor& visitor);
 
     virtual float 	getLeftSpace() const;
     virtual float 	getRightSpace() const;

@@ -34,11 +34,6 @@
 
 using namespace std;
 
-#ifndef WIN32
-#warning ("TODO: set bounding box (currently ignored)");
-#endif
-
-
 extern GRStaff * gCurStaff;
 
 GRHarmony::GRHarmony(GRStaff * p_staff, const ARHarmony * ar)
@@ -57,6 +52,22 @@ GRHarmony::GRHarmony(GRStaff * p_staff, const ARHarmony * ar)
 
 	float curLSPACE = p_staff ? p_staff->getStaffLSPACE() : LSPACE;
 
+    if( mMustFollowPitch == false ) {
+        int pos = ar->position();
+        if (p_staff) {
+            switch (pos) {
+                case ARHarmony::kUndefined:
+                case ARHarmony::kBelow:
+                    mPosition.y = p_staff->getDredgeSize(); // + curLSPACE;
+                    break;
+                case ARHarmony::kAbove:
+                    mPosition.y = -p_staff->getDredgeSize() - curLSPACE/2;
+                    break;
+            }
+        }
+        else mPosition.y = -curLSPACE;
+    }
+
 	if (ar) st->text = ar->getText() ? ar->getText() : "";
 	
 	mTextAlign = VGDevice::kAlignLeft + VGDevice::kAlignTop;
@@ -72,10 +83,10 @@ GRHarmony::GRHarmony(GRStaff * p_staff, const ARHarmony * ar)
 	st->boundingBox.top = sizey;
 	st->boundingBox.bottom = 4 * LSPACE;
 
-//	float dy = ar->getDY()->getValue() + LSPACE/2;
-//	mBoundingBox.left = mBoundingBox.right = 0;
-//	mBoundingBox.top = -sizey - dy;
-//	mBoundingBox.bottom = -dy;
+    mBoundingBox.left = 0;
+    mBoundingBox.right = sizex;
+    mBoundingBox.top = 0;
+    mBoundingBox.bottom = sizey;
 }
 
 
@@ -275,8 +286,69 @@ void GRHarmony::tellPosition(GObject * caller, const NVPoint & inPosition)
 //		const ARHarmony* arText = getARHarmony();
 //		const char* text = arText ? arText->getText() : 0;
 //		if (text) st->text = text;
-
+        
+        FloatRect r = getTextMetrics (*gGlobalSettings.gDevice, staff);
+        setPosition (NVPoint(r.left, r.top));
+        NVRect bb (0, 0, r.Width(), r.Height());
+        mBoundingBox = bb;
+        float xoffset = 0;
+        if (mTextAlign & VGDevice::kAlignCenter)
+            xoffset = mBoundingBox.Width()/2;
+        if (mTextAlign & VGDevice::kAlignRight)
+            xoffset = mBoundingBox.Width();
+        mBoundingBox -= NVPoint(xoffset, 0);
 	}
+}
+
+FloatRect GRHarmony::getTextMetrics(VGDevice & hdc, const GRStaff* staff ) const
+{
+    FloatRect r;
+
+    GRSystemStartEndStruct * sse = getSystemStartEndStruct( staff->getGRSystem() );
+    assert(sse);
+    GRTextSaveStruct * st = (GRTextSaveStruct *) sse->p;
+    const ARHarmony * arText = getARHarmony();
+    const float curLSPACE = staff ? staff->getStaffLSPACE(): LSPACE;
+    // - Setup position.
+    // y-reference position if the lowest line of the staff.
+    NVPoint drawPos (st->position);
+    if( mMustFollowPitch == false ) {
+        int pos = arText->position();
+        if (staff) {
+            switch (pos) {
+                case ARHarmony::kUndefined:
+                case ARHarmony::kBelow:
+                    drawPos.y = staff->getDredgeSize(); // + curLSPACE;
+                    break;
+                case ARHarmony::kAbove:
+                    drawPos.y = -staff->getDredgeSize() - curLSPACE/2;
+                    break;
+            }
+        }
+        else drawPos.y = -curLSPACE;
+    }
+
+    float dx = arText->getDX()->getValue( curLSPACE );
+    float dy = -arText->getDY()->getValue( curLSPACE );
+
+    float x = drawPos.x + st->boundingBox.left + dx;
+    float y = drawPos.y + dy;
+    float w = 0;
+    float h = 0;
+
+    const VGFont* savedFont = hdc.GetTextFont();
+    hdc.SetTextFont( fFont );
+    fFont->GetExtent(st->text.c_str(), (int)st->text.size(), &w, &h, &hdc);
+    hdc.SetTextFont( savedFont );
+    
+    r.Set(x, y, x+w, y+h);
+    return r;
+}
+
+void GRHarmony::accept (GRVisitor& visitor)
+{
+    visitor.visitStart (this);
+    visitor.visitEnd (this);
 }
 
 void GRHarmony::removeAssociation(GRNotationElement * el)
