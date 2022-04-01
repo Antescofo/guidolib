@@ -118,6 +118,8 @@ class GRSingleNote : public GRNote
         void forceAppearance();
 		const GRStem *getStem() const;
 		float getNoteWidth() const			{ return mNoteBreite; }
+    
+        bool contains(const TYPE_TIMEPOSITION& date) const;
 
 protected:
 	GRStem *	  getStem();

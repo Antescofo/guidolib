@@ -548,6 +548,7 @@ float GRVoice::getGROffsetForEvent(int num, int denom, int midiPitch, int steps)
     float errVal = -10000;
 
     const TYPE_TIMEPOSITION tpsearch ( num,denom );
+    const TYPE_TIMEPOSITION onemeasure ( 1,1 );
     GuidoPos pos = First();
     while (pos)
     {
@@ -556,7 +557,8 @@ float GRVoice::getGROffsetForEvent(int num, int denom, int midiPitch, int steps)
         if (grn)
         {
             const ARNote* note = grn->getARNote();
-            if ( (note) && (grn->getRelativeTimePosition() == tpsearch) &&
+            
+            if ( (note) && (grn->contains(tpsearch)) &&
                 (note->getMidiPitch() == midiPitch) )
             {
                 // get original pitch
@@ -579,8 +581,9 @@ float GRVoice::getGROffsetForEvent(int num, int denom, int midiPitch, int steps)
                 float v_original = stf->getNotePosition(original_pitch, original_oct);
                 return (verticalPos - v_original);
             }
-            else if (grn->getRelativeTimePosition() > tpsearch)
+            else if (grn->getRelativeTimePosition() > tpsearch + onemeasure ) {
                 return errVal;
+            }
         }
     }
     return errVal;

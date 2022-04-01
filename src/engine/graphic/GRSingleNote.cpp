@@ -134,6 +134,15 @@ void GRSingleNote::GetMap( GuidoElementSelector sel, MapCollector& f, MapInfos& 
 	}
 }
 
+bool GRSingleNote::contains(const TYPE_TIMEPOSITION &date)  const {
+    TYPE_DURATION dur = getDuration();
+    if (dur.getNumerator() == 0) {        // notes in chords have a null duration
+        dur = getDurTemplate();
+    }
+    
+    return (getARNote()->getStartTimePosition() <= date) && (getARNote()->getStartTimePosition()+dur > date);
+}
+
 //____________________________________________________________________________________
 float GRSingleNote::getLedgeWidth (VGDevice & hdc) const
 {
