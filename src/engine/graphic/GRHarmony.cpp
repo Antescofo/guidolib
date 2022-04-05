@@ -143,7 +143,7 @@ void GRHarmony::OnDraw( VGDevice & hdc ) const
 	DrawHarmonyString (hdc, fFont, st->text, drawPos.x + st->boundingBox.left + dx, drawPos.y + dy);
 
 	if( mColRef ) hdc.SetFontColor( prevTextColor );
-//	DrawBoundingBox(hdc,VGColor(0,0,0));
+//	DrawBoundingBox(hdc, kEventBBColor);
 }
 
 float GRHarmony::CharExtend (const char* c, const VGFont* font, VGDevice* hdc) const
@@ -160,16 +160,17 @@ void GRHarmony::DrawHarmonyString (VGDevice & hdc, const VGFont* font, const str
 	const VGFont* mfont = hdc.GetMusicFont();
 	float ratio = font->GetSize() / 150.f; // 150 is the default font size for harmony (20 pt)
 
-	const VGFont* mBigFont = FontManager::FindOrCreateFont( int(mfont->GetSize() * 1.3 * ratio), mfont->GetName(), "");
+	const VGFont* mBigFont = FontManager::FindOrCreateFont( int(mfont->GetSize() * 1.0 * ratio), mfont->GetName(), "");
 	const VGFont* mSmallFont = FontManager::FindOrCreateFont( int(mfont->GetSize() * 0.8 * ratio), mfont->GetName(), "");
 	const VGFont* tSmallFont = FontManager::FindOrCreateFont( int(font->GetSize() * 0.8), font->GetName(), "");
 	const VGFont* curmfont = mBigFont;
 	const VGFont* curtfont = font;
 	const char * ptr = str.c_str();
-	float moffset = 4 * LSPACE * ratio;
+	float moffset = 2 * LSPACE * ratio;
 	float yoffset = 0;
 	float xoffset = LSPACE/2;
 	bool inSecPart = false;
+    bool isBase = false;
 
 	hdc.SetMusicFont (mBigFont);
 	while (*ptr) {
@@ -179,14 +180,29 @@ void GRHarmony::DrawHarmonyString (VGDevice & hdc, const VGFont* font, const str
 			inSecPart = std::isdigit(c);
 			if (inSecPart) {
 				hdc.SetMusicFont (mSmallFont);
-				moffset = 2 * LSPACE * ratio;
+				moffset = 1.5 * LSPACE * ratio;
 				yoffset = -2;
 				xoffset /= 2;
 			}
 		}
+        
+        if (!isBase) {
+            isBase = (c == '/');
+            if (isBase) {
+                hdc.SetTextFont (font);
+                curtfont = font;
+                yoffset = 0;
+                xoffset = LSPACE/2;
+                if (inSecPart) {
+                    inSecPart = false;
+                    hdc.SetMusicFont (mBigFont);
+                    moffset = 2 * LSPACE * ratio;
+                }
+            }
+        }
 
 		if (c == '#') {
-			hdc.DrawMusicSymbol(x + 10, y - moffset - LSPACE, kSharpSymbol);
+			hdc.DrawMusicSymbol(x + 10, y - moffset - LSPACE/2, kSharpSymbol);
 			buff[0] = kSharpSymbol;
 			x += CharExtend (buff, curmfont, &hdc) + xoffset;
 		}
@@ -198,6 +214,9 @@ void GRHarmony::DrawHarmonyString (VGDevice & hdc, const VGFont* font, const str
 		else {
 			hdc.DrawString( x, y + yoffset, buff, 1);
 			x += CharExtend (buff, curtfont, &hdc);
+            if (isBase) {
+                if (c=='/') continue;
+            }
 			hdc.SetTextFont (tSmallFont);
 			if (!inSecPart) {
 				curtfont = tSmallFont;
