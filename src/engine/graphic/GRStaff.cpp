@@ -94,6 +94,7 @@ using namespace std;
 #include "GRBowing.h"
 
 #include "GRDynamics.h"
+#include "GRHarmony.h"
 
 #include "kf_ivect.h"
 #include "TCollisions.h"
@@ -1998,6 +1999,22 @@ void GRStaff::updateBoundingBox()
                         if (r.top > tmp.top)         r.top = tmp.top;
                         if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
                     }
+                }
+                
+                const GRHarmony *harmTag = e->isGRHarmony();
+                if (harmTag) {
+                    tmp = harmTag->getBoundingBox() + harmTag->getPosition() + harmTag->getOffset();
+//                    cerr<<"ExtendedBB Harm "<<harmTag->getPosition()
+//                    <<" top:"<<tmp.top<< " r.top:"<< r.top
+//                    <<" bot:"<<tmp.bottom<< " r.bot:"<< r.bottom;
+                    if (tmp.Height()>0.0) {
+                        if (r.top > tmp.top)         r.top = tmp.top;
+                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    }
+//                    cerr<<" r->:"
+//                    <<r
+//                    <<endl;
+
                 }
 
                 GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
