@@ -247,7 +247,7 @@ enum GuidoMapping {
 
 
 enum { kAutoDistrib = 1, kAlwaysDistrib = 2, kNeverDistrib = 3 };
-enum GRElement { kGRSlur=1, kGRDynamics, kGRArticulations, kGRText, kGRLyrics, kGRFingering, kGRBow, kGRBreathMark };
+enum GRElement { kGRSlur=1, kGRDynamics, kGRArticulations, kGRText, kGRLyrics, kGRFingering, kGRBow, kGRBreathMark, kGRHarmony };
 
 /**
     \brief Engine settings for the graphic score layout.

@@ -39,6 +39,7 @@ class GRBreathMark;
 class GRTie;
 class GRArpeggio;
 class GROctava;
+class GRHarmony;
 
 class GRVisitor
 {
@@ -121,6 +122,9 @@ class GRVisitor
     
     virtual void visitStart (GROctava* o)    {}
     virtual void visitEnd   (GROctava* o)    {}
+    
+    virtual void visitStart (GRHarmony* o)    {}
+    virtual void visitEnd   (GRHarmony* o)    {}
 };
 
 #endif

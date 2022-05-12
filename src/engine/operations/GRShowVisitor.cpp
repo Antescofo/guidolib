@@ -22,6 +22,7 @@
 #include "GRIntens.h"
 #include "GRArticulation.h"
 #include "GRBreathMark.h"
+#include "GRHarmony.h"
 
 using namespace std;
 
@@ -31,6 +32,7 @@ void GRShowVisitor::visitStart (GRSlur* o)			{ if (fTarget == kGRSlur)		o->Show(
 void GRShowVisitor::visitStart (GRDynamics* o)		{ if (fTarget == kGRDynamics) o->Show(fState); }
 void GRShowVisitor::visitStart (GRIntens* o)		{ if (fTarget == kGRDynamics) o->Show(fState); }
 void GRShowVisitor::visitStart (GRBreathMark* o)        { if (fTarget == kGRBreathMark) o->Show(fState); }
+void GRShowVisitor::visitStart (GRHarmony* o)        { if (fTarget == kGRHarmony) o->Show(fState); }
 
 void GRShowVisitor::visitStart (GRArticulation* o)    {
     if ((fTarget == kGRBow) && o->isBow()) o->Show(fState);
