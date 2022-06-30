@@ -2,6 +2,19 @@ GUIDO Engine history
 
 
 ----------------------------------------------------------------
+  version 1.7.6
+- new \auto tag parameter: resolveMultiVoiceCollisions intended to multi voices note collisions (issue #158)
+
+----------------------------------------------------------------
+  version 1.7.5
+- extends guido font version 3.92 with inverted turn (with a bar)
+- add invertedb type to \turn 
+
+----------------------------------------------------------------
+  version 1.7.4
+- fix multiple articulations on chords (issue #151)
+
+----------------------------------------------------------------
   version 1.7.3
 - fix extra accidental on multi-voice chord (issue #147)
 - fix incorrect beaming with empty (issue #146)

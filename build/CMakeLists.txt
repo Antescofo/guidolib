@@ -20,10 +20,9 @@ macro (get_major_minor_patch version)
 endmacro()
 get_major_minor_patch( ${VERSION} )
 set (SOVERS ${VERSION_MAJOR})
-set (STRVERS "v.1.7.0")
+set (STRVERS "v.1.7.4")
 set (GUIDOFWKVERS C)
 message (STATUS "Configuring version ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
-
 
 #######################################
 # Options 
@@ -91,7 +90,7 @@ if (WIN32)
 		set( DEFS ${DEFS} GCC )
 	endif()
 
-	if (${CMAKE_GENERATOR} MATCHES ".*Win64")
+	if (CMAKE_SIZEOF_VOID_P EQUAL 8)
 		set( DEFS ${DEFS} WIN64 )
 		set (WIN64 1)
 		set (target GUIDOEngine64)
@@ -266,7 +265,6 @@ target_link_libraries (${target} ${LINK})
 # install paths 
 # defined before loading subprojects
 if (APPLE)
-set (CMAKE_INSTALL_PREFIX $ENV{HOME}/Guido-${VERSION})
 	set (CMAKE_INSTALL_PREFIX $ENV{HOME}/Guido-${VERSION})
 elseif(WIN32)
 	set (HOME $ENV{USERPROFILE})

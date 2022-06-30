@@ -29,63 +29,62 @@
 #include "TagList.h"
 #include "GUIDOInternal.h"	// for gGlobalSettings.gAutoBarlines
 
-#include "ARMusicalVoice.h"
-#include "ARMusicalVoiceState.h"
-#include "ARStaff.h"
-#include "ARClef.h"
-#include "ARTStem.h"
-#include "ARColor.h"
+
+#include "ARAlter.h"
+#include "ARAuto.h"
 #include "ARAutoBeam.h"
+#include "ARAutoBeamEnd.h"
+#include "ARBar.h"
+#include "ARBase.h"
 #include "ARBeamState.h"
-#include "ARNewSystem.h"
-#include "ARNote.h"
+#include "ARChordComma.h"
+#include "ARChordTag.h"
+#include "ARClef.h"
+#include "ARCluster.h"
+#include "ARCoda.h"
+#include "ARColor.h"
+#include "ARDisplayDuration.h"
+#include "ARDotFormat.h"
+#include "ARDummyRangeEnd.h"
+#include "ARFeatheredBeam.h"
+#include "ARFinishBar.h"
+#include "ARGlissando.h"
+#include "ARGrace.h"
+#include "ARKey.h"
+#include "ARLyrics.h"
+#include "ARMerge.h"
 #include "ARMeter.h"
 #include "ARMMRest.h"
-#include "ARMusicalEvent.h"
-#include "ARBar.h"
-#include "ARAutoBeamEnd.h"
-#include "ARTie.h"
-#include "ARDummyRangeEnd.h"
-#include "ARMerge.h"
-#include "ARBase.h"
-#include "ARDisplayDuration.h"
-#include "ARTuplet.h"
-#include "ARNewPage.h"
-#include "ARKey.h"
-#include "ARAuto.h"
-#include "ARNaturalKey.h"
-#include "ARSecondGlue.h"
-#include "ARFinishBar.h"
-#include "ARRepeatEnd.h"
-#include "ARStaffFormat.h"
-#include "ARDotFormat.h"
-#include "ARChordTag.h"
-#include "ARShareStem.h"
-#include "ARChordComma.h"
-#include "ARDisplayDuration.h"
-#include "ARShareLocation.h"
-#include "ARGrace.h"
-#include "ARNoteFormat.h"
 #include "ARMusic.h"
-#include "ARLyrics.h"
-#include "ARText.h"
-#include "ARRest.h"
-#include "ARAlter.h"
-#include "ARSlur.h"
-#include "ARTrill.h"
-#include "ARGlissando.h"
-#include "GRTrill.h"
-#include "GRSingleNote.h"
-
-#include "ARCluster.h"
-#include "ARSymbol.h"
-#include "ARFeatheredBeam.h"
-#include "ARTremolo.h"
+#include "ARMusicalEvent.h"
+#include "ARMusicalVoice.h"
+#include "ARMusicalVoiceState.h"
+#include "ARNaturalKey.h"
+#include "ARNewPage.h"
+#include "ARNewSystem.h"
+#include "ARNote.h"
+#include "ARNoteFormat.h"
 #include "AROctava.h"
 #include "ARPossibleBreak.h"
 #include "ARRepeatBegin.h"
-#include "ARCoda.h"
+#include "ARRepeatEnd.h"
+#include "ARRest.h"
+#include "ARSecondGlue.h"
 #include "ARSegno.h"
+#include "ARShareLocation.h"
+#include "ARShareStem.h"
+#include "ARSlur.h"
+#include "ARStaff.h"
+#include "ARStaffFormat.h"
+#include "ARSymbol.h"
+#include "ARText.h"
+#include "ARTie.h"
+#include "ARTremolo.h"
+#include "ARTrill.h"
+#include "ARTStem.h"
+#include "ARTuplet.h"
+#include "GRSingleNote.h"
+#include "GRTrill.h"
 
 #include "GMNCodePrintVisitor.h"
 #include "benchtools.h"
@@ -1029,7 +1028,7 @@ void ARMusicalVoice::doMicroTonal()
 */
 void ARMusicalVoice::getOctava(int voice, std::map< int, std::vector<AROctava*> >& list)
 {
-cerr << "ARMusicalVoice::getOctava " << voice << endl;
+//cerr << "ARMusicalVoice::getOctava " << voice << endl;
 	setReadMode (EVENTMODE);
 	
 	int curstaff = voice;
@@ -3162,6 +3161,17 @@ void ARMusicalVoice::doAutoDisplayCheck()
 		TYPE_DURATION dur = DURATION_0;
 		// track tie- and merge-tags
 
+
+//const PositionTagList * tl = vst.getCurPositionTags();
+//GuidoPos tlpos = tl ? tl->GetHeadPosition() : 0;
+//bool hasDispDur = false;
+//while (tlpos) {
+//	ARPositionTag* ptag = tl->GetNext(tlpos);
+//	ARDisplayDuration * disp = dynamic_cast<ARDisplayDuration *>(ptag);
+//	if (disp) cerr << __LINE__ << " ARMusicalVoice::doAutoDisplayCheck disp " << disp << " " << disp->getIsAuto() << " " << disp->getRelativeTimePosition() << " " << disp->getDuration() << endl;
+//	hasDispDur = true;
+//}
+
 		// check, whether positiontags have been removed ...
 		if (vst.removedpositiontags)
 		{
@@ -3382,6 +3392,7 @@ void ARMusicalVoice::doAutoDisplayCheck()
 				// if there is a base other than 1, we have to tell the dispduration for the event ...
 				// we need to do this also, when a merge-tag is active ...
 				if (base.getNumerator() != 1 || mergelookahead)
+//				if ((!hasDispDur && base.getNumerator() != 1) || mergelookahead)
 					InsertDisplayDurationTag( dispdur,b_punkt, ev->getRelativeTimePosition(),pos, vst);
 
 				if (mergelookahead) {
@@ -3400,6 +3411,7 @@ void ARMusicalVoice::doAutoDisplayCheck()
 						GetNext(tmppos,armergestate);
 					}
 				}
+//				hasDispDur = false;
 			}
 			else if (!dontsplit) {
 				// not Displayable ... this means, we have to adjust the event ...
