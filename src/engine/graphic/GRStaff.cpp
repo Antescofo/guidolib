@@ -1953,15 +1953,15 @@ void GRStaff::updateBoundingBox()
         if (e) {
             if (extendedBB) {
                 /// AC: 2021: It is NOT a good idea to include Slurs in the bounding box! This will create uneven system distribution on page! One should play around with minimum system distribution instead!
-    //            GRBowing * bowTag = dynamic_cast<GRBowing *>(e);
-    //            if (bowTag) {
-    //                // Note: we use the dynamic BB here which depends on the staff
-    //                tmp = bowTag->getBoundingBox(this);
-    //                if (tmp.Height() < 1000 && tmp.Height() > 0) {
-    //                    if (r.top > tmp.top)         r.top = tmp.top;
-    //                    if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
-    //                }
-    //            }
+                GRBowing * bowTag = dynamic_cast<GRBowing *>(e);
+                if (bowTag) {
+                    // Note: we use the dynamic BB here which depends on the staff
+                    tmp = bowTag->getBoundingBox(this);
+                    if (tmp.Height() < 1000 && tmp.Height() > 0) {
+                        if (r.top > tmp.top)         r.top = tmp.top;
+                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    }
+                }
                 
                 if (e->isPedal()) {
                     // Note: using offset here will result to bad BBs!

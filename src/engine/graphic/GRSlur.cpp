@@ -403,7 +403,7 @@ void GRSlur::automaticControlPoints( const GRBowingContext * context, const ARBo
     bowInfos->offsets[1].x = crossX - bowInfos->position.x;
 
 {
-	float limit = 250;
+	float limit = 150;
 	float h = bowInfos->offsets[1].y;
 	float y1 = bowInfos->offsets[0].y;
 	float y2 = bowInfos->offsets[2].y;
