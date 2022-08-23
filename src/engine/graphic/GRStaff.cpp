@@ -2065,7 +2065,7 @@ void GRStaff::updateBoundingBox()
         GRNotationElement * e = mCompElements.GetNext(pos);
         if (e) {
             if (extendedBB) {
-                /// AC: 2021: It is NOT a good idea to include Slurs in the bounding box! This will create uneven system distribution on page! One should play around with minimum system distribution instead!
+                /// AC: 2021: It is NOT a good idea to include Slurs in the bounding box!
                 GRBowing * bowTag = dynamic_cast<GRBowing *>(e);
                 if (bowTag) {
                     // Note: we use the dynamic BB here which depends on the staff
@@ -2083,7 +2083,6 @@ void GRStaff::updateBoundingBox()
                         if (r.top > tmp.top)         r.top = tmp.top;
                         if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
                     }
-                    continue;
                 }
                 
                 const GRDynamics * dynTag = e->isGRDynamic();
@@ -2114,20 +2113,22 @@ void GRStaff::updateBoundingBox()
                     }
                 }
                 
-                const GRHarmony *harmTag = e->isGRHarmony();
-                if (harmTag) {
-                    tmp = harmTag->getBoundingBox() + harmTag->getPosition() + harmTag->getOffset();
-//                    cerr<<"ExtendedBB Harm "<<harmTag->getPosition()
-//                    <<" top:"<<tmp.top<< " r.top:"<< r.top
-//                    <<" bot:"<<tmp.bottom<< " r.bot:"<< r.bottom;
+                GRText *lyricsTag = e->isGRLyrics();
+                if (lyricsTag) {
+                    tmp = lyricsTag->getBoundingBox() + lyricsTag->getPosition() + lyricsTag->getOffset();
                     if (tmp.Height()>0.0) {
                         if (r.top > tmp.top)         r.top = tmp.top;
                         if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
                     }
-//                    cerr<<" r->:"
-//                    <<r
-//                    <<endl;
-
+                }
+                
+                const GRHarmony *harmTag = e->isGRHarmony();
+                if (harmTag) {
+                    tmp = harmTag->getBoundingBox() + harmTag->getPosition() + harmTag->getOffset();
+                    if (tmp.Height()>0.0) {
+                        if (r.top > tmp.top)         r.top = tmp.top;
+                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                    }
                 }
 
                 GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
@@ -2136,8 +2137,8 @@ void GRStaff::updateBoundingBox()
                         tmp = e->getBoundingBox() + e->getPosition();
                         if (r.top > tmp.top)         r.top = tmp.top;
                         if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+                        continue;
                     }
-                    continue;
                 }
 
                 const GRSingleNote * note = e->isSingleNote();
