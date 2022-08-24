@@ -423,7 +423,25 @@ void GRBeam::initp0 (GRSystemStartEndStruct * sse, const GREvent * startEl, PosI
 
             if (conversionOk)
                 st->p[0].x -= (float)result * infos.currentSize;
-		}
+        } else {
+            GuidoPos stemPos = sse->startpos;
+            while(stemPos) {
+                GREvent * stemNote = GREvent::cast(mAssociated->GetNext(stemPos));
+                if(stemNote) {
+                    if (!infos.stemsReverse) {
+                        if (infos.stemdir == dirDOWN) {
+                            if (st->p[0].y < stemNote->getStemStartPos().y) {
+                                st->p[0].y = stemNote->getStemStartPos().y; // AC: Heuristics!!!
+                            }
+                        } else if (infos.stemdir == dirUP) {
+                            if (st->p[0].y > stemNote->getStemStartPos().y) {
+                                st->p[0].y = stemNote->getStemStartPos().y; // AC: Heuristics!!!
+                            }
+                        }
+                    }
+                }
+            }
+        }
 	}
 
 	p = arBeam->getDy1();
