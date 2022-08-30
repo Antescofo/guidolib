@@ -1649,12 +1649,15 @@ void GRVoiceManager::checkEndPTags(GuidoPos tstpos)
 				else if(dynamic_cast<GRGlissando *>(g))
 					organizeGlissando(g);
 
-				else if(dynamic_cast<GRBeam *>(g))
-					organizeBeaming(g);
+//				else if(dynamic_cast<GRBeam *>(g))
+//					organizeBeaming(g);
 
 				g->RangeEnd(mCurGrStaff);
 				fGRTags->RemoveElementAt(curpos);
 				mpos = fGRTags->GetHeadPosition();
+                
+                if(dynamic_cast<GRBeam *>(g))
+                    organizeBeaming(g);
 			}
 		}
 	}
@@ -2186,33 +2189,65 @@ void GRVoiceManager::organizeBeaming(GRTag * grb)
 	if(!caller)
 		return;
 	GuidoPos pos = fGRTags->GetHeadPosition();
+    auto callerEndPos = caller->getEndElement()->getRelativeTimePosition();
+    cerr<<"organizeBeaming caller "<<caller->associated()->size()<<" ";
+    caller->print(cerr);
+    cerr<<" ENDPOS="<< callerEndPos;
+    cerr<<" curbeam:"<<curbeam.size();
+    cerr<<" :"<<endl;
 	while(pos)
 	{
 		GRTag * tag = fGRTags->GetNext(pos);
 		GRBeam * beam = dynamic_cast<GRBeam *>(tag);
 		bool same = false;
 		if(beam) {
-			std::vector<GRBeam *>::iterator it = curbeam.begin();
-			while(it != curbeam.end())
-			{
-				if(*it == beam) same = true;
-				if(same && beam == caller) {
-					curbeam.erase(it);
-					break;
-				}	
-				// to be added as "smaller beam", it has to be on its end position, 
-				// and to have begun after the other(s) current(s) beam(s)
-				if ( (beam == caller) && !same
-					 && (*it)->getRelativeTimePosition() <= beam->getRelativeTimePosition()
-					 && (beam->isGraceBeaming() == (*it)->isGraceBeaming()))
-					(*it)->addSmallerBeam(beam);
-				it++;
-			}
-			// if the beam is already registered, or if it is the caller (in its end position), there is no need to add it
-			if(!same && beam != caller)
-				curbeam.push_back(beam);
+            bool sameAsCaller = (beam == caller);
+            bool hasEnded = ( beam->getEndElement() != 0);
+            cerr<<"\t beam "<<beam->associated()->size()<<" :";
+            beam->print(cerr);
+            cerr<<" curbeam:"<<curbeam.size();
+            cerr<<" sameAsCaller:"<< sameAsCaller;
+            cerr<<" BeamHasEnd?"<< hasEnded ;
+            cerr<<endl;
+            if( !sameAsCaller &&
+                caller->getRelativeTimePosition() <= beam->getRelativeTimePosition()
+                && hasEnded
+               ) {
+                beam->addSmallerBeam(caller);
+                //caller->addSmallerBeam(beam);
+            }
 		}
 	}
+    // Check previous closures, only if their endPos is equal to the caller's endpos
+    std::vector<GRBeam *>::iterator it = curbeam.begin();
+    while(it != curbeam.end())
+    {
+        auto curbeamEndPos = (*it)->getEndElement()->getRelativeTimePosition();
+        cerr<<"\tcurBeam "<<(*it)->associated()->size()<<" :";
+        (*it)->print(cerr);
+        cerr<<" at:"<<(*it)->getRelativeTimePosition()<<"->"<< curbeamEndPos
+        <<" vs "<<caller->getRelativeTimePosition()<<"->"<< callerEndPos;
+        cerr<<endl;
+        if(curbeamEndPos < callerEndPos) {
+            if (caller->getRelativeTimePosition() <= (*it)->getRelativeTimePosition())
+                caller->addSmallerBeam((*it));
+            it = curbeam.erase(it);
+            cerr<<"\t\tErased!"<<endl;
+            continue;
+        }
+        // to be added as "smaller beam", it has to be on its end position,
+        // and to have begun after the other(s) current(s) beam(s)
+        if ((*it)->getRelativeTimePosition() >= caller->getRelativeTimePosition()
+            && (caller->isGraceBeaming() == (*it)->isGraceBeaming())) {
+            (caller)->addSmallerBeam(*it);
+        } else if((*it)->getRelativeTimePosition() < caller->getRelativeTimePosition()
+                  && (caller->isGraceBeaming() == (*it)->isGraceBeaming())) {
+            (*it)->addSmallerBeam(caller);
+        }
+        it++;
+    }
+    
+    curbeam.push_back(caller);
 }
 
 //----------------------------------------------------------------------------------

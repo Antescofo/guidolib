@@ -1211,15 +1211,26 @@ void GRBeam::tellPosition( GObject * gobj, const NVPoint & p_pos)
 	// a new test is performed: if it is a systemTag and
 	// it is not a systemcall (checkpos), than we can just do nothing.
 	if (getError() || !mAssociated || ( mAssociated->GetCount() == 0 )
-		|| ( getTagType() == GRTag::SYSTEMTAG && !mIsSystemCall ))
+        || ( getTagType() == GRTag::SYSTEMTAG && !mIsSystemCall )) {
+        cerr<<"\t ERROR: BEAM TELL POS "
+        <<" getTagType() == GRTag::SYSTEMTAG ->"<< (getTagType() == GRTag::SYSTEMTAG)
+        <<" !mIsSystemCall:"<<(!mIsSystemCall)
+        <<endl;
 		return;
+    }
 	
 	GRNotationElement * el = dynamic_cast<GRNotationElement *>(gobj);
-	if (!el || !el->getGRStaff()) return;
+    if (!el || !el->getGRStaff()) {
+        cerr<<"\t ERROR: BEAM TELL POS "<<" NO STAFF!"<<endl;
+        return;
+    }
 
 	GRSystemStartEndStruct * sse = getSystemStartEndStruct(el->getGRStaff()->getGRSystem());
 	assert(sse);
-	if (el != sse->endElement) return;
+    if (el != sse->endElement) {
+        cerr<<"\t ERROR: BEAM TELL POS "<<" NO END ELEMENT!"<<endl;
+        return;
+    }
 	if(fLevel != 0) return;
 
 	GRBeamSaveStruct * st = (GRBeamSaveStruct *)sse->p;
@@ -1246,6 +1257,17 @@ void GRBeam::tellPosition( GObject * gobj, const NVPoint & p_pos)
 
 	if (startEl)	infos.stemdir = startEl->getStemDirection();
 	else if(endEl)	infos.stemdir = endEl->getStemDirection();
+    
+    cerr<<"Beam TellPos: isSystemTag?"<< (getTagType() == SYSTEMTAG)
+    <<" Associated:"<<mAssociated->size()
+    <<" infos: stavesStartEnd="<<infos.stavesStartEnd
+    <<" stemsReverse="<<infos.stemsReverse
+    <<" stemdir="<<infos.stemdir
+    <<" fixCrossStaffUp="<<infos.fixCrossStaffUp()
+    <<" highStaff="<<infos.highStaff
+    <<" lowStaff="<<infos.lowStaff
+    <<" fSmallerBeams:"<< fSmallerBeams.size()
+    <<endl;
 
 	initp0 (sse, startEl, infos);
 	initp1 (sse, infos);
@@ -1334,9 +1356,21 @@ void GRBeam::tellPosition( GObject * gobj, const NVPoint & p_pos)
 	if(!fSmallerBeams.empty()) {
 		for(auto sb: fSmallerBeams) {
 			sb->decLevel();
+            cerr<<"\t !!!!!! USING fSmallerBeams "<< fSmallerBeams.size()
+            <<" AssociatedSize:"<< sb->associated()->size()
+            <<" Level:"<<sb->fLevel
+            <<endl;
 			sb->tellPosition(sb->getEndElement(), sb->getEndElement()->getPosition());
 		}
-		return;
+        // now we have to make sure, that the original positions for the beam are set for the right staff
+//        if (getTagType() == SYSTEMTAG) {
+//            const NVPoint &offset = beamstaff->getPosition();
+//            st->p[0] -= offset;
+//            st->p[1] -= offset;
+//            st->p[2] -= offset;
+//            st->p[3] -= offset;
+//        }
+//		return;
 	}
 
 	// -- Now we need to add the simplebeams as simplebeamgroups ...
@@ -1400,7 +1434,11 @@ void GRBeam::tellPosition( GObject * gobj, const NVPoint & p_pos)
 		st->p[2] -= offset;
 		st->p[3] -= offset;
 	}
-//cerr << "GRBeam::tellPosition out: \t\t" << st->p[0] << " " << st->p[1] << " " << st->p[2] << " "  << st->p[3] << endl;
+cerr << "\tGRBeam::tellPosition out: \t\t" << st->p[0] << " " << st->p[1] << " " << st->p[2] << " "  << st->p[3]
+    <<" Associated:"<<mAssociated->size()
+    <<" needsadjust:"<<needsadjust
+    <<" slope:"<<slope
+    << endl;
 }
 
 
@@ -1513,6 +1551,14 @@ GRNotationElement * GRBeam::getEndElement()
 
 void GRBeam::addSmallerBeam(GRBeam * beam)
 {
+    if (std::find(fSmallerBeams.begin(), fSmallerBeams.end(), beam) != fSmallerBeams.end()) {
+        return;
+    }
 	beam->setLevel(fLevel+1);
 	fSmallerBeams.push_back(beam);
+    
+    cerr<<"\t\t organizeBeaming addSmallerBeam at "<< beam->getRelativeTimePosition()<<"_"<<beam->associated()->size()
+    <<" to "<< getRelativeTimePosition()<<"_"<< associated()->size()
+    <<" Size="<<fSmallerBeams.size()
+    <<endl;
 }
