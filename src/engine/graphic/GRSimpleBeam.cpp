@@ -18,21 +18,30 @@
 #include "GRBeam.h"
 #include "VGDevice.h"
 
-GRSimpleBeam::GRSimpleBeam (GRBeam * p_parent, const NVPoint par[4] )
+GRSimpleBeam::GRSimpleBeam (GRBeam * p_parent, const BeamRect& r)
 {
 	fParent = p_parent;
-	fPoints[0] = par[0];
-	fPoints[1] = par[1];
-	fPoints[2] = par[2];
-	fPoints[3] = par[3];
+	fRect = r;
 }
 
-void GRSimpleBeam::setPoints( const NVPoint p[] )
+void GRSimpleBeam::setPoints( const BeamRect& r )
 {
-	fPoints[0] = p[0];
-	fPoints[1] = p[1];
-	fPoints[2] = p[2];
-	fPoints[3] = p[3];
+	BeamRect fixed = r;
+	if (fRect.topLeft.x > r.topLeft.x) {		 // partial beam anchored to the right
+		fixed.topLeft.x 	= fRect.topLeft.x;
+		fixed.bottomLeft.x 	= fRect.bottomLeft.x;
+		float y = (fRect.topLeft.x - r.topLeft.x) * r.slope();
+		fixed.topLeft.y 	+= y;
+		fixed.bottomLeft.y 	+= y;
+	}
+	else if (fRect.topRight.x < r.topRight.x) {	 // partial beam anchored to the left
+		fixed.topRight.x 	= fRect.topRight.x;
+		fixed.bottomRight.x = fRect.bottomRight.x;
+		float y = (fRect.topRight.x - r.topLeft.x) * r.slope();
+		fixed.topRight.y 	-= y;
+		fixed.bottomRight.y -= y;
+	}
+	fRect = fixed;
 }
 
 void GRSimpleBeam::OnDraw( VGDevice & hdc ) const
@@ -46,16 +55,17 @@ void GRSimpleBeam::OnDraw( VGDevice & hdc ) const
 		hdc.PushFillColor( color );
 		hdc.PushPen( color, 1 );
 	}
-	float ax [4] = { fPoints[0].x, fPoints[1].x, fPoints[3].x, fPoints[2].x };
-	float ay [4] = { fPoints[0].y, fPoints[1].y, fPoints[3].y, fPoints[2].y };
+	float ax [4], ay[4];
+	fRect.xList(ax);
+	fRect.yList(ay);
 
 
 // DF added to check for incorrect coordinates
 // makes sure that the right point is not to the left of the left point :-)
 // actually this should be checked at coordinates computation time
 // todo: check the object that computes the beam coordinates
-	if (ax[0] > ax[2]) { ax[2] = ax[0]; }
-	if (ax[1] > ax[3]) { ax[3] = ax[1]; }
+//	if (ax[0] > ax[2]) { ax[2] = ax[0]; }		// check fRect.topLeft.x > fRect.bottomRight.x
+//	if (ax[1] > ax[3]) { ax[3] = ax[1]; }		// check bottomLeft.x > topRight.x
 	
 	// This does the drawing!
 	hdc.Polygon( ax, ay, 4 );

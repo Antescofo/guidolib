@@ -104,7 +104,7 @@ class GREvent : public GRARCompositeNotationElement
 		virtual void	setGlobalLocation(GRGlobalLocation * pglog);
 
 		virtual void 	setBeamStem( GRBeam * inBeam, float pos);
-		virtual float 	setStemLength( float inLen );
+		virtual float 	setStemLength( float inLen, bool userLength = false );
 
 		virtual GDirection getStemDirection() const;
 
@@ -119,7 +119,7 @@ class GREvent : public GRARCompositeNotationElement
 		virtual NVPoint getStemEndPos() const;
 	   
 
-		virtual float 	changeStemLength( float inLen );
+		virtual float 	changeStemLength( float inLen, bool force = false );
 		virtual int 	getNumFaehnchen() const;
 		virtual int 	getBeamCount() const	{ return mBeamCount; }
 		virtual void 	incBeamCount()			{ ++ mBeamCount; }

@@ -12,8 +12,10 @@
 
 */
 
+#include <algorithm>
 #include <typeinfo>
 #include <iostream>
+#include <sstream>
 
 
 #include "ARAccelerando.h"
@@ -150,7 +152,6 @@
 #include "GRRepeatEnd.h"
 #include "GRRest.h"
 #include "GRSegno.h"
-#include "GRSimpleBeam.h"
 #include "GRSingleNote.h"
 #include "GRSingleRest.h"
 #include "GRSlur.h"
@@ -1611,11 +1612,9 @@ void GRVoiceManager::checkEndPTags(GuidoPos tstpos)
 {
 	// the following deletes the Tags which have matching end-Positions
 	GuidoPos mpos = fGRTags->GetHeadPosition();
-	GRTag * g;
-
 	while (mpos) {
 		GuidoPos curpos = mpos;
-		g = fGRTags->GetNext(mpos);
+		GRTag * g = fGRTags->GetNext(mpos);
 		GRPositionTag * gpt = dynamic_cast<GRPositionTag *>(g);
 		if( gpt ) {
 			if (gpt->getEndPos() == tstpos) {
@@ -1650,7 +1649,7 @@ void GRVoiceManager::checkEndPTags(GuidoPos tstpos)
 					organizeGlissando(g);
 
 				else if(dynamic_cast<GRBeam *>(g))
-					organizeBeaming(g);
+					organizeBeaming(static_cast<GRBeam*>(g));
 
 				g->RangeEnd(mCurGrStaff);
 				fGRTags->RemoveElementAt(curpos);
@@ -1791,7 +1790,7 @@ GRSingleNote * GRVoiceManager::CreateSingleNote( const TYPE_TIMEPOSITION & tp, A
 		}
 		const TagParameterFloat * tpf = curstemstate->getLength();
 		if (tpf && tpf->TagIsSet())
-			grnote->setStemLength((float)(tpf->getValue(mCurGrStaff->getStaffLSPACE())));
+			grnote->setStemLength(tpf->getValue(mCurGrStaff->getStaffLSPACE()), true);
 	}
 
 	if (curheadstate)				grnote->setHeadState(curheadstate);
@@ -1877,7 +1876,7 @@ GREvent * GRVoiceManager::CreateGraceNote( const TYPE_TIMEPOSITION & tp, ARMusic
 	GRSingleNote * grnote = CreateSingleNote (tp, arObject, size, true);
 	const TagParameterFloat * tpf = curstemstate ? curstemstate->getLength() : 0;
 	if (tpf && tpf->TagIsSet())
-		grnote->setStemLength((float)(tpf->getValue()));
+		grnote->setStemLength(tpf->getValue(), true);
 	return grnote;
 }
 
@@ -2182,39 +2181,27 @@ bool & GRVoiceManager::getCurStaffDraw(int index)
 	return mCurStaffDraw[index];
 }	
 
-void GRVoiceManager::organizeBeaming(GRTag * grb)
+void GRVoiceManager::organizeBeaming(GRBeam * beam)
 {
-	GRBeam * caller = dynamic_cast<GRBeam *>(grb);
-	if(!caller)
-		return;
-	GuidoPos pos = fGRTags->GetHeadPosition();
-	while(pos)
-	{
-		GRTag * tag = fGRTags->GetNext(pos);
-		GRBeam * beam = dynamic_cast<GRBeam *>(tag);
-		bool same = false;
-		if(beam) {
-			std::vector<GRBeam *>::iterator it = curbeam.begin();
-			while(it != curbeam.end())
-			{
-				if(*it == beam) same = true;
-				if(same && beam == caller) {
-					curbeam.erase(it);
-					break;
-				}	
-				// to be added as "smaller beam", it has to be on its end position, 
-				// and to have begun after the other(s) current(s) beam(s)
-				if ( (beam == caller) && !same
-					 && (*it)->getRelativeTimePosition() <= beam->getRelativeTimePosition()
-					 && (beam->isGraceBeaming() == (*it)->isGraceBeaming()))
-					(*it)->addSmallerBeam(beam);
-				it++;
-			}
-			// if the beam is already registered, or if it is the caller (in its end position), there is no need to add it
-			if(!same && beam != caller)
-				curbeam.push_back(beam);
+	NEPointerList* assoc = beam->getAssociations();
+	GRNotationElement* lastEvt = assoc ? assoc->GetAt(assoc->GetTailPosition()) : nullptr;
+	if (!lastEvt) return;
+
+	for (GRBeam* b: fBeams) {
+		NEPointerList* assoc = b->getAssociations();
+		GRNotationElement* bLast = assoc ? assoc->GetAt(assoc->GetTailPosition()) : nullptr;
+		if (! bLast) continue;
+		if (beam->isGraceBeaming() != b->isGraceBeaming()) continue;
+		if ((b->getRelativeTimePosition() <= beam->getRelativeTimePosition()) && (bLast->getRelativeTimePosition() >= lastEvt->getRelativeTimePosition())) {
+			b->addSmallerBeam(beam);
+			beam->setParent(b);
+		}
+		else if ((b->getRelativeTimePosition() >= beam->getRelativeTimePosition()) && (bLast->getRelativeTimePosition() <= lastEvt->getRelativeTimePosition())) {
+			beam->addSmallerBeam(b);
+			b->setParent(beam);
 		}
 	}
+	fBeams.push_back(beam);
 }
 
 //----------------------------------------------------------------------------------
