@@ -116,9 +116,10 @@ class GRSingleNote : public GRNote
 
         ARTHead::HEADSTATE getHeadState() { return mHeadState; }
 
-        void forceAppearance();
-		const GRStem *getStem() const;
-		float getNoteWidth() const			{ return mNoteBreite; }
+        void 			forceAppearance();
+		const GRStem *	getStem() const;
+		float 			getNoteWidth() const	{ return mNoteBreite; }
+		void			hideHead ();
     
         bool contains(const TYPE_TIMEPOSITION& date) const;
 

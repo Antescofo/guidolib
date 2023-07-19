@@ -102,6 +102,8 @@ public:
 			int		DoBreak		(const TYPE_TIMEPOSITION & tp, int system_or_page);
 			int		getStaffNum () const	{ return staffnum; }
 			const ARMusicalVoiceState * getVoiceState() const	{ return fVoiceState; }
+			const ARMusicalVoice* getARVoice() const 			{ return arVoice; }
+	static  void 	resetCurrentNotesTP() 						{ fCurrentNotesTP.clear(); }
 
 protected:
 	void beginOpenTags();
@@ -177,6 +179,12 @@ private:
 	void			addAssociations (GREvent* ev, bool setnext=true);
 	int				endIteration ();
 	void			checkCluster(GREvent *ev);
+	void			checkHiddenNotes(const std::vector<GRSingleNote *>& notes);
+
+	int 			IterateEvent		(ARMusicalEvent * arev, TYPE_TIMEPOSITION &timepos);
+	int 			IterateNoDurEvent	(ARMusicalObject * obj, const TYPE_TIMEPOSITION& timepos);
+	int 			IterateTag			(ARMusicalObject * obj);
+	int 			IterateChord		(const TYPE_TIMEPOSITION& timepos);
 	
 	std::vector<GRBeam *> fCurbeam;
 	std::vector<GRBeam *> fBeams;
@@ -184,6 +192,8 @@ private:
 	TSharedArticulationsList fSharedArticulations;
 	void			handleSharedArticulations(const TSharedArticulationsList& list);
 	void			setTrillNext (GRNotationElement* ev);
+
+	static std::vector<GRSingleNote *> fCurrentNotesTP;   // current notes at a given time position (shared)
 };
 
 #endif

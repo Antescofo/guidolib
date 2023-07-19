@@ -121,6 +121,7 @@ class GRStaffState
         void setStaffLSPACE(float value)                        { staffLSPACE = value * 2; } // Factor 2 to be consistent with GRStaff::setStaffFormat(ARStaffFormat * staffrmt)
         void setMultiVoiceCollisions(bool state)                { fMultiVoiceCollisions = state; }
         bool multiVoiceCollisions() const                       { return fMultiVoiceCollisions; }
+        const MeasureAccidentals& getMeasureAccidentals() const { return fMeasureAccidentals; }
 
 	private:
 		// Meter-Parameters
@@ -294,7 +295,7 @@ class GRStaff : public GRCompositeNotationElement
 		void	checkMultiVoiceNotesCollision ();
 		float	getNotesDensity () const;
 		size_t	getLyrics (std::vector<const GRNotationElement*>& list) const;
-	
+		void	inhibitNextReset2Key()		{ fInhibitNextReset2key = true; }
 
   protected:
 		void	DebugPrintState(const char * info) const;
@@ -334,7 +335,7 @@ class GRStaff : public GRCompositeNotationElement
 		bool			isNextOn;
 		bool			firstOnOffSetting;
         bool            extendedBB;
-
+		bool			fInhibitNextReset2key = false;
 		float			fProportionnalRendering;
     
     NVRect noteOnlyBoundingBox;     // Used for AutoPos
