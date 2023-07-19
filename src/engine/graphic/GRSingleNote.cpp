@@ -135,7 +135,7 @@ bool GRSingleNote::contains(const TYPE_TIMEPOSITION &date)  const {
         dur = getDurTemplate();
     }
     
-    return (getARNote()->getStartTimePosition() <= date) && (getARNote()->getStartTimePosition()+dur > date);
+    return (getARNote()->getRelativeTimePosition() <= date) && (getARNote()->getRelativeTimePosition()+dur > date);
 }
 
 //____________________________________________________________________________________
