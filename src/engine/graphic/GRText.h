@@ -16,6 +16,7 @@
 */
 
 #include <string>
+#include <vector>
 
 #include "GRVisitor.h"
 #include "GRPTagARNotationElement.h"
@@ -58,6 +59,7 @@ class GRText : public GRPTagARNotationElement
 		virtual void 	OnDraw( VGDevice & hdc ) const;
 
 		virtual FloatRect getTextMetrics(VGDevice & hdc, const GRStaff* staff) const;
+		virtual float 	getLineHeight(VGDevice & hdc) const;
 		const ARText * 	getARText() const;
 	
 		virtual unsigned int getTextAlign() const { return mTextAlign; }
@@ -73,11 +75,16 @@ class GRText : public GRPTagARNotationElement
 		virtual bool	isLyrics() const;
 		virtual const GRText*	isText() const			{ return this; }
         virtual GRText *    isGRLyrics()    { return (isLyrics() ? this : 0); }
+    
+    virtual void setColor(const char * cp) {
+        GRTag::setColor(cp);
+    }
+
 
 
 	protected:
-		virtual const VGColor 	startDraw( VGDevice & hdc ) const;
-		virtual void			endDraw( VGDevice & hdc, const VGColor) const;
+		virtual const VGColor 	startDraw( VGDevice & hdc, unsigned int& fontalign ) const;
+		virtual void			endDraw( VGDevice & hdc, const VGColor, unsigned int fontalign) const;
 	
 		virtual GRPositionTag::GRSaveStruct * getNewGRSaveStruct()
 			{ return new GRTextSaveStruct; }	
@@ -85,8 +92,10 @@ class GRText : public GRPTagARNotationElement
 		unsigned int mTextAlign;
 		bool	mMustFollowPitch; // (when the text tag has a range)
 		float	mStaffBottom;
+		float 	fLineHeight = 0.f;
 
 	private:
+		std::vector<std::string> fSubstrings;
 		const VGFont* fFont;
 };
 

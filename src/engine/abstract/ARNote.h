@@ -46,12 +46,9 @@ class ARNote : public ARMusicalEvent
 		virtual const char*	getParamsStr() const	{ return ""; };
 		virtual const char*	getTagName() const		{ return "ARNote"; };
 		virtual std::string getGMNName() const;
+        std::string getPitchName() const;
 
 		virtual void browse(TimeUnwrap& mapper) const;
-
-		// start time position has been introduced to get correct time position for notes in chords [DF 2012-03-19]
-		virtual void						setStartTimePosition(const TYPE_TIMEPOSITION  & pos)	{ fStartPosition = pos; }
-		virtual const TYPE_TIMEPOSITION&	getStartTimePosition() const;
 
 		void		 addFlat();
 		void	 	 addSharp();
@@ -91,7 +88,8 @@ class ARNote : public ARMusicalEvent
 													  bool inHaveToBeCreated = false);
 
 		static int	detune2Quarters(float detune);
-	
+        static void transpose(int *pitch, int *octave, int accidental, int interval);
+
 		// Used when dispNote param is set on \tuplet-tag to force note appearance
 		void forceNoteAppearance(NVstring noteAppearance);
 
@@ -100,6 +98,7 @@ class ARNote : public ARMusicalEvent
 		virtual const ARNote*	isARNote() const		{ return this; }
 		virtual bool			isEmptyNote() const		{ return getName() == "empty"; }
 		bool		isAuto() const						{ return fAuto; }
+		void		setAuto(bool val)					{ fAuto = val; }
 
                 bool            isOriginTied() const { return fIsOriginTied; }
                 bool            isTied() const { return fIsTied; }
@@ -126,9 +125,6 @@ class ARNote : public ARMusicalEvent
 		const ARAlter *   fAlter	= 0;
 
 		bool		fTrillOwner = false;
-	
-		TYPE_TIMEPOSITION	fStartPosition;
-
 		NVstring   fNoteAppearance;
 		int		   fOctava;			// for octava signs
 };

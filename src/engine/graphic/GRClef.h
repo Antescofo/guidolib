@@ -49,13 +49,14 @@ public:
 	int getBaseLine() const					{ return mClefStaffLine; }
 
 	virtual void setHPosition( float inX );
+	virtual void GetMap( GuidoElementSelector sel, MapCollector& f, MapInfos& infos ) const;
 
 protected:
 
 	TYPE_PITCH 		mClefBasePitch;
 	TYPE_REGISTER 	mClefBaseOctave;
 	int 			mClefStaffLine; // line count from the bottom of the staff.
-	const char * 	mOctaveStr;
+	const char * 	mOctaveStr = nullptr;
 	NVPoint 		mOctaveOffset;
 	
 	bool			mDoubleTreble;

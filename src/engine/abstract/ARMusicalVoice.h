@@ -15,6 +15,7 @@
 
 */
 
+#include <map>
 #include <vector>
 
 #include "ObjectList.h"
@@ -22,7 +23,6 @@
 #include "TagList.h"		// is a typedef
 #include  "kf_ilist.h"		// for ObjectList
 
-class ARAuto;
 class ARMusicalVoiceState;
 class ARPositionTag;
 class ARVoiceManager;
@@ -200,12 +200,14 @@ class ARMusicalVoice : public ObjectList, public ARMusicalEvent
 		void doAutoBeaming();
 		void doAutoGlissando();
 		void doAutoFeatheredBeam();
+		void doAutoFixOctavaStaff();
 
 		void doMicroTonal();
+		void getOctava(int voice, std::map< int, std::vector<AROctava*> >& list);
 
 		void CloseBase			( ARBase * curbase, ARTuplet * autotuplet, GuidoPos lastevpos, GuidoPos FLA);
 		void ReplacePositionTag	( const ARPositionTag * ptold, ARPositionTag * ptnew, ARMusicalVoiceState & vst, const char * endtagname = 0 );
-		void InsertDisplayDurationTag (const TYPE_DURATION & dispdur, int b_punkt, const TYPE_TIMEPOSITION & tp,
+		const ARDisplayDuration* InsertDisplayDurationTag (const TYPE_DURATION & dispdur, int b_punkt, const TYPE_TIMEPOSITION & tp,
 										GuidoPos pos, ARMusicalVoiceState & vst, int setptagpos = 1);
 
 		GuidoPos			  lastevposition;

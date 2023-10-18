@@ -35,7 +35,9 @@ class GRShowVisitor : public GRVisitor
 		virtual void visitStart (GRSlur* o);
 		virtual void visitStart (GRDynamics* o);
 		virtual void visitStart (GRIntens* o);
-		virtual void visitStart (GRArticulation* o);
+        virtual void visitStart (GRArticulation* o);
+        virtual void visitStart (GRBreathMark* o);
+        virtual void visitStart (GRHarmony* o);
 };
 
 #endif

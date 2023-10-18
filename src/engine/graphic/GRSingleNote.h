@@ -90,14 +90,15 @@ class GRSingleNote : public GRNote
 		// This sets Stem On or Off (1 == on, 0 == off)
 		virtual void	setStemOnOff( bool p );
 
-		virtual float	changeStemLength( float inLen );
-		virtual float	setStemLength( float inLen );
+		virtual float	changeStemLength( float inLen, bool force = false );
+		virtual float	setStemLength( float inLen, bool userLength = false );
 		virtual GDirection getStemDirection() const;
 		virtual NVPoint getStemStartPos() const;
 		virtual NVPoint getStemEndPos() const;
 		virtual float	getStemLength() const;
-	    virtual bool	getStemDirSet() const  	{ return mStemDirSet; }
+	    virtual bool	getStemDirSet() const  		{ return mStemDirSet; }
 		virtual bool	getStemLengthSet() const	{ return mStemLengthSet; }
+		virtual bool	userLength() const			{ return fUserLength; }
 
 		// -
 		virtual const TYPE_DURATION & getDurTemplate() const { return mDurTemplate; }
@@ -115,9 +116,12 @@ class GRSingleNote : public GRNote
 
         ARTHead::HEADSTATE getHeadState() { return mHeadState; }
 
-        void forceAppearance();
-		const GRStem *getStem() const;
-		float getNoteWidth() const			{ return mNoteBreite; }
+        void 			forceAppearance();
+		const GRStem *	getStem() const;
+		float 			getNoteWidth() const	{ return mNoteBreite; }
+		void			hideHead ();
+    
+        bool contains(const TYPE_TIMEPOSITION& date) const;
 
 protected:
 	GRStem *	  getStem();
@@ -129,19 +133,27 @@ protected:
 	TYPE_DURATION mDurTemplate; // the template for the display
 
 private:
-	void handleAccidental	(const ARAccidental* acc);
-	void createNote(const TYPE_DURATION & p_durtemplate /*= DURATION_0*/ );
+	void 	handleAccidental	(const ARAccidental* acc);
+	void 	createNote(const TYPE_DURATION & p_durtemplate /*= DURATION_0*/ );
+	void 	drawLedges (VGDevice & hdc) const;
+	float 	getLedgeWidth (VGDevice & hdc) const;
 
 	GRStdNoteHead *	mNoteHead; // exists also in element list.
 	GDirection		mStemDir;
 	float		    mStemLen;
 	bool 		    mStemLengthSet;
 	bool 		    mStemDirSet;
+	bool 		    fUserLength = false;
+
+	static float 	fLedgeWidth;
 
 	ARTHead::HEADSTATE mHeadState;
         
     // Used when dispNote param is set on \tuplet-tag to force note appearance
     NVstring mNoteAppearance;
+    
+    unsigned char* getColorRef() const;
+    unsigned char* getStaffFormatColorRef() const;
 };
 
 #endif

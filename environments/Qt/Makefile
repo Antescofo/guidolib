@@ -22,11 +22,6 @@ apps:
 tools:
 	$(MAKE) -C tools
 
-install:
-	$(MAKE) -C libs install
-	$(MAKE) -C apps install
-
-
 clean:
 	$(MAKE) -C libs clean
 	$(MAKE) -C apps clean

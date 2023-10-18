@@ -49,8 +49,14 @@ class GRNoteDot : public GRNotationElement
      virtual void   addOffsetX(float inX)                   { mOffset.x += inX; }
      virtual void   addOffsetY(float inY)                   { mOffset.y += inY; }
 	 
-     virtual const	unsigned char * getColRef() const		{ return mColRef; }
-	 virtual float	getSize() const	 						{ return size; }
+     virtual const unsigned char * getColRef() const        {
+          if (mAssignedColRef) {
+              return mAssignedColRef;
+          }
+          return mColRef;
+      }
+     
+      virtual float	getSize() const	 						{ return size; }
 
 	  static int	DurationToDotCount( const TYPE_DURATION & duration );
 

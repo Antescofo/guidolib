@@ -16,5 +16,5 @@ function svg(str, name) {
 
 function doit (engine) {
 	console.log( "Guido Engine version " + engine.getVersion().str);
- 	run ( engine, log, svg );
+   	run ( engine, log, svg );
 }

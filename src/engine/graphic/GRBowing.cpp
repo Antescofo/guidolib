@@ -24,7 +24,6 @@
 
 #include "GRGlue.h"
 #include "GRBowing.h"
-#include "GREmpty.h"
 #include "GRStaff.h"
 #include "GRRest.h"
 #include "GRSingleNote.h"
@@ -78,6 +77,7 @@ GRBowing::GRBowing(GRStaff * grstaff, GRNotationElement * startEl, GRNotationEle
 	else if ( startElement )
 		setRelativeTimePosition (startElement->getRelativeTimePosition());
 	mBoundingBox.Set( 0, 0, 0, 0 );
+    mAssignedColRef = 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -115,6 +115,7 @@ GRSystemStartEndStruct * GRBowing::initGRBowing( GRStaff * grstaff )
 	st->offsets[0].y = 0;
 
 	sse->p = (void *)st;
+    mAssignedColRef = 0;
 	return sse;
 }
 
@@ -123,6 +124,8 @@ GRBowing::~GRBowing()
 {
 	assert(mStartEndList.GetCount() == 0);
 	FreeAssociatedList();
+    delete [] mAssignedColRef;
+    mAssignedColRef = 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -226,35 +229,6 @@ GRGlobalStem * GRBowing::findGlobalStem( const GRNotationElement * stemOwner ) c
 }
 
 // -----------------------------------------------------------------------------
-void GRBowing::updateBoundingBox()
-{
-	GRSystemStartEndStruct * sse = getSystemStartEndStruct( getGRStaff()->getGRSystem());
-	if ( sse == 0 ) return;
-
-	GRBowingSaveStruct * bowInfos = (GRBowingSaveStruct *)sse->p;
-	if( bowInfos == 0 ) return;
-
-	// - Update bounding box
-	mBoundingBox.left = bowInfos->offsets[0].x + bowInfos->position.x;		// middle point might be smaller.
-	mBoundingBox.right = bowInfos->offsets[2].x + bowInfos->position.x;	    // middle point might be larger.
-
-	const float y0 = bowInfos->offsets[0].y + bowInfos->position.y;
-	const float y1 = bowInfos->offsets[1].y + bowInfos->position.y;
-	const float y2 = bowInfos->offsets[2].y + bowInfos->position.y;
-
-	if( y1 < y0 )	// upward
-	{
-		mBoundingBox.top = y1;
-		mBoundingBox.bottom = y2 > y0 ? y2 : y0;
-	}
-	else
-	{
-		mBoundingBox.top = y2 < y0 ? y2 : y0;
-		mBoundingBox.bottom = y1;
-	}
-}
-
-// -----------------------------------------------------------------------------
 /** \brief Calculates the placement of the bow: direction, anchor and control points.
 
 	Changes the parameter-names and just handle positions correctly.
@@ -270,23 +244,24 @@ void GRBowing::updateBow( GRStaff * inStaff, bool grace )
 	GRSystemStartEndStruct * sse = prepareSSEStructForBow( inStaff );
 	if ( sse == 0 ) return;
 
-	// --- Collects informations about the context ---
-	GRBowingContext context;
-	context.staff = inStaff;
-	getBowBeginingContext( &context, sse );
-	getBowEndingContext( &context, sse );
-
-	// --- Handles the cases where the bow is opened to the left or to the right ---
-	// find out, if the elements contain shareStem associations!?
-	// this shows, wether any parameter for the bow was set or not.
 
 	GRNotationElement * startElement = sse->startElement;
 	GRNotationElement * endElement = sse->endElement;
 	GRBowingSaveStruct * bowInfos = (GRBowingSaveStruct *)sse->p;
 
+	// --- Collects informations about the context ---
+	GRBowingContext* context = &bowInfos->context;
+	context->staff = inStaff;
+	getBowBeginingContext( context, sse );
+	getBowEndingContext( context, sse );
+
+	// --- Handles the cases where the bow is opened to the left or to the right ---
+	// find out, if the elements contain shareStem associations!?
+	// this shows, wether any parameter for the bow was set or not.
+
 	if (sse->startflag == GRSystemStartEndStruct::OPENLEFT || !startElement)
 	{
-		context.openLeft = true;
+		context->openLeft = true;
 		if (!startElement && inStaff) {
 			setStartElement( inStaff, inStaff->getSecondGlue());
 			sse->startflag = GRSystemStartEndStruct::OPENLEFT;
@@ -296,7 +271,7 @@ void GRBowing::updateBow( GRStaff * inStaff, bool grace )
 
 	if (sse->endflag == GRSystemStartEndStruct::OPENRIGHT || !endElement)
 	{
-		context.openRight = true;
+		context->openRight = true;
 		if (!endElement && inStaff) {
 			setEndElement(inStaff, inStaff->getEndGlue());
 			sse->endflag = GRSystemStartEndStruct::OPENRIGHT;
@@ -314,23 +289,23 @@ void GRBowing::updateBow( GRStaff * inStaff, bool grace )
 	float paramH = arBow->getH();
 	ARBowing::CurveDirection dir = arBow->getCurve();
 	if (dir != ARBowing::kUndefined) {
-		context.curveDir = (dir == ARBowing::kDown) ? -1 : 1;
+		context->curveDir = (dir == ARBowing::kDown) ? -1 : 1;
 	}
 	else if( paramH != ARBowing::undefined()) {
-		context.curveDir = (paramH > 0) ? 1 : -1;
+		context->curveDir = (paramH > 0) ? 1 : -1;
 	}
-	else automaticCurveDirection( &context, arBow, sse );
+	else automaticCurveDirection( context, arBow, sse );
 
 	// --- Calculate the start and end anchor points positions --
 	// NOTE: in the futur, offsets could also be applied after automatic
 	// positionning. (tag parameter list for 'curve' would be completed)
 	if (grace)
-		graceAnchorPoints( &context, arBow, sse, inStaff );
+		graceAnchorPoints( context, arBow, sse, inStaff );
 	else if( (dir != ARBowing::kUndefined) || !arBow->getParSet() )
-		automaticAnchorPoints( &context, arBow, sse );
+		automaticAnchorPoints( context, arBow, sse );
 	else
-		manualAnchorPoints( &context, arBow, sse );
-	applyAnchorPointsOffsets( &context, arBow, sse );
+		manualAnchorPoints( context, arBow, sse );
+	applyAnchorPointsOffsets( context, arBow, sse );
 
 	// WARNING: THE PRECEDING CODE MODIFIED THE VALUE OF paramH WHILE
 	// PROCESSING ANCHOR CALCULATION: THEN PTR BECAME UNVALID (DELETED
@@ -342,7 +317,7 @@ void GRBowing::updateBow( GRStaff * inStaff, bool grace )
 	if ( (paramH != ARBowing::undefined()) || (paramR3 != ARBowing::undefined()))
 	{
 		// A tag for control points has been specified in the guido script.
-		manualControlPoints( &context, arBow, sse );
+		manualControlPoints( context, arBow, sse );
 	}
 	else { // Automatic placement of control points, it will try to avoid collisions.
 #ifdef NONE //FIX_SLOPE
@@ -382,19 +357,66 @@ void GRBowing::updateBow( GRStaff * inStaff, bool grace )
 //cerr << "GRBowing::updateBow position 3: " << bowInfos->position << endl;
 		return;
 #else
-		automaticControlPoints( &context, arBow, sse );
+		automaticControlPoints( context, arBow, sse );
 		float corr = LSPACE ;
 		float hcorr = LSPACE / 2;
-		if (context.openLeft) {
+		if (context->openLeft) {
 			bowInfos->offsets[0].x -= corr;
-			bowInfos->offsets[0].y = bowInfos->offsets[1].y - ((context.curveDir > 0) ? hcorr : -hcorr);
+			bowInfos->offsets[0].y = bowInfos->offsets[1].y - ((context->curveDir > 0) ? hcorr : -hcorr);
 		}
-		if (context.openRight) {
+		if (context->openRight) {
 			bowInfos->offsets[2].x += corr;
 		}
 #endif
 	}
-	updateBoundingBox();
+
+    // Note: The Bounding box of BOWINGs depend on the position so we should get them dynamically based on the staff using the override method. Thus, there is no need to update them!
+}
+
+NVRect GRBowing::getBoundingBox(GRStaff * grstaff) const {
+    GRSystemStartEndStruct * sse = getSystemStartEndStruct( grstaff->getGRSystem());
+    NVRect r = NVRect(0, 0, 0, 0);
+
+    if ( sse == 0 ) return r;
+
+    GRBowingSaveStruct * bowInfos = (GRBowingSaveStruct *)sse->p;
+    if( bowInfos == 0 ) return r;
+    
+    // - Update bounding box
+    r.left = bowInfos->offsets[0].x + bowInfos->position.x;        // middle point might be smaller.
+    r.right = bowInfos->offsets[2].x + bowInfos->position.x;        // middle point might be larger.
+
+    const float y0 = bowInfos->offsets[0].y + bowInfos->position.y;
+    const float y1 = bowInfos->offsets[1].y + bowInfos->position.y;
+    const float y2 = bowInfos->offsets[2].y + bowInfos->position.y;
+    
+
+    if (sse->startflag != GRSystemStartEndStruct::OPENLEFT) {
+
+        if( y1 < y0 )    // upward
+        {
+            r.top = y1;
+            r.bottom = y2 > y0 ? y2 : y0;
+        }
+        else
+        {
+            r.top = y2 < y0 ? y2 : y0;
+            r.bottom = y1;
+        }
+    }else {
+        if( y0 < y2 )    // upward
+        {
+            r.top = y0;
+            r.bottom = y2 > y1 ? y2 : y1;
+        }
+        else
+        {
+            r.top = y2 < y1 ? y2 : y1;
+            r.bottom = y0;
+        }
+    }
+    
+    return r;
 }
 
 // -----------------------------------------------------------------------------
@@ -550,10 +572,9 @@ void GRBowing::automaticCurveDirection( GRBowingContext * context, const ARBowin
 	int firstDir = context->stemDirLeft;
 	if( firstDir == 0 )
 	{
-		GRNote * firstNote = dynamic_cast<GRNote *>(startElement);
+		const GRNote * firstNote = startElement->isGRNote();
 		if( firstNote )
 			firstDir = firstNote->getThroatDirection();
-
 		context->stemDirLeft = firstDir;
 	}
 
@@ -561,10 +582,9 @@ void GRBowing::automaticCurveDirection( GRBowingContext * context, const ARBowin
 	int lastDir = context->stemDirRight;
 	if( lastDir == 0 )
 	{
-		GRNote * lastNote = dynamic_cast<GRNote *>(endElement);
+		const GRNote * lastNote = endElement->isGRNote();
 		if( lastNote )
 			lastDir = lastNote->getThroatDirection();
-
 		context->stemDirRight = lastDir;
 	}
 
@@ -687,6 +707,14 @@ GRNotationElement * GRBowing::getEndElement(GRStaff * grstaff) const
 	return 0;
 }
 
+void GRBowing::setColor(const char * cp) {
+    if (!mAssignedColRef)
+        mAssignedColRef = new unsigned char[4];
+    TagParameterString* color = new TagParameterString(cp);
+    color->setName("color");
+    color->getRGB(mAssignedColRef);
+}
+
 // -----------------------------------------------------------------------------
 void GRBowing::OnDraw( VGDevice & hdc) const
 {
@@ -696,9 +724,7 @@ void GRBowing::OnDraw( VGDevice & hdc) const
 
 //	NVRect r = getAssociatedBoundingBox();
 //	hdc.Frame(r.left, r.top, r.right, r.bottom);
-//
-//	DrawBoundingBox( hdc, VGColor( 255, 120, 150, 120 )); // DEBUG
-//	hdc.Frame(mBoundingBox.left, mBoundingBox.top, mBoundingBox.right, mBoundingBox.bottom);
+    
 	GRSystemStartEndStruct * sse = getSystemStartEndStruct( gCurSystem );
 	if( sse == 0) return; // don't draw
 
@@ -706,7 +732,10 @@ void GRBowing::OnDraw( VGDevice & hdc) const
 	GRBowingSaveStruct * bowInfos = (GRBowingSaveStruct *)sse->p;
 	assert(bowInfos);
 
-	if (mColRef) hdc.PushFillColor( VGColor( mColRef ) );
+    auto mColRef = getColRef();
+    if (mColRef) {
+        hdc.PushFillColor( VGColor( mColRef ) );
+    }
 
 	const float x = bowInfos->position.x;
 	const float y = bowInfos->position.y;
@@ -725,11 +754,12 @@ void GRBowing::OnDraw( VGDevice & hdc) const
 
 	// restore old pen and brush
 	if (mColRef) hdc.PopFillColor();
-	
-//	hdc.Frame(fStartBox.left, fStartBox.top, fStartBox.right, fStartBox.bottom);
-//	hdc.Frame(fEndBox.left, fEndBox.top, fEndBox.right, fEndBox.bottom);
-//	hdc.Frame(fMidBox.left, fMidBox.top, fMidBox.right, fMidBox.bottom);
-//cerr << "GRBowing::OnDraw high : " << fMidBox.TopLeft() << " low: " << fMidBox.BottomRight() << endl;
+    
+    // Note: AC: To draw the BB for debug, one should use the override method and not the GObject mBoundingBox
+//    hdc.PushPen( VGColor(250, 0, 0), 4);
+//    NVRect r = getBoundingBox(getGRStaff());
+//    hdc.Frame(r.left, r.top, r.right, r.bottom);
+//    hdc.PopPen();
 }
 
 // -----------------------------------------------------------------------------
@@ -771,7 +801,7 @@ void drawSlur(VGDevice & hdc, float x1, float y1, float x2, float y2, float x3, 
 
     const bool upward = (y1 + x2*ratio)>y2;
 
-    const float arcHalfWidth = sqrt(pow(x1-x3,2)+pow(y1-y3,2))/2;
+    const float arcHalfWidth = (float)sqrt(pow(x1-x3,2)+pow(y1-y3,2))/2;
     const float arcHeight = (y2-y1)*cosPhi - (x2-x1)*sinPhi;
     const float inflexionCurveControl = 4; // Arbitrary, control the minimum inflexion under which the curve flattens
     const float inflexionH = arcHalfWidth * exp(-inflexion/8 ) * 4/5;

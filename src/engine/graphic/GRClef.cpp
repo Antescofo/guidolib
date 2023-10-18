@@ -22,6 +22,7 @@
 #include "GRDefine.h"
 #include "GRMusic.h"
 #include "FontManager.h"
+#include "TagParameterFloat.h"
 
 #include "VGDevice.h"
 
@@ -44,8 +45,7 @@ NVPoint GRClef::refposAlto;
 unsigned int GRClef::sClefTextAlign;
 
 GRClef::GRClef(const ARClef * arClef, GRStaff *curstaff, bool ownsAR)
- 				 : GRTagARNotationElement(arClef, curstaff->getStaffLSPACE(), ownsAR),
-    				mOctaveStr(0)
+ 				 : GRTagARNotationElement(arClef, curstaff->getStaffLSPACE(), ownsAR)
 {
 	assert(arClef);
 	assert(curstaff);
@@ -251,8 +251,24 @@ void GRClef::accept (GRVisitor& visitor)
 // -----------------------------------------------------------------------------
 void GRClef::setHPosition( float inX )
 {
-//	cerr << (void*)this << " GRClef::setHPosition " << inX << endl;
+//cerr << (void*)this << " GRClef::setHPosition " << inX << " spring id: " << getSpringID() << endl;
 	GRTagARNotationElement::setHPosition(inX);
+	mMapping = mBoundingBox;
+	float h = mBoundingBox.Height();
+	float hr = h * mTagSize;
+	float diff = (hr - h)/2;
+	mMapping.top -= diff;
+	mMapping.bottom += diff;
+	mMapping += mPosition + getOffset();
+}
+
+// ----------------------------------------------------------------------------
+/** \brief Retrieves the mapping
+*/
+void GRClef::GetMap( GuidoElementSelector sel, MapCollector& f, MapInfos& infos ) const
+{
+	if (sel == kClefSel)
+		SendMap (f, getRelativeTimePosition(), getDuration(), kClef, infos);
 }
 
 // -----------------------------------------------------------------------------

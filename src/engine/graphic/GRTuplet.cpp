@@ -204,6 +204,7 @@ void GRTuplet::OnDraw(VGDevice & hdc) const
 	if (sse == 0) return;
 
     VGColor prevFontColor = hdc.GetFontColor();
+    auto mColRef = GRTag::getColRef();
     if (mColRef) hdc.SetFontColor(VGColor(mColRef));
 	const ARTuplet * arTuplet = getARTuplet();
 	GRTupletSaveStruct * st = (GRTupletSaveStruct *)sse->p;

@@ -9,51 +9,54 @@ system	:= $(shell uname -s)
 # normalizes MINGW versions
 system := $(shell echo $(system) | grep -e MINGW -e MSYS > /dev/null && echo MINGW || echo $(system))
 ifeq ($(system), Darwin)
-	GENERATOR ?= Xcode
-	PREFIX ?= /usr/local
 	PROJ ?= $(BUILDDIR)/guidolib.xcodeproj
-	JOBS ?= -jobs 4
 else
 ifeq ($(system), MINGW)
-	GENERATOR ?= "Visual Studio 14 2015 Win64"
-	PROJ ?= $(BUILDDIR)/guidolib.sln
-	JOBS ?= /maxcpucount:4
-else
-	GENERATOR ?= "Unix Makefiles"
-	PREFIX ?= /usr/local
 	PROJ ?= $(BUILDDIR)/Makefile
-	JOBS ?= -j 4
+else
+	PROJ ?= $(BUILDDIR)/Makefile
 endif
 endif
 
+INSTALLPREFIX := $(if $(PREFIX), -DPREFIX=$(PREFIX))
+
+
+MAKE     ?= make
+CMAKE    ?= cmake
 BUILDDIR ?= guidodir
-CMAKEOPT ?= -DMIDIEXPORT=yes -Wno-dev
+CMAKEOPT ?= # -Wno-dev
 BUILDOPT ?= --config Release
+GENERATOR ?= 
+
+MSLIGHT := ../midisharelight/src
 
 .PHONY: lib
 
 #===============================================================
 basic : $(PROJ)
-	cd $(BUILDDIR) && cmake --build .  $(BUILDOPT) -- $(JOBS)
+	cd $(BUILDDIR) && $(CMAKE) --build .  $(BUILDOPT)
 
 all : $(PROJ)
-	git submodule update --init
 	$(MAKE) basic
 	$(MAKE) Qt
 	$(MAKE) wasm
 	
-$(PROJ) : $(BUILDDIR)
-	cd $(BUILDDIR) && cmake $(CMAKEOPT) .. -G $(GENERATOR)
+$(PROJ) : CMakeLists.txt
+	$(MAKE) cmake
 
-cmake : $(BUILDDIR)
-	cd $(BUILDDIR) && cmake $(CMAKEOPT) .. 
+cmake : $(BUILDDIR) $(MSLIGHT)/MidiShareLight.h
+	cd $(BUILDDIR) && $(CMAKE) .. $(CMAKEOPT) $(INSTALLPREFIX) $(GENERATOR)
+
+$(MSLIGHT)/MidiShareLight.h:
+	git submodule update --init
 
 $(BUILDDIR) :
 	mkdir $(BUILDDIR)
 
-travis : CMAKEOPT := -DMIDIEXPORT=no -Wno-dev
+travis : CMAKEOPT := -Wno-dev
 travis : $(PROJ)
-	cd $(BUILDDIR) && cmake --build .  $(BUILDOPT) -- $(JOBS)
+	git submodule update --init
+	cd $(BUILDDIR) && $(CMAKE) --build .  $(BUILDOPT)
 	$(MAKE) Qt
 
 
@@ -65,7 +68,7 @@ help :
 	@echo "                        the guido Java library (when JDK is present),"
 	@echo "   all          : build the basic target,"	
 	@echo "                        the Guido Qt library and applications,"	
-	@echo "                        the guido Javascript library."
+	@echo "                        the guido WASM library."
 	@echo "   lib          : build the GUIDOEngine library"	
 	@echo "   tools        : build guido tools"	
 	@echo "   Qt           : build the Guido Qt library, applications and tools"	
@@ -76,13 +79,17 @@ help :
 	@echo "   install      : install the Guido library and public headers"
 	@echo "   uninstall    : undo what install did"
 	@echo "   localinstall : install the Guido tools to $$HOME/bin"
-	@echo "   tags         : extract the current tags list"
+	@echo "   tags         : extract the current guido tags list"
 	@echo "   guido2       : build the embedded svg font"
 	@echo "   package      : build a package for distribution"
 	@echo 
+	@echo "Utilities:"
+	@echo "   minimal      : generates a minimal project (the library only)"
+	@echo "   cmakeall     : switch the MIN flag off (revert the minimal target)"
+	@echo 
 	@echo "Options:"
 	@echo "   BUILDDIR     : the output folder (currently $(BUILDDIR))"
-	@echo "   GENERATOR    : a cmake generator (currently $(GENERATOR))"
+	@echo "   GENERATOR    : a cmake generator option (currently $(GENERATOR))"
 	@echo "   CMAKEOPT     : options passed to cmake for project generation (currently $(CMAKEOPT))"
 	@echo "   BUILDOPT     : options passed to cmake for building (currently $(BUILDOPT))"
 	@echo 
@@ -99,7 +106,7 @@ wasm: emcc
 	$(MAKE) -C ../lang/javascript
 
 emcc:
-	which emcc || echo emcc compiler must be available crom the command line
+	@which emcc || (echo emcc compiler must be available from the command line; false)
 
 #===============================================================
 # clean the project
@@ -111,14 +118,25 @@ clean :
 #===============================================================
 # building the Guido library
 #===============================================================
-lib :
-	cd $(BUILDDIR) && cmake --build .  $(BUILDOPT) --target GUIDOEngine -- $(JOBS)
+lib : $(BUILDDIR) $(PROJ)
+	cd $(BUILDDIR) && $(CMAKE) --build .  $(BUILDOPT) --target GUIDOEngine 
+
+#===============================================================
+# generating a minimal project (the library only)
+#===============================================================
+minimal : $(BUILDDIR)
+	$(MAKE) cmake CMAKEOPT="-DMIN=on"
+	$(MAKE) 
+
+cmakeall : $(BUILDDIR)
+	$(MAKE) cmake CMAKEOPT="-DMIN=off"
+	$(MAKE)
 
 #===============================================================
 # building the jni and java library
 #===============================================================
-java :
-	cd $(BUILDDIR) && cmake --build .  $(BUILDOPT) --target jniGUIDOEngine -- $(JOBS)
+java : $(BUILDDIR) $(PROJ)
+	cd $(BUILDDIR) && $(CMAKE) --build .  $(BUILDOPT) --target jniGUIDOEngine 
 
 #===============================================================
 # building the Qt resources
@@ -137,11 +155,11 @@ android :
 #===============================================================
 ios : iosdir/guidolib.xcodeproj
 	git submodule update --init
-	cd iosdir && cmake --build .  $(BUILDOPT) --target GUIDOEngine -- $(JOBS)
+	cd iosdir && $(CMAKE) --build .  $(BUILDOPT) --target GUIDOEngine -- OTHER_CFLAGS="-fembed-bitcode"
 
 iosdir/guidolib.xcodeproj:
 	@[ -d iosdir ] || mkdir iosdir
-	cd iosdir && cmake -DIOS=yes -DMIDIEXPORT=no .. -G Xcode
+	cd iosdir && $(CMAKE) -DIOS=yes -DMIDIEXPORT=no .. -G Xcode
 
 #===============================================================
 # build the embedded svg font
@@ -165,8 +183,7 @@ tags:
 #===============================================================
 DESTDIR ?=
 install: 
-	cd $(BUILDDIR) && cmake .. -DCMAKE_INSTALL_PREFIX=$(PREFIX) 
-	cmake --build $(BUILDDIR)  $(BUILDOPT) --target install -- $(JOBS)
+	$(CMAKE) --build $(BUILDDIR)  $(BUILDOPT) --target install 
 
 installLog := $(BUILDDIR)/install_manifest.txt
 uninstall: installedfiles = $(shell cat $(installLog))
@@ -180,10 +197,9 @@ localinstall:
 # packaging
 #===============================================================
 package: PACK:=GuidoLib-$(VERSION)
-package: ../gmn-examples/examples
-	make install PREFIX=../$(PACK)
+package:
+	$(MAKE) -C ../environments/Qt
+	$(MAKE) cmake CMAKEOPT="-DPREFIX=../$(PACK)"
+	$(MAKE) install
 	hdiutil create $(PACK).dmg -fs HFS+ -srcfolder $(PACK) -format UDBZ -ov
-	rm -rf
-
-../gmn-examples/examples:
-	cd ../gmn-examples && svn checkout https://github.com/grame-cncm/guidodoc/trunk/examples/mkdocs/examples
+	@echo "Warning: package target has changed the install PREFIX"

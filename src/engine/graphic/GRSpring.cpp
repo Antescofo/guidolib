@@ -78,6 +78,7 @@ GRSpring::GRSpring(const TYPE_TIMEPOSITION & vtp,
 	fIsfrozen = 0;
 	fId = -1;
 	fX  = 0;
+	fPosx = 0;
 	fForce = 0;
 
 	fDur = vdur;
@@ -313,6 +314,7 @@ int GRSpring::setGRPositionX(GCoord p_posx)
 	fPosx = p_posx;
 	GuidoPos pos = fGrolst.GetHeadPosition();
 
+//if ((fId == 7) || (fId == 6)) print (cerr);
 	while (pos) {
 		GRNotationElement * el = fGrolst.GetNext(pos);
 		el->setHPosition(fPosx);
@@ -474,11 +476,9 @@ float GRSpring::calcconst(GRNotationElement * grn)
 {
 	GRGlue * glue;
 	GRTag * tmp;
-	if (grn &&
-		(glue = dynamic_cast<GRGlue *>(grn)) != NULL)
+	if (grn && (glue = dynamic_cast<GRGlue *>(grn)) != NULL)
 		fSconst = glue->getSConst();
-	else if (grn && 
-		(tmp = dynamic_cast<GRTag *>(grn)) != NULL)
+	else if (grn &&  (tmp = dynamic_cast<GRTag *>(grn)) != NULL)
 		fSconst = tmp->getSConst();
 	else if (fDur == DURATION_0) {
 		if (dynamic_cast<GREmpty *>(grn))
@@ -690,7 +690,10 @@ void GRSpring::checkAccidentalCollisions()
 			NVRect bb = acc->getBoundingBox();
 			bb += acc->getPosition();
 			bb += ystaffOffset;						// on next staff, add a y offset
-			accbbs.push_back(bb);
+			if (acc->getSize())
+				accbbs.push_back(bb);
+			else
+				accbbs.push_back(NVRect(0,0,0,0));
 			previousStaff = staff;
 		}
 		
@@ -823,7 +826,7 @@ void GRSpring::OnDraw( VGDevice & hdc ) const
 //------------------------------------------------------------------------
 void GRSpring::print(ostream& out) const
 {
-	out << "GRSpring id: " << fId << " date: " << fTp << " dur: " << fDur << " force/x/const: " << fForce << " " << fX << " " << fSconst << endl;
+	out << "GRSpring id: " << fId << " date: " << fTp << " dur: " << fDur << " force/x/sconst/fPosx: " << fForce << "/" << fX << "/" << fSconst << "/" << fPosx << endl;
 	GuidoPos pos = fGrolst.GetHeadPosition();
 	while (pos) {
 		GRNotationElement* elt = fGrolst.GetNext(pos);

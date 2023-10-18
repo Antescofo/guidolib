@@ -36,9 +36,7 @@ using namespace std;
 
 // - Guido GR
 #include "GRMusic.h"
-#include "GRSpringForceIndex.h"
 #include "GRStaffManager.h"
-#include "GRSpring.h"
 #include "GRPage.h"
 
 // - Guido Misc
@@ -67,6 +65,7 @@ using namespace std;
 
 #include "guido2.h"
 #include "GRShowVisitor.h"
+#include "GRColorVisitor.h"
 #include "TagParametersMaps.h"
 
 //#include "GMNCodePrintVisitor.h"
@@ -77,8 +76,8 @@ using namespace std;
 // ==========================================================================
 const int GUIDOENGINE_MAJOR_VERSION = 1;
 const int GUIDOENGINE_MINOR_VERSION = 7;
-const int GUIDOENGINE_SUB_VERSION   = 0;
-const char* GUIDOENGINE_VERSION_STR = "1.7.0";
+const int GUIDOENGINE_SUB_VERSION   = 6;
+const char* GUIDOENGINE_VERSION_STR = "1.7.6";
 
 ARPageFormat* gARPageFormat;
 const TagParametersMaps* gMaps = 0;
@@ -381,6 +380,16 @@ GUIDOAPI GuidoErrCode	GuidoShowElement( GRHandler gr, GRElement elt, bool status
 	return guidoNoErr;
 }
 
+GUIDOAPI GuidoErrCode    GuidoMarkStaff( GRHandler gr, int staffnum, std::string params)
+{
+    if ( !gr )            return guidoErrInvalidHandle;
+    if ( !gr->grmusic )    return guidoErrInvalidHandle;
+
+    GRColorVisitor v(params, staffnum);
+    gr->grmusic->accept (v);
+    return guidoNoErr;
+}
+
 // --------------------------------------------------------------------------
 GUIDOAPI GuidoErrCode GuidoUpdateGR( GRHandler gr, const GuidoLayoutSettings * settings)
 {
@@ -507,6 +516,7 @@ GUIDOAPI void GuidoGetDefaultLayoutSettings (GuidoLayoutSettings *settings)
     settings->resizePage2Music      = kSettingDefaultResizePage2Music;
     settings->proportionalRenderingForceMultiplicator = kSettingDefaultProportionalRendering;
     settings->checkLyricsCollisions = kSettingDefaultCheckLyricsCollisions;
+    settings->useExtendedBoundingBox = kSettingDefaultExtendedBoundingBox;
 }
 
 // --------------------------------------------------------------------------
@@ -568,6 +578,18 @@ GUIDOAPI int GuidoFindEventPage( CGRHandler inHandleGR, const GuidoDate & date )
 	if ( !inHandleGR )
 		return 0;
 	return inHandleGR->grmusic ? inHandleGR->grmusic->getPageNum(date.num, date.denom) : 0;
+}
+
+GUIDOAPI GuidoErrCode GuidoFindEventTransposedOffset( CGRHandler inHandleGR, const GuidoDate & date, int midiPitch, int midiOffset, float *pos )
+{
+    if ( !inHandleGR || !inHandleGR->grmusic )
+        return guidoErrInvalidHandle;
+    float v = inHandleGR->grmusic->getGROffsetForEvent(date.num, date.denom, midiPitch, midiOffset);
+    if (v!=-10000.0) {
+        *pos = v;
+        return guidoNoErr;
+    }
+    return guidoErrBadParameter;
 }
 
 // --------------------------------------------------------------------------

@@ -105,6 +105,8 @@ public:
 
 	TYPE_TIMEPOSITION mDebugSystemDate;
     static int sSystemID;
+    
+    void    fixTellPositionOrder ();
 
 protected:
 	void 		dospacing();
@@ -153,7 +155,6 @@ private:
 	void	DrawAccolade( VGDevice & hdc, const GRSystemSlice * slice, const GRStaff * staff) const;
 	void	HandleStaffOnOff (GuidoPos pos, const GRSystemSlice * slice) const;
 	void	patchTempoIssue ();
-	void	fixTellPositionOrder ();
 
 	GRPage*			mPage;
 	StaffVector*	mStaffs;

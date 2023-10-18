@@ -33,6 +33,7 @@ NVPoint GRRepeatEnd::refpos;
 GRRepeatEnd::GRRepeatEnd( const ARRepeatEnd * ar, GRStaff * inStaff, const TYPE_TIMEPOSITION & inTimePos, float proportionnalRender )
 					: GRBar(ar, inStaff, inTimePos, proportionnalRender)
 {
+	setGRStaff (inStaff);
 	InitRepeatEnd();
 }
 
@@ -61,7 +62,6 @@ void GRRepeatEnd::InitRepeatEnd()
         fBaseThickness = LSPACE * 0.6f * fSize;
         fLSpace = staff->getStaffLSPACE();
     }
-	updateBoundingBox();
 }
 
 // --------------------------------------------------------------------------
@@ -117,6 +117,7 @@ void GRRepeatEnd::DrawDots( VGDevice & hdc ) const
 	}
 
     float x  = -hlspace * 0.75f - getXOffset();
+    hdc.SetFontAlign(VGDevice::kAlignBaseLeft);
     DrawSymbol(hdc, kDotSymbol, x, y1, pointSize);
     DrawSymbol(hdc, kDotSymbol, x, y2, pointSize);
 }

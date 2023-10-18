@@ -177,6 +177,8 @@ GRStaffManager::GRStaffManager(GRMusic * p_grmusic, ARPageFormat * inPageFormat,
 // ----------------------------------------------------------------------------
 GRStaffManager::~GRStaffManager()
 {
+	GRVoiceManager::resetCurrentNotesTP();
+
 	if (mSystemSlices)
 	{
 		// This is important for ABORT issues ...
@@ -217,14 +219,13 @@ GRStaffManager::~GRStaffManager()
 // returns a boolean value to indicate the end of all voices
 bool GRStaffManager::nextTimePosition (int nvoices, bool filltagmode, TCreateStavesState& state)
 {
-	TYPE_TIMEPOSITION tp;
+	TYPE_TIMEPOSITION timepos;
 	bool end = true;
 	for (int i = 0; i < nvoices; i++)
 	{
 		GRVoiceManager *voiceManager = mVoiceMgrList->Get(i);
-		tp = state.timePos;
-
-		// this does the next timeposition ... 
+		timepos = state.timePos;
+		// this does the next timeposition ...
 		// behavior:
 		// 1. independant of filltagmode:
 		//	  if curtp > tmptp then tmptp is set to curtp and -1 is returned.
@@ -244,8 +245,7 @@ bool GRStaffManager::nextTimePosition (int nvoices, bool filltagmode, TCreateSta
 		//    ret = tmp->Next(tmptp, filltagmode);
 		// see Iterate-description for documentation
 
-		int ret = voiceManager->Iterate(tp, filltagmode);
-
+		int ret = voiceManager->Iterate(timepos, filltagmode);
 		// there is still a voice active ...
 		if (ret != GRVoiceManager::ENDOFVOICE)
 			end = false;
@@ -255,8 +255,8 @@ bool GRStaffManager::nextTimePosition (int nvoices, bool filltagmode, TCreateSta
 		// This value is also important for potential Breakpoint determination.
 		if (ret == GRVoiceManager::CURTPBIGGER_ZEROFOLLOWS || ret == GRVoiceManager::DONE_ZEROFOLLOWS)
 		{
-			if (tp < state.minswitchtp)
-				state.minswitchtp = tp;
+			if (timepos < state.minswitchtp)
+				state.minswitchtp = timepos;
 		}
 
 		if (ret != GRVoiceManager::MODEERROR) {
@@ -286,7 +286,7 @@ bool GRStaffManager::nextTimePosition (int nvoices, bool filltagmode, TCreateSta
 					ret == GRVoiceManager::CURTPBIGGER_ZEROFOLLOWS )
 				{
 					// set the increment of timeposition
-					if (tp < state.mintp) state.mintp = tp;
+					if (timepos < state.mintp) state.mintp = timepos;
 				}
 			}
 		}
@@ -492,7 +492,37 @@ void GRStaffManager::createStaves()
 		// if the force is alright
 	} while ( /* !sizer && */ !ender);
 
+//	checkAccidentalsCollisions();
+	finishStaves (state, beginheight);
+}
 
+//----------------------------------------------------------------------------------
+void GRStaffManager::checkAccidentalsCollisions()
+{
+	const int mini = mMyStaffs->GetMinimum();
+	const int maxi = mMyStaffs->GetMaximum();
+	for( int i = mini; i <= maxi; ++i )
+	{
+		GRStaff * staff = mMyStaffs->Get(i);
+		if (staff) {
+cerr << "GRStaffManager::checkAccidentalsCollisions staff " << i << endl;
+			NEPointerList* elts = staff->getElements();
+			GuidoPos pos = elts->GetHeadPosition();
+			while (pos) {
+				GRNotationElement * e = elts->GetNext(pos);
+				if (e) {
+cerr << "	check " << e << endl;
+				}
+			}
+		}
+	}
+
+}
+
+//----------------------------------------------------------------------------------
+// was initially at the end of createStaves
+void GRStaffManager::finishStaves (const TCreateStavesState& state, float beginheight)
+{
 	// I have to rethink the following ...
 	// it may be, that I have to finish the last slice before calling the optimum-Break-Routine ....
 	if (mSpringVector->GetMaximum() >= mSpringVector->GetMinimum())
@@ -504,7 +534,7 @@ void GRStaffManager::createStaves()
 		{
 			sff = BuildSFF();
 
-            // add the thing to the slice-list 
+            // add the thing to the slice-list
             GRPossibleBreakState * pbs = new GRPossibleBreakState();
             pbs->sff = sff;
             pbs->copyofcompletesff = NULL;
@@ -532,7 +562,7 @@ void GRStaffManager::prepareStaff(int staff)
 {
 	GRStaff * curstaff = mMyStaffs->Get(staff);
     if (curstaff == NULL) {
-		curstaff = new GRStaff(mGrSystemSlice, settings.proportionalRenderingForceMultiplicator);
+		curstaff = new GRStaff(mGrSystemSlice, settings.proportionalRenderingForceMultiplicator, settings.useExtendedBoundingBox);
 		if (mStaffStateVect) {
 			// this just copies the stateinformation ...
 			GRStaffState * myss = mStaffStateVect->Get(staff);
@@ -560,22 +590,24 @@ GRStaff * GRStaffManager::getStaff(int staff)
 	return mMyStaffs->Get(staff);
 }
 
-void GRStaffManager::setRelativeEndTimePosition(const TYPE_TIMEPOSITION & tp)
-{
-	mDurationOfGR = tp - relativeTimePositionOfGR;
-}
-
-void GRStaffManager::EndSystem(ARMusicalVoice * arVoice, GuidoPos pos)
-{
-	// pos is the Position of the newLine -Tag
-	setRelativeEndTimePosition( arVoice->GetAt(pos)->getRelativeEndTimePosition() );
-}
-
-void GRStaffManager::EndPage(ARMusicalVoice * voice, GuidoPos pos)
-{
-	// pos is the Position of the newPage-Tag
-	setRelativeEndTimePosition ( voice->GetAt(pos)->getRelativeEndTimePosition() );
-}
+// the functions below are never called D.F.
+//
+//void GRStaffManager::setRelativeEndTimePosition(const TYPE_TIMEPOSITION & tp)
+//{
+//	mDurationOfGR = tp - relativeTimePositionOfGR;
+//}
+//
+//void GRStaffManager::EndSystem(ARMusicalVoice * arVoice, GuidoPos pos)
+//{
+//	// pos is the Position of the newLine -Tag
+//	setRelativeEndTimePosition( arVoice->GetAt(pos)->getRelativeEndTimePosition() );
+//}
+//
+//void GRStaffManager::EndPage(ARMusicalVoice * voice, GuidoPos pos)
+//{
+//	// pos is the Position of the newPage-Tag
+//	setRelativeEndTimePosition ( voice->GetAt(pos)->getRelativeEndTimePosition() );
+//}
 
 float GRStaffManager::getSystemWidthCm()
 {
@@ -888,9 +920,9 @@ int GRStaffManager::AddPageTag(GRNotationElement * grel, GRStaff * grstaff,int v
 	mGrPage->AddTail(grel);
     // AC: Add to pageHeaderHeight if the element is hooked to topMargin
     if (grpgtxt->isRelativeToTopMargin()) {
-        float bottom = grpgtxt->getPosition().y + grpgtxt->getBoundingBox().bottom;
-        if (bottom > mGrPage->mPageheaderHeight) {
-            mGrPage->mPageheaderHeight = bottom;
+        float offset = grpgtxt->offsetFromTopMargin;
+        if (offset > mGrPage->mPageheaderHeight) {
+            mGrPage->mPageheaderHeight = offset;
         }
     }
     // END OF AC
@@ -1548,48 +1580,50 @@ void GRStaffManager::addElementToSpring(GRNotationElement * grne, int springid)
 
 	(EndStaff) Then, all open tags are finished 
 	(all VoiceManagers get called with closeOpenTags)
+	
+	actually this function is never called D.F.
 */
-void GRStaffManager::EndStaves( const TYPE_TIMEPOSITION & tp, int lastline )
-{
-	// now we attach one last spring to the springvect
-	// This spring is NOT stretchable and is ignored in the SPF!
-	// this last spring is for the glue only.
-
-	GRSpring * spr = new GRSpring(tp, DURATION_0, settings.spring, settings.proportionalRenderingForceMultiplicator);
-	spr->setID(mSpringID);
-	spr->fIsfrozen = 1;
-	mSpringVector->Set(mSpringID++,spr);
-
-	int i;
-	int mini = mMyStaffs->GetMinimum();
-	int maxi = mMyStaffs->GetMaximum();
-
-	for( i = mini; i <= maxi; ++i )
-	{
-		GRStaff * staff = mMyStaffs->Get(i);
-		if (staff)
-		{
-			// this call adds an endglue to this staff (attaching it to the last spring)
-			staff->EndStaff(tp,this,NULL,lastline);
-		}
-		/* else
-		{
-			// then we need to create
-			// empty staves ...
-			mMyStaffs->Set(i,getStaff(i));
-		} */
-	}
-
-	// now all the voiceManagers get called
-	mini = mVoiceMgrList->GetMinimum();
-	maxi = mVoiceMgrList->GetMaximum();
-
-	for( i= mini; i <= maxi; ++i )
-	{
-		GRVoiceManager * vcmg = mVoiceMgrList->Get(i);
-		vcmg->closeOpenTags();
-	}
-}
+//void GRStaffManager::EndStaves( const TYPE_TIMEPOSITION & tp, int lastline )
+//{
+//	// now we attach one last spring to the springvect
+//	// This spring is NOT stretchable and is ignored in the SPF!
+//	// this last spring is for the glue only.
+//
+//	GRSpring * spr = new GRSpring(tp, DURATION_0, settings.spring, settings.proportionalRenderingForceMultiplicator);
+//	spr->setID(mSpringID);
+//	spr->fIsfrozen = 1;
+//	mSpringVector->Set(mSpringID++,spr);
+//
+//	int i;
+//	int mini = mMyStaffs->GetMinimum();
+//	int maxi = mMyStaffs->GetMaximum();
+//
+//	for( i = mini; i <= maxi; ++i )
+//	{
+//		GRStaff * staff = mMyStaffs->Get(i);
+//		if (staff)
+//		{
+//			// this call adds an endglue to this staff (attaching it to the last spring)
+//			staff->EndStaff(tp,this,NULL,lastline);
+//		}
+//		/* else
+//		{
+//			// then we need to create
+//			// empty staves ...
+//			mMyStaffs->Set(i,getStaff(i));
+//		} */
+//	}
+//
+//	// now all the voiceManagers get called
+//	mini = mVoiceMgrList->GetMinimum();
+//	maxi = mVoiceMgrList->GetMaximum();
+//
+//	for( i= mini; i <= maxi; ++i )
+//	{
+//		GRVoiceManager * vcmg = mVoiceMgrList->Get(i);
+//		vcmg->closeOpenTags();
+//	}
+//}
 
 /** \brief Take into account that pbs2 must not be completed at the time of calling!
 	Assumes, that mLastSpringID is set as the mSpringID at the first pbs.
@@ -2028,7 +2062,7 @@ void GRStaffManager::BreakAtPBS(GuidoPos pbpos)
 			// The Staff-numbers are equal to
 			// the staff-vector at the  breaktime.
 			
-			GRStaff * newstaff = new GRStaff(mGrSystemSlice, settings.proportionalRenderingForceMultiplicator);
+			GRStaff * newstaff = new GRStaff(mGrSystemSlice, settings.proportionalRenderingForceMultiplicator, settings.useExtendedBoundingBox);
 			mGrSystem->addStaff(newstaff,i);
 			
 			
@@ -2563,7 +2597,6 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
     
 	int count = -1;
 	GuidoPos pos = mSystemSlices->GetHeadPosition();		// then I just iterate through the systemslices ....
-    GRFixVisitor ffix;  // AC: For fixing Bounding Boxes before they propagate
 	while (pos)
 	{
 		// no longer needed because of sliceheight
@@ -2592,10 +2625,6 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 		}
 		
 		GRSystemSlice * begslice = mSystemSlices->GetAt(pos);	// this is the beginning slice of the potential line.
-        // AC: Fix BBs before propagation
-        begslice->accept(ffix);
-        begslice->FinishSlice();
-        // END OF AC
 		GRBeginSpaceForceFunction2 * begsff = 0;
 		// this gets the SpaceForceFunction of the beginning-elemnts 
 		// that would be needed, if the break would really occur at this location.
@@ -2619,12 +2648,6 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 		while (tmppos) {
 			tmpcount++;
 			GRSystemSlice * slc = mSystemSlices->GetNext(tmppos);
-            // AC: Fix BBs before propagation
-            //cerr<<"SliceHeight="<<slc->getBoundingBox().Height(); //<<endl;
-            slc->accept(ffix);
-            slc->FinishSlice();
-            //cerr<<"\t ---> SliceHeight="<<slc->getBoundingBox().Height()<<endl;
-            // END OF AC
 			if (slc)
 			{
                 float optconst = 0;
@@ -2645,7 +2668,7 @@ traceslice(cout << "GRStaffManager::FindOptimumBreaks num slices is " << numslic
 				    curxmin += slc->mPossibleBreakState->sff->getXminOpt(); // we also just add the curxmin-value ....
 
 				// we have to deal with the height ...
-				sliceheight.AddSystemSlice(slc);
+				sliceheight.AddSystemSlice(slc, 1); // AC: added ability to update BBs in the process
 				const float slcheight = slc->mBoundingBox.Height();
 								
 				if (slcheight > curheight)
@@ -3315,7 +3338,7 @@ GRSystemSlice * GRStaffManager::CreateBeginSlice(const GRSystemSlice * lastslice
 		if (sas)
 		{
 			// The Staff-numbers are equal to the staff-vector at the breaktime.			
-			GRStaff * newstaff = new GRStaff(beginslice, settings.proportionalRenderingForceMultiplicator);
+			GRStaff * newstaff = new GRStaff(beginslice, settings.proportionalRenderingForceMultiplicator, settings.useExtendedBoundingBox);
 			beginslice->addStaff(newstaff,i);
             
             // We apply potential staff size defined with GuidoSetStaffSize API call

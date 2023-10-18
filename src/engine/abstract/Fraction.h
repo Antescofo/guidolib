@@ -16,6 +16,7 @@
 */
 
 #include <iostream>
+#include <string>
 
 /** \brief Numerator and denominator
 */
@@ -53,11 +54,14 @@ class Fraction
 		bool 	isOdd() const;
 		bool	isEven() const;
 
+		void 	add (const Fraction &tmp); // non normalized addition
+
       Fraction getBiggestFullNote(int exp) const;
       Fraction getReallySmallerNote(int exp) const;
 
 		operator double() const;
 		operator float() const;
+		operator std::string() const;
 		inline operator bool() const				{ return numerator != 0; }
 		bool operator >(const Fraction & in) const  { return (dval > in.dval); }
 		bool operator ==(const Fraction & in) const { return (dval == in.dval); }

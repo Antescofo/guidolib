@@ -53,7 +53,7 @@ class GRGlobalStem : public GRPTagARNotationElement, public GRSystemTagInterface
 		virtual void	removeAssociation(GRNotationElement * grnot);
 
 		virtual void		checkPosition(const GRSystem * grsys);
-		virtual float		changeStemLength( float inLen );
+		virtual float		changeStemLength( float inLen, bool force = false );
         virtual void		setHPosition( GCoord nx);
         virtual void		setFlagOnOff(bool i);
         virtual void		setStemDirection(GDirection dir);
@@ -68,7 +68,7 @@ class GRGlobalStem : public GRPTagARNotationElement, public GRSystemTagInterface
 		virtual GRStem* 	getGRStem() const			{ return fStem; }
         virtual bool		getStemDirSet() const 		{ return fStemdirSet; }
         virtual bool		getStemLengthSet() const 	{ return fStemlengthSet; }
-       	virtual const unsigned char * getColRef() const { return mColRef; }
+       	virtual const unsigned char * getColRef() const { return GRTag::getColRef(); }
         virtual GRNotationElement *  getFirstEl() const	{ return fFirstEl; }
 
  		virtual GDirection	getStemDir() const;
@@ -78,6 +78,8 @@ class GRGlobalStem : public GRPTagARNotationElement, public GRSystemTagInterface
 		virtual int			getNumFaehnchen() const;
 	
 		void			setBeam( GRBeam* beam)			{ fBeam = beam; }
+    
+    void setColor(const char * cp);
 
 	protected:
 		bool		fFlagOnOff;

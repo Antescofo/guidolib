@@ -34,11 +34,6 @@
 
 using namespace std;
 
-#ifndef WIN32
-#warning ("TODO: set bounding box (currently ignored)");
-#endif
-
-
 extern GRStaff * gCurStaff;
 
 GRHarmony::GRHarmony(GRStaff * p_staff, const ARHarmony * ar)
@@ -57,6 +52,22 @@ GRHarmony::GRHarmony(GRStaff * p_staff, const ARHarmony * ar)
 
 	float curLSPACE = p_staff ? p_staff->getStaffLSPACE() : LSPACE;
 
+    if( mMustFollowPitch == false ) {
+        int pos = ar->position();
+        if (p_staff) {
+            switch (pos) {
+                case ARHarmony::kUndefined:
+                case ARHarmony::kBelow:
+                    mPosition.y = p_staff->getDredgeSize(); // + curLSPACE;
+                    break;
+                case ARHarmony::kAbove:
+                    mPosition.y = -p_staff->getDredgeSize() - curLSPACE/2;
+                    break;
+            }
+        }
+        else mPosition.y = -curLSPACE;
+    }
+
 	if (ar) st->text = ar->getText() ? ar->getText() : "";
 	
 	mTextAlign = VGDevice::kAlignLeft + VGDevice::kAlignTop;
@@ -72,10 +83,10 @@ GRHarmony::GRHarmony(GRStaff * p_staff, const ARHarmony * ar)
 	st->boundingBox.top = sizey;
 	st->boundingBox.bottom = 4 * LSPACE;
 
-//	float dy = ar->getDY()->getValue() + LSPACE/2;
-//	mBoundingBox.left = mBoundingBox.right = 0;
-//	mBoundingBox.top = -sizey - dy;
-//	mBoundingBox.bottom = -dy;
+    mBoundingBox.left = 0;
+    mBoundingBox.right = sizex;
+    mBoundingBox.top = 0;
+    mBoundingBox.bottom = sizey;
 }
 
 
@@ -132,7 +143,7 @@ void GRHarmony::OnDraw( VGDevice & hdc ) const
 	DrawHarmonyString (hdc, fFont, st->text, drawPos.x + st->boundingBox.left + dx, drawPos.y + dy);
 
 	if( mColRef ) hdc.SetFontColor( prevTextColor );
-//	DrawBoundingBox(hdc,VGColor(0,0,0));
+//	DrawBoundingBox(hdc, kEventBBColor);
 }
 
 float GRHarmony::CharExtend (const char* c, const VGFont* font, VGDevice* hdc) const
@@ -149,16 +160,17 @@ void GRHarmony::DrawHarmonyString (VGDevice & hdc, const VGFont* font, const str
 	const VGFont* mfont = hdc.GetMusicFont();
 	float ratio = font->GetSize() / 150.f; // 150 is the default font size for harmony (20 pt)
 
-	const VGFont* mBigFont = FontManager::FindOrCreateFont( int(mfont->GetSize() * 1.3 * ratio), mfont->GetName(), "");
+	const VGFont* mBigFont = FontManager::FindOrCreateFont( int(mfont->GetSize() * 1.0 * ratio), mfont->GetName(), "");
 	const VGFont* mSmallFont = FontManager::FindOrCreateFont( int(mfont->GetSize() * 0.8 * ratio), mfont->GetName(), "");
 	const VGFont* tSmallFont = FontManager::FindOrCreateFont( int(font->GetSize() * 0.8), font->GetName(), "");
 	const VGFont* curmfont = mBigFont;
 	const VGFont* curtfont = font;
 	const char * ptr = str.c_str();
-	float moffset = 4 * LSPACE * ratio;
+	float moffset = 2 * LSPACE * ratio;
 	float yoffset = 0;
 	float xoffset = LSPACE/2;
 	bool inSecPart = false;
+    bool isBase = false;
 
 	hdc.SetMusicFont (mBigFont);
 	while (*ptr) {
@@ -168,14 +180,29 @@ void GRHarmony::DrawHarmonyString (VGDevice & hdc, const VGFont* font, const str
 			inSecPart = std::isdigit(c);
 			if (inSecPart) {
 				hdc.SetMusicFont (mSmallFont);
-				moffset = 2 * LSPACE * ratio;
+				moffset = 1.5 * LSPACE * ratio;
 				yoffset = -2;
 				xoffset /= 2;
 			}
 		}
+        
+        if (!isBase) {
+            isBase = (c == '/');
+            if (isBase) {
+                hdc.SetTextFont (font);
+                curtfont = font;
+                yoffset = 0;
+                xoffset = LSPACE/2;
+                if (inSecPart) {
+                    inSecPart = false;
+                    hdc.SetMusicFont (mBigFont);
+                    moffset = 2 * LSPACE * ratio;
+                }
+            }
+        }
 
 		if (c == '#') {
-			hdc.DrawMusicSymbol(x + 10, y - moffset - LSPACE, kSharpSymbol);
+			hdc.DrawMusicSymbol(x + 10, y - moffset - LSPACE/2, kSharpSymbol);
 			buff[0] = kSharpSymbol;
 			x += CharExtend (buff, curmfont, &hdc) + xoffset;
 		}
@@ -187,6 +214,9 @@ void GRHarmony::DrawHarmonyString (VGDevice & hdc, const VGFont* font, const str
 		else {
 			hdc.DrawString( x, y + yoffset, buff, 1);
 			x += CharExtend (buff, curtfont, &hdc);
+            if (isBase) {
+                if (c=='/') continue;
+            }
 			hdc.SetTextFont (tSmallFont);
 			if (!inSecPart) {
 				curtfont = tSmallFont;
@@ -275,8 +305,69 @@ void GRHarmony::tellPosition(GObject * caller, const NVPoint & inPosition)
 //		const ARHarmony* arText = getARHarmony();
 //		const char* text = arText ? arText->getText() : 0;
 //		if (text) st->text = text;
-
+        
+        FloatRect r = getTextMetrics (*gGlobalSettings.gDevice, staff);
+        setPosition (NVPoint(r.left, r.top));
+        NVRect bb (0, 0, r.Width(), r.Height());
+        mBoundingBox = bb;
+        float xoffset = 0;
+        if (mTextAlign & VGDevice::kAlignCenter)
+            xoffset = mBoundingBox.Width()/2;
+        if (mTextAlign & VGDevice::kAlignRight)
+            xoffset = mBoundingBox.Width();
+        mBoundingBox -= NVPoint(xoffset, 0);
 	}
+}
+
+FloatRect GRHarmony::getTextMetrics(VGDevice & hdc, const GRStaff* staff ) const
+{
+    FloatRect r;
+
+    GRSystemStartEndStruct * sse = getSystemStartEndStruct( staff->getGRSystem() );
+    assert(sse);
+    GRTextSaveStruct * st = (GRTextSaveStruct *) sse->p;
+    const ARHarmony * arText = getARHarmony();
+    const float curLSPACE = staff ? staff->getStaffLSPACE(): LSPACE;
+    // - Setup position.
+    // y-reference position if the lowest line of the staff.
+    NVPoint drawPos (st->position);
+    if( mMustFollowPitch == false ) {
+        int pos = arText->position();
+        if (staff) {
+            switch (pos) {
+                case ARHarmony::kUndefined:
+                case ARHarmony::kBelow:
+                    drawPos.y = staff->getDredgeSize(); // + curLSPACE;
+                    break;
+                case ARHarmony::kAbove:
+                    drawPos.y = -staff->getDredgeSize() - curLSPACE/2;
+                    break;
+            }
+        }
+        else drawPos.y = -curLSPACE;
+    }
+
+    float dx = arText->getDX()->getValue( curLSPACE );
+    float dy = -arText->getDY()->getValue( curLSPACE );
+
+    float x = drawPos.x + st->boundingBox.left + dx;
+    float y = drawPos.y + dy;
+    float w = 0;
+    float h = 0;
+
+    const VGFont* savedFont = hdc.GetTextFont();
+    hdc.SetTextFont( fFont );
+    fFont->GetExtent(st->text.c_str(), (int)st->text.size(), &w, &h, &hdc);
+    hdc.SetTextFont( savedFont );
+    
+    r.Set(x, y, x+w, y+h);
+    return r;
+}
+
+void GRHarmony::accept (GRVisitor& visitor)
+{
+    visitor.visitStart (this);
+    visitor.visitEnd (this);
 }
 
 void GRHarmony::removeAssociation(GRNotationElement * el)

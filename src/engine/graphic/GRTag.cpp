@@ -47,12 +47,23 @@ GRTag::GRTag( const ARMusicalTag * artag, float curLSPACE )
 		const TagParameterFloat * tps = artag->getSize();
 		mTagSize = tps ? tps->getValue() : 1.0f;
 	}
+    mAssignedColRef = NULL;
+}
+
+void GRTag::setColor(const char * cp) {
+    TagParameterString* color = new TagParameterString(cp);
+    color->setName("color");
+    if (!mAssignedColRef)
+        mAssignedColRef = new unsigned char[4];
+    color->getRGB(mAssignedColRef);
 }
 
 GRTag::~GRTag()
 {
 	delete [] mColRef;
     mColRef = 0;
+    delete [] mAssignedColRef;
+    mAssignedColRef = 0;
 }
 
 void GRTag::RangeEnd(GRStaff * grstaff)			{}

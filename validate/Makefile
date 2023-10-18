@@ -16,10 +16,10 @@ system := $(shell echo $(system) | grep MINGW > /dev/null && echo MINGW || echo 
 version	 ?= $(shell cat guidoversion.txt)
 LEAKTOOLS = guidoparse guidoar2gr guidodraw
 
-guido2image := guido2image
-guido2svg   := guido2svg
-guido2midi  := guido2midi
-guido2proll := guido2proll
+guido2image ?= ../environments/Qt/apps/bin/guido2image
+guido2svg   ?= ../build/bin/guido2svg
+guido2midi  ?= ../build/bin/guido2midi
+guido2proll ?= ../build/bin/guido2proll
 
 ifeq ($(MAKECMDGOALS), win32)
   PLATFORM := 32
@@ -70,10 +70,10 @@ mapsout		:= $(sysmapout) $(staffmapout) $(voicemapout)
 timemapout	:= $(patsubst ../%.gmn, $(version)/maps/time/%.map, $(gmnfiles))
 lyricsout	:= $(patsubst ../%.gmn, $(version)/lyrics/%.svg, $(lyricsfiles))
 
-prollout	            := $(patsubst ../%.gmn, $(version)/proll/classic/%.svg, $(gmnfilesproll))
-prollvoicescolorout     := $(patsubst ../%.gmn, $(version)/proll/classic/voicescolor/%.svg, $(gmnfilesproll))
-prolltrajout            := $(patsubst ../%.gmn, $(version)/proll/trajectory/%.svg, $(gmnfilesproll))
-prollvoicescolortrajout := $(patsubst ../%.gmn, $(version)/proll/trajectory/voicescolor/%.svg, $(gmnfilesproll))
+prollout	            := $(patsubst ../%.gmn, $(version)/proll/%.svg, $(gmnfilesproll))
+prollvoicescolorout     := $(patsubst ../%.gmn, $(version)/proll/voicescolor/%.svg, $(gmnfilesproll))
+#prolltrajout            := $(patsubst ../%.gmn, $(version)/proll/trajectory/%.svg, $(gmnfilesproll))
+#prollvoicescolortrajout := $(patsubst ../%.gmn, $(version)/proll/trajectory/voicescolor/%.svg, $(gmnfilesproll))
 
 leaksout 	:= $(patsubst ../%.gmn, $(version)/$(TOOLPATH)/%.leaks.txt, $(gmnfiles))
 midiout     := $(patsubst ../%.gmn, $(version)/%.mid, $(gmnfiles))
@@ -236,11 +236,14 @@ checkcrash: $(LEAKTOOLS)
 
 #########################################################################
 # tools to generate svg files
-svg: $(svgout) $(lyricsout) $(mapsout) $(timemapout) $(prollout) $(prollvoicescolorout) $(prolltrajout) $(prollvoicescolortrajout)
+svg: $(svgout) $(lyricsout) $(mapsout) $(timemapout) $(prollout) $(prollvoicescolorout) # $(prolltrajout) $(prollvoicescolortrajout)
 svgshort: $(svgout)  $(lyricsout)
-
+svgforce:
+	make svgclean
+	make svgshort
+	
 svgclean: 
-	rm -f $(svgout) $(mapsout) $(timemapout) $(prollout) $(prollvoicescolorout) $(prolltrajout) $(prollvoicescolortrajout)
+	rm -rf $(version)
 
 $(version)/%.svg: ../%.gmn
 	@[ -d $(@D) ] || mkdir -p $(@D)
@@ -278,22 +281,22 @@ $(version)/maps/time/%.map: ../%.gmn
 	
 #########################################################################
 # tool to generate proll files
-proll: $(prollout) $(prollvoicescolorout) $(prolltrajout) $(prollvoicescolortrajout)
-$(version)/proll/classic/%.svg: ../%.gmn
+proll: $(prollout) $(prollvoicescolorout) # $(prolltrajout) $(prollvoicescolortrajout)
+$(version)/proll/%.svg: ../%.gmn
 	@[ -d $(@D) ] || mkdir -p $(@D)
 	-$(guido2proll) $< > $@
     
-$(version)/proll/classic/voicescolor%.svg: ../%.gmn
+$(version)/proll/voicescolor%.svg: ../%.gmn
 	@[ -d $(@D) ] || mkdir -p $(@D)
 	-$(guido2proll) -voicesautocolor true $< > $@
     
-$(version)/proll/trajectory/%.svg: ../%.gmn
-	@[ -d $(@D) ] || mkdir -p $(@D)
-	-$(guido2proll) -pianoroll trajectory $< > $@
+#$(version)/proll/trajectory/%.svg: ../%.gmn
+#	@[ -d $(@D) ] || mkdir -p $(@D)
+#	-$(guido2proll) -pianoroll trajectory $< > $@
     
-$(version)/proll/trajectory/voicescolor%.svg: ../%.gmn
-	@[ -d $(@D) ] || mkdir -p $(@D)
-	-$(guido2proll) -pianoroll trajectory -voicesautocolor true $< > $@
+#$(version)/proll/trajectory/voicescolor%.svg: ../%.gmn
+#	@[ -d $(@D) ] || mkdir -p $(@D)
+#	-$(guido2proll) -pianoroll trajectory -voicesautocolor true $< > $@
 
 
 #########################################################################

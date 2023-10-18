@@ -22,6 +22,7 @@
 #include "GuidoDefs.h"
 #include "NVPoint.h"
 #include "VGDevice.h"
+#include "VGFont.h"
 
 // - Guido AR
 #include "ARNoteFormat.h"
@@ -48,7 +49,6 @@
 #include "GRTrill.h"
 #include "GRCluster.h"
 #include "GRTuplet.h"
-#include "GRSpring.h"
 #include "GRPage.h"
 #include "GRSlur.h"
 #include "secureio.h"
@@ -62,6 +62,7 @@ using namespace std;
 #define traceMethod(method)	
 #endif
 
+float GRSingleNote::fLedgeWidth = 0.f;
 
 //____________________________________________________________________________________
 GRSingleNote::GRSingleNote( GRStaff* inStaff, const ARNote* arnote, const TYPE_TIMEPOSITION& pos, const TYPE_DURATION& dur)
@@ -97,6 +98,21 @@ void GRSingleNote::doCreateNote( const TYPE_DURATION & p_durtemplate )
 	createNote(p_durtemplate);
 }
 
+unsigned char* GRSingleNote::getColorRef() const {
+    if (mAssignedColRef) {
+        return mAssignedColRef;
+    }
+    return mColRef;
+}
+
+unsigned char* GRSingleNote::getStaffFormatColorRef() const {
+    if (mAssignedColRef)
+        return mAssignedColRef;
+    if (mGrStaff->getStffrmtColRef())
+        return mGrStaff->getStffrmtColRef();
+    return NULL;
+}
+
 //____________________________________________________________________________________
 void GRSingleNote::GetMap( GuidoElementSelector sel, MapCollector& f, MapInfos& infos ) const
 {
@@ -109,63 +125,104 @@ void GRSingleNote::GetMap( GuidoElementSelector sel, MapCollector& f, MapInfos& 
 		if (dur.getNumerator() == 0) {		// notes in chords have a null duration
 			dur = getDurTemplate();
         }
-//		const ARNote * ar = getARNote();
-//		std::cout << "mapped pos: " << ar->getStartTimePosition() << " ar pos: " << ar->getRelativeTimePosition() << " ";
-//		ar->print(std::ostream& os);
-		// ARNote and GRNote don't have the same time position in chords
-		// actually chord notes have a wrong time position, it has been corrected in ARMusicalVoice::FinishChord
-        SendMap (f, getARNote()->getStartTimePosition(), dur, (isGraceNote() ? kGraceNote : kNote), infos);
+        SendMap (f, getARNote()->getRelativeTimePosition(), dur, (isGraceNote() ? kGraceNote : kNote), infos);
 	}
 }
+
+bool GRSingleNote::contains(const TYPE_TIMEPOSITION &date)  const {
+    TYPE_DURATION dur = getDuration();
+    if (dur.getNumerator() == 0) {        // notes in chords have a null duration
+        dur = getDurTemplate();
+    }
+    
+    return (getARNote()->getRelativeTimePosition() <= date) && (getARNote()->getRelativeTimePosition()+dur > date);
+}
+
+//____________________________________________________________________________________
+float GRSingleNote::getLedgeWidth (VGDevice & hdc) const
+{
+	if (!fLedgeWidth) {
+		const VGFont* font = hdc.GetMusicFont();
+		if (font) {
+			float foo;
+			font->GetExtent(kLedgerLineSymbol, &fLedgeWidth, &foo, &hdc);
+		}
+	}
+	return fLedgeWidth;
+}
+
+
+//____________________________________________________________________________________
+// draw ledger lines
+void GRSingleNote::drawLedges (VGDevice & hdc) const
+{
+    float incy = 1;
+    float posy = 0;
+    int count = mNumHelpLines;
+    if (!count) return;
+
+	GRStdNoteHead * head = getNoteHead();
+	NVRect r = head->getBoundingBox() + head->getNoteHeadPosition();
+//	hdc.Frame(r.left, r.top, r.right, r.bottom);
+
+    if (mNumHelpLines > 0) { 	// ledger lines up
+        incy = -mCurLSPACE;
+        posy = -mCurLSPACE;
+    }
+    else if (mNumHelpLines < 0) {
+        incy = mCurLSPACE;
+        posy = mGrStaff->getNumlines() * mCurLSPACE;
+        count = - count;
+    }
+	hdc.SetFontAlign(VGDevice::kAlignLeft | VGDevice::kAlignBase);
+
+    // draw ledger lines
+#ifdef SMUFL
+    float ledXPos = -mCurLSPACE * 0.65;;
+#else
+    float ledXPos = - 60 * 0.85f * mSize;
+#endif
+	
+	bool largeledge = false;
+	if (!getDuration() && !fClusterNote)  { // denotes a chord and not a cluster
+		const float xPos = mPosition.x + getOffset().x + getReferencePosition().x + ledXPos;
+		if (xPos > r.left) {
+			largeledge = true;
+			ledXPos -= r.Width() * 0.8;
+		}
+		else if ((xPos +  getLedgeWidth(hdc)) < r.right) {
+			largeledge = true;
+		}
+	}
+//cerr << "GRSingleNote::drawLedges note " << this << " " << largeledge << " " << r << endl;
+    for (int i = 0; i < count; ++i, posy += incy) {
+		GRNote::DrawSymbol(hdc, largeledge ? kLedgerLargeSymbol : kLedgerLineSymbol, ledXPos, posy - mPosition.y);
+	}
+}
+
 //____________________________________________________________________________________
 void GRSingleNote::OnDraw( VGDevice & hdc) const
 {
 	if (!mDraw || !mShow) return;
 
-    float incy = 1;
-    float posy = 0;
-    int sum = mNumHelpLines;
-
-//	NVRect r = getEnclosingBox(false, false, false);
-//	hdc.Frame(r.left, r.top, r.right, r.bottom);
-//	NVPoint p = getStemEndPos();
-//	float w = 25.f;
-//	hdc.Rectangle(p.x-w, p.y-w, p.x+w, p.y+w);
-//cerr << "GRSingleNote::OnDraw " << this << " box: " << r << endl;
-
-    if (mNumHelpLines > 0) { 	// ledger lines up
-        incy = -mCurLSPACE;
-        posy = -mCurLSPACE;
-        hdc.SetFontAlign(VGDevice::kAlignLeft | VGDevice::kAlignBase);
-    }
-    else if (mNumHelpLines < 0) {
-        incy = mCurLSPACE;
-        posy = mGrStaff->getNumlines() * mCurLSPACE;
-        sum = - sum;
-        hdc.SetFontAlign(VGDevice::kAlignLeft | VGDevice::kAlignBase);
-    }
-
 	const VGColor prevFontColor = hdc.GetFontColor();
-    if (mGrStaff->getStffrmtColRef())
-        hdc.SetFontColor(VGColor(mGrStaff->getStffrmtColRef()));
+	const unsigned char* staffColor = getStaffFormatColorRef();
+    if (staffColor)
+        hdc.SetFontColor(VGColor(staffColor));
 
     // draw ledger lines
-#ifdef SMUFL
-    const float ledXPos = -mCurLSPACE * 0.65;;
-#else
-    const float ledXPos = - 60 * 0.85f * mSize;
-#endif
-    for (int i = 0; i < sum; ++i, posy += incy)
-        GRNote::DrawSymbol(hdc, kLedgerLineSymbol, ledXPos, (posy - mPosition.y)); // REM: the ledger line width can't change with staffFormat width
-                                                                                   //      because it's drawn with the font, not with a line
-    if (mGrStaff->getStffrmtColRef())
+    drawLedges(hdc);
+
+    if (staffColor)
         hdc.SetFontColor(prevFontColor);
 	if (fCluster)
 		getNoteHead()->setHaveToBeDrawn(false);
 
 	const VGColor oldcolor = hdc.GetFontColor();
-	if (mColRef)
-        hdc.SetFontColor(VGColor(mColRef));
+    const unsigned char * colref = getColorRef();
+    if (colref) {
+        hdc.SetFontColor(VGColor(colref));
+    }
 
 	// - Draw elements (stems, dots...)
     if (getARNote()->haveSubElementsToBeDrawn())
@@ -178,7 +235,7 @@ void GRSingleNote::OnDraw( VGDevice & hdc) const
 		el->OnDraw(hdc);
 	}
 
-	if (mColRef) 						hdc.SetFontColor(oldcolor);
+	if (colref) 						hdc.SetFontColor(oldcolor);
 	if (gBoundingBoxesMap & kEventsBB) 	DrawBoundingBox(hdc, kEventBBColor);
 	if (fClusterHaveToBeDrawn) 			fCluster->OnDraw(hdc);
 	
@@ -420,6 +477,14 @@ void GRSingleNote::forceAppearance()
 }
 
 //____________________________________________________________________________________
+void GRSingleNote::hideHead ()
+{
+	if (mNoteHead)
+		mNoteHead->setHaveToBeDrawn(false);
+	else mStyle = "none";
+}
+
+//____________________________________________________________________________________
 /** \brief Called by GRGlobalStem to allow the note to adjust its headposition.
 
 	If head Headstate is set by the user the sugHeadState (suggested Head State) is just ignored.
@@ -505,9 +570,11 @@ NVRect GRSingleNote::getEnclosingBox(bool includeAccidentals, bool includeSlurs,
 	if (!getDuration()) {
 		// we're in a chord, needs to add the stem
 		const GRStem * stem = getStem();
-		NVRect r = stem->getBoundingBox();
-		r += stem->getPosition();
-		outrect.Merge (r);
+		if (stem) {
+			NVRect r = stem->getBoundingBox();
+			r += stem->getPosition();
+			outrect.Merge (r);
+		}
 	}
 	if (!includeAccidentals) {
 		outrect.left = mPosition.x - mNoteBreite / 2 * getSize();
@@ -540,7 +607,7 @@ NVRect GRSingleNote::getEnclosingBox(bool includeAccidentals, bool includeSlurs,
 		if (includeSlurs) {
 			const GRSlur * slur = dynamic_cast<const GRSlur *>(el);
 			if (slur) {
-				NVRect r = slur->getBoundingBox();
+                NVRect r = slur->getBoundingBox(getGRStaff());
 				if (r.top < outrect.top) outrect.top = r.top;
 				if (r.bottom > outrect.bottom) outrect.bottom = r.bottom;
 			}
@@ -764,8 +831,9 @@ void GRSingleNote::setBeamStem(GRBeam * beam, GCoord pos)
 }
 
 //____________________________________________________________________________________
-float GRSingleNote::setStemLength( float inLen )
+float GRSingleNote::setStemLength( float inLen, bool userLength)
 {
+	fUserLength = userLength;
 	if (mGlobalStem) {
 		mGlobalStem->setNoteStemLength( this, inLen);
 		return (float)mGlobalStem->getStemLength();
@@ -791,29 +859,21 @@ float GRSingleNote::setStemLength( float inLen )
 }
 
 //____________________________________________________________________________________
-float GRSingleNote::changeStemLength( float inLen )
+float GRSingleNote::changeStemLength( float inLen, bool force )
 {
-	if (mStemLengthSet)
+	if (mStemLengthSet && !force)
         return mStemLen;
 
 	setStemLength(inLen);
-	// this makes sure, that we don't think that
-	// the stemlength was changed with a parameter.
+	// this makes sure, that we don't think that the stem length was changed with a parameter.
 	mStemLengthSet = false;
 
 	GRNEList::iterator ptr;
 	GRNEList& articulations = getArticulations();
 	sort (articulations.begin(), articulations.end(), GRArticulation::compare);
-	for( GRNEList::iterator i = articulations.begin(); i != articulations.end(); i++ ) {
-		(*i)->tellPosition( this, mPosition );
+	for(auto art: articulations) {
+		art->tellPosition( this, mPosition );
 	}
-
-//	NEPointerList & list = GetCompositeElements();
-//	GuidoPos pos = list.GetHeadPosition();
-//	while (pos) {
-//		GRNotationElement* e = list.GetNext(pos);
-//		e->tellPosition( this, mPosition );
-//	}
 	return mStemLen;
 }
 

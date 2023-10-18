@@ -37,6 +37,9 @@ class GRDynamics : public GRPTagARNotationElement
 		virtual void	accept			(GRVisitor& visitor);
 
     	virtual const GRDynamics *	isGRDynamic() const		{ return this; }
+    
+    /// Override getBoundingBox since for this GR they depend on the staff and need to be dynamically calculated. (AC: 2021/03)
+    NVRect getBoundingBox(const GRSystem*) const;
 
 	protected:
 		typedef struct TXSegment {

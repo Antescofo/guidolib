@@ -45,6 +45,12 @@ GRArpeggio::GRArpeggio( GRStaff * inStaff, const ARArpeggio * ar )
 	fDy = dy ? dy->getValue (fLSpace) : 0.f;
 }
 
+void GRArpeggio::accept (GRVisitor& visitor)
+{
+    visitor.visitStart (this);
+    visitor.visitEnd (this);
+}
+
 //-------------------------------------------------------------------------
 void GRArpeggio::OnDraw( VGDevice & hdc ) const
 {
@@ -60,6 +66,7 @@ void GRArpeggio::OnDraw( VGDevice & hdc ) const
 	 ARArpeggio::dir dir = ar->getDirection();
 
 	// set up color
+    auto mColRef = getColRef();
 	if (mColRef) {
 		VGColor color (mColRef); 	// custom or black
 		hdc.PushFillColor(color);

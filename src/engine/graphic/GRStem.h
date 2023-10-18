@@ -47,7 +47,12 @@ public:
 	virtual float 		getSize() const					{ return mSize; }
 	virtual GDirection 	getStemDir() const				{ return mStemDir; }
 	virtual float 		getStemLength() const			{ return mStemLen; }
-	virtual const unsigned char * getColRef() const		{ return mColRef; }
+	virtual const unsigned char * getColRef() const		{
+        if (mAssignedColRef) {
+            return mAssignedColRef;
+        }
+        return mColRef;
+    }
 	
     bool getFirstSegmentDrawingState() const 			{ return fDrawActivated; }
     ARTHead::HEADSTATE getHeadOrientation() const 		{ return fHeadOrientation; }

@@ -29,6 +29,7 @@
 #include "GRClef.h"
 #include "GRKey.h"
 #include "GRMeter.h"
+#include "GRGrace.h"
 
 // - Guido AR
 #include "ARMusicalObject.h"
@@ -38,6 +39,8 @@
 #include "secureio.h"
 #include "FontManager.h"
 #include "VGFont.h"
+
+#include "TagParameterString.h"
 
 using namespace std;
 
@@ -53,6 +56,7 @@ GRNotationElement::GRNotationElement()
 	mDraw = true;
 	mShow = true;
     mIsInHeader = false;
+    mAssignedColRef = NULL;
 }
 
 GRNotationElement::~GRNotationElement()
@@ -71,7 +75,9 @@ GRNotationElement::~GRNotationElement()
 		}
 		delete mAssociated;
 		mAssociated = 0;
-  } 
+  }
+    delete [] mAssignedColRef;
+    mAssignedColRef = 0;
   // previously: no delete only set to NULL ... associated = NULL;
 }
 
@@ -103,9 +109,7 @@ void GRNotationElement::SendMap (const NVRect& map, MapCollector& f, TYPE_TIMEPO
 
     const ARNote *arNote = dynamic_cast<const ARNote *>(ar);
     inf.midiPitch = (arNote ? arNote->getMidiPitch() : -1);
-    inf.isTied = (arNote ? arNote->isTied() : false);
-    inf.isOriginTied = (arNote ? arNote->isOriginTied() : false);
-    inf.intensity = (arNote ? arNote->getIntensity() : 0);
+    inf.noteName = (arNote ? arNote->getPitchName() : "");
 
 	f.Graph2TimeMap (r, dates, inf);
 }
@@ -146,6 +150,14 @@ GRNotationElement::addToBoundingBox( GRNotationElement * in )
 	mBoundingBox.Merge( box );
 }
 
+void GRNotationElement::setColor(const char * cp) {
+    if (!mAssignedColRef)
+        mAssignedColRef = new unsigned char[4];
+    TagParameterString* color = new TagParameterString(cp);
+    color->setName("color");
+    color->getRGB(mAssignedColRef);
+}
+
 // -------------------------------------------------------------------------
 void GRNotationElement::OnDrawText( VGDevice & hdc, NVPoint pos, const char * text, int inCharCount ) const
 {
@@ -153,7 +165,7 @@ void GRNotationElement::OnDrawText( VGDevice & hdc, NVPoint pos, const char * te
 	
 	const VGFont* hmyfont = FontManager::gFontText;
 	const int size = getFontSize();
-	const unsigned char * colref = getColRef();
+	const unsigned char * colref = getColorRef(); // <- Prefers assigned ColorRef from ColorVisitor
 	
 	if (getFont())
 		hmyfont = FontManager::FindOrCreateFont( size, getFont(), getFontAttrib());
@@ -197,7 +209,8 @@ void GRNotationElement::OnDrawSymbol( VGDevice & hdc, unsigned int inSymbol, flo
 	if(!mDraw || !mShow)
 		return;
 
-	const unsigned char * colref = getColRef();
+    const unsigned char * colref = getColorRef(); // <- Prefers assigned ColorRef from ColorVisitor
+
 	const VGColor prevFontColor = hdc.GetFontColor();
   	if (colref)
 		hdc.SetFontColor( VGColor( colref ));
@@ -375,6 +388,11 @@ NVRect GRNotationElement::getAssociatedBoundingBox() const
 // -------------------------------------------------------------------------
 void GRNotationElement::addAssociation( GRNotationElement * p )
 {
+	// DF 02-08-2023 don't associate a GRGrace to any element
+	// it's useless since notes are already notified of their 'grace' status
+	// solves the crash of issue #173
+	if (dynamic_cast<const GRGrace*>(p)) return;
+
 	if (mAssociated == 0)
 		mAssociated = new NEPointerList; // these elements don't belong to the list
 

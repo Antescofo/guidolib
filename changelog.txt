@@ -2,6 +2,60 @@ GUIDO Engine history
 
 
 ----------------------------------------------------------------
+  version 1.7.7
+- support for line break ('\n') in text elements
+- fix crash bug with repeat begin
+- fix issue #168: Slur Collision when the slur spams more than one system
+- fix issue #170: Dots not drawn in Tuplets
+- fix issue #171: Incorrect beam dash direction
+- fix issue #169: Double flat is rendered as four if repeated on a 2nd voice
+- fix issue #164: Conflicting notes on a multi voices staff 
+- fix occasional incorrect dots placement in repeatEnd (depending on context)
+- fix issue #173: Cross Staff Grace Notes rendering issue with Beaming
+
+----------------------------------------------------------------
+  version 1.7.6
+- fix crash bug related to pageFormat (issue #159)
+- new \auto tag parameter: resolveMultiVoiceCollisions intended to multi-voices note collisions (issue #158)
+- fix incorrect font format (issue #157)
+- fix incorrect beaming (issue #161)
+- fix incorrect beaming (issue #136)
+- fix incorrect beaming (issue #58)
+- fix incorrect beaming (issue #154)
+- fix incorrect beaming (issue #88)
+- fix incorrect beaming (issue #137)
+
+----------------------------------------------------------------
+  version 1.7.5
+- extends guido font version 3.92 with inverted turn (with a bar)
+- add invertedb type to \turn 
+
+----------------------------------------------------------------
+  version 1.7.4
+- fix multiple articulations on chords (issue #151)
+
+----------------------------------------------------------------
+  version 1.7.3
+- fix extra accidental on multi-voice chord (issue #147)
+- fix incorrect beaming with empty (issue #146)
+- fix accidental extra space in chords (issue #145)
+
+----------------------------------------------------------------
+  version 1.7.2
+- octava add support for dx
+- improve \mark spacing
+- fix incorrect octava rendering (issue #134)
+- fix ledger line width with chords and heads reversed (issue #135)
+- fix incorrect accidental rendering with chords (issue #144 and #81)
+- fix fontalign state after text drawing
+
+----------------------------------------------------------------
+  version 1.7.1
+- add 'hidden' attribute to \octava
+- fix incorrect volta placement 
+- fix incorrect repeatEnd length with non 5 lines staves
+
+----------------------------------------------------------------
   version 1.7.0
 - introduce variables
 - support single quote strings

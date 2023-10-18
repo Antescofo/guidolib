@@ -18,12 +18,10 @@
 #include "ARTStem.h"
 #include "GRAccidental.h"
 #include "GRBeam.h"
-#include "GREmpty.h"
 #include "GRFlag.h"
 #include "GRGlobalStem.h"
 #include "GRNoteDot.h"
 #include "GRSingleNote.h"
-#include "GRSpring.h"
 #include "GRStaff.h"
 #include "GRStdNoteHead.h"
 #include "GRStem.h"
@@ -440,6 +438,18 @@ void GRGlobalStem::RangeEnd( GRStaff * inStaff)
 	}
 }
 
+void GRGlobalStem::setColor(const char * cp)
+{
+    GRTag::setColor(cp);
+    GRNotationElement::setColor(cp);
+    if (fStem) {
+        fStem->setColRef(getColRef());
+    }
+    if (fFlag) {
+        fFlag->setColRef(getColRef());
+    }
+}
+
 
 //----------------------------------------------------------------
 void GRGlobalStem::updateGlobalStem(const GRStaff * inStaff)
@@ -827,9 +837,9 @@ void GRGlobalStem::OnDraw( VGDevice & hdc) const
 }
 
 //----------------------------------------------------------------
-float GRGlobalStem::changeStemLength( float inLen )
+float GRGlobalStem::changeStemLength( float inLen, bool force )
 {
-	if (fStemlengthSet) {
+	if (fStemlengthSet && !force) {
 		GuidoWarn("Stemlength already set!");
 		if (fStem) return fStem->getStemLength();
 	}

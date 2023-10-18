@@ -18,6 +18,7 @@
 #include "ARVoiceManager.h"
 #include "ARAuto.h"
 #include "ARMusicalVoice.h"
+#include "AROctava.h"
 #include "MeterVisitor.h"
 #include "TempoVisitor.h"
 #include "TimeMapper.h"
@@ -376,13 +377,17 @@ void ARMusic::doAutoStuff()
 
 	int counter = 0;
 	pos = GetHeadPosition();
-	//char statusmsg[100];
 
 	while (pos) {
 		++counter;
 		ARMusicalVoice * arvc = GetNext(pos);
 		timebench("doAutoStuff1", arvc->doAutoStuff1());
 	}
+
+//cerr << "======================== after auto stuff 1" << endl;
+//	GMNCodePrintVisitor va(cerr);
+//	this->accept (va);
+
 
 	// now, we do the stuff that needs to be done by ALL voices ...
 	// AutoBreaks inserts possible breaks at the positions, keeping track of explicit newlines ....
@@ -402,6 +407,31 @@ void ARMusic::doAutoStuff()
 
 //	GMNCodePrintVisitor v(cerr);
 //	this->accept (v);
+}
+
+//____________________________________________________________________________________
+/** \brief check multiple octava on multiple voice, same staff
+*/
+void ARMusic::doOctavaCheck()
+{
+	int num = 1;
+	map<int, vector<AROctava*> > map;
+	GuidoPos pos = GetHeadPosition();
+	while (pos) {
+		ARMusicalVoice * arvc = GetNext(pos);
+		arvc->getOctava(num++, map);
+	}
+	
+	for (auto elt: map) {
+		if (elt.second.size() > 1) {
+cerr << "ARMusic::doOctavaCheck check dup on staff " << elt.first << endl;
+			for (AROctava* o: elt.second) {
+cerr << "	- date: " << o->getRelativeTimePosition() << " end: " << o->getEnd() << endl;
+				
+			}
+		}
+		
+	}
 }
 
 /** \brief Removes tags that were added automatically

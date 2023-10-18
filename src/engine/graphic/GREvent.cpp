@@ -57,6 +57,7 @@ GREvent::GREvent(GRStaff * inStaff, const ARMusicalEvent * ar, bool p_ownsAR)
 		mSize = 1.0f;
 		mCurLSPACE = LSPACE;
 	}
+    mAssignedColRef = NULL;
 }
 
 // ----------------------------------------------------------------------------
@@ -95,6 +96,7 @@ GREvent::GREvent( GRStaff * inStaff, const ARMusicalEvent * ar, const TYPE_TIMEP
 	// ATTENTION, this can be bad for Chords ...
 	// Graphical-Elements are longer than the
 	// abstract-representations!
+    mAssignedColRef = NULL;
 }
 
 GREvent::~GREvent()
@@ -105,6 +107,8 @@ GREvent::~GREvent()
 	mArtilist.clear();
 	delete [] mColRef;
     mColRef = 0;
+    delete [] mAssignedColRef;
+    mAssignedColRef = 0;
 }
 
 /* 
@@ -130,7 +134,7 @@ void GREvent::setBeamStem(GRBeam *, GCoord )
 { // ignore/ do nothing for rests and composite note 
 }
 
-float GREvent::setStemLength( float inLen )
+float GREvent::setStemLength( float inLen, bool userLength )
 {
 	return 0;
 }
@@ -148,7 +152,7 @@ NVPoint GREvent::getCrescEnd()	// may be obsolete
 // ----------------------------------------------------------------------------
 /** \brief Looks for a dot in the notation elements list.
 */
-GRNoteDot * GREvent::getDot()
+GRNoteDot * GREvent::getDot() const
 {
 	GuidoPos pos = First();
 	GRNotationElement * e;
@@ -298,7 +302,7 @@ void GREvent::addArticulation( const ARMusicalTag * inTag )
 	// DEBUG, try to place the articulation correctly. (OK, this fixes bugs)
 	newArticulation->tellPosition( this, getPosition());
 
-	mArticulationFlags |= newArticulation->getArticulationType(); // Avoids the use of 2 identical articulations
+//	mArticulationFlags |= newArticulation->getArticulationType(); // Avoids the use of 2 identical articulations
 	updateBoundingBox(); // ok ?
 }
 
@@ -385,9 +389,9 @@ NVPoint GREvent::getStemEndPos() const
 	return NVPoint(mBoundingBox.right,0); 
 }
 
-float GREvent::changeStemLength( float inLen )
+float GREvent::changeStemLength( float inLen, bool force )
 { 
-	return mGlobalStem ? mGlobalStem->changeStemLength( inLen ) : 0;
+	return mGlobalStem ? mGlobalStem->changeStemLength( inLen, force ) : 0;
 }
 
 bool GREvent::getStemDirSet() const
@@ -416,5 +420,14 @@ GREvent::isSyncopated() const
 bool GREvent::hasArticulation( int inArticulationFlag ) const
 {
 	return (( mArticulationFlags & inArticulationFlag ) != 0 );
+}
+
+void GREvent::setColor(const char * cp)
+{
+    TagParameterString* color = new TagParameterString(cp);
+    color->setName("color");
+    if (!mAssignedColRef)
+        mAssignedColRef = new unsigned char[4];
+    color->getRGB(mAssignedColRef);
 }
 

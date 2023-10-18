@@ -119,6 +119,9 @@ class GRStaffState
         const TagParameterFloat* getStaffDistance() const       { return staffDistance; }
     
         void setStaffLSPACE(float value)                        { staffLSPACE = value * 2; } // Factor 2 to be consistent with GRStaff::setStaffFormat(ARStaffFormat * staffrmt)
+        void setMultiVoiceCollisions(bool state)                { fMultiVoiceCollisions = state; }
+        bool multiVoiceCollisions() const                       { return fMultiVoiceCollisions; }
+        const MeasureAccidentals& getMeasureAccidentals() const { return fMeasureAccidentals; }
 
 	private:
 		// Meter-Parameters
@@ -160,6 +163,7 @@ class GRStaffState
         unsigned char *colRef;
 		float	distance;
 		bool	distanceset;
+		bool	fMultiVoiceCollisions = false;
 		// this is VOICE-Stuff!
 		// Stemdirection
 		// stemstate stemset;  // STEMUP, STEMDOWN, STEMAUTO
@@ -182,7 +186,7 @@ class GRStaff : public GRCompositeNotationElement
 	friend class GRVoiceManager;
 
 	public:
-						 GRStaff(GRSystemSlice * systemslice, float propRender);
+						 GRStaff(GRSystemSlice * systemslice, float propRender, bool extendedBBsetting);
 		virtual 		~GRStaff();
 
 		float           getDistance() const;
@@ -288,9 +292,10 @@ class GRStaff : public GRCompositeNotationElement
 		float	getProportionnalRender() const { return this->fProportionnalRendering; }
 		float	getStaffBottom () const;
 		void	checkCollisions (TCollisions& state) const;
+		void	checkMultiVoiceNotesCollision ();
 		float	getNotesDensity () const;
 		size_t	getLyrics (std::vector<const GRNotationElement*>& list) const;
-	
+		void	inhibitNextReset2Key()		{ fInhibitNextReset2key = true; }
 
   protected:
 		void	DebugPrintState(const char * info) const;
@@ -323,13 +328,14 @@ class GRStaff : public GRCompositeNotationElement
 		
  	 private:
 		TYPE_TIMEPOSITION	fLastSystemBarChecked;
-		void newMeasure(const TYPE_TIMEPOSITION & tp);
+		void newMeasure(const TYPE_TIMEPOSITION & tp, bool reset=true);
 		
 		std::map<TYPE_TIMEPOSITION, bool> fOnOffList;
 		std::map<float, float> fPositions;
 		bool			isNextOn;
 		bool			firstOnOffSetting;
-
+        bool            extendedBB;
+		bool			fInhibitNextReset2key = false;
 		float			fProportionnalRendering;
     
     NVRect noteOnlyBoundingBox;     // Used for AutoPos

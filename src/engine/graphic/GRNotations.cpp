@@ -70,7 +70,7 @@ GRNotations::GRNotations( GRStaff * inStaff, const ARNotations * ar)
 
 	const float curLSPACE = mGrStaff ? mGrStaff->getStaffLSPACE() : LSPACE;
 	mPosition.y = 7 * curLSPACE;
-}
+} 
 
 // -----------------------------------------------------------------------------
 void GRNotations::accept (GRVisitor& visitor)

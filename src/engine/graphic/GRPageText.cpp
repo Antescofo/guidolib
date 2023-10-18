@@ -24,6 +24,8 @@
 #include "VGFont.h"
 
 #include "FontManager.h"
+#include "TagParameterFloat.h"
+
 
 
 GRPageText::GRPageText ( const ARText * ar, GRPage * page, const char* txt, const char* location)
@@ -38,6 +40,7 @@ GRPageText::GRPageText ( const ARText * ar, GRPage * page, const char* txt, cons
 	fFontName   = ar->getFont();
 	fFontAttrib = ar->getTextAttributes();
 	fFontSize   = ar->getFSize();
+    fDy         = ar->getDY()->getValue();
 
 	fTextalign = VGDevice::kAlignLeft + VGDevice::kAlignTop;
 	const VGFont* myfont = FontManager::GetTextFont(ar, LSPACE, fTextalign);
@@ -73,6 +76,8 @@ GRPageText::GRPageText ( const ARText * ar, GRPage * page, const char* txt, cons
 		mBoundingBox.top    = -height;
 		mBoundingBox.bottom = 0;
 	}
+    
+    offsetFromTopMargin = 0.0;
 }
 
 //-------------------------------------------------------------------------------
@@ -116,6 +121,9 @@ void GRPageText::calcPosition()
 	else if (second == '5')					mPosition.y = (pageHeight -(mb * kCmToVirtual));
 	else if (second == '6')					mPosition.y = (pageHeight - ((mb * kCmToVirtual) * 0.5f));
 	else if (second == 'b' || second == '7')mPosition.y = (pageHeight);
+    
+    // Calculate y-distance from top-margin which depends on the second attribute, BB, and position
+    offsetFromTopMargin = mBoundingBox.Height() - fDy;
 }
 
 bool GRPageText::isRelativeToTopMargin() const {
@@ -123,4 +131,8 @@ bool GRPageText::isRelativeToTopMargin() const {
     char second = fLocation[1];
     
     return (second == 't') || (second == '1') || (second == '2') || (second == '3');
+}
+
+float GRPageText::getYOffset() const {
+    return fDy;
 }

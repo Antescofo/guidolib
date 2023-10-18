@@ -91,7 +91,8 @@ ConstMusicalSymbolID kFinishBarSymbol	 	 =  92;
 ConstMusicalSymbolID kRepeatBeginSymbol		 =  93;	// ']'
 ConstMusicalSymbolID kMarcatoUpSymbol		 =  94;
 ConstMusicalSymbolID kLedgerLineSymbol	 	 =  95;	// Ledger line
-ConstMusicalSymbolID kP8Symbol				 =  97;	  
+ConstMusicalSymbolID kLedgerLargeSymbol	 	 =  59;	// Large ledger line
+ConstMusicalSymbolID kP8Symbol				 =  97;
 ConstMusicalSymbolID kFlatSymbol			 =  98;
 ConstMusicalSymbolID kCSymbol				 =  99;	// 'c'
 ConstMusicalSymbolID kBarGSSymbol	 		 = 101;
@@ -151,6 +152,7 @@ ConstMusicalSymbolID kBuzzPizzSymbol		 = 226;
 ConstMusicalSymbolID kFingernailPizzSymbol	 = 227;
 ConstMusicalSymbolID kStaccmoUpSymbol		 = 228;
 ConstMusicalSymbolID kInvertedTurnSymbol	 = 229;
+ConstMusicalSymbolID kInvertedTurnBarSymbol	 = 250;
 ConstMusicalSymbolID kCodaSymbol			 = 230;
 
 // version 1.39

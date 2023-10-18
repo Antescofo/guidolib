@@ -31,7 +31,6 @@ class GObject;
 class NVPoint;
 class MapInfos;
 
-
 class NEPointerList : public NEList  
 {
   public:
@@ -42,6 +41,7 @@ class NEPointerList : public NEList
 		virtual ~NEPointerList();
 
 		void print(std::ostream& os) const;
+		std::string reduce_print() const;
 
 	  virtual void setHPosition( float nx );
 		int getMaxSpacing();
@@ -72,6 +72,9 @@ class NEPointerList : public NEList
 		GuidoPos AddAtCorrectTimePosition(GRNotationElement * grne);
 		GuidoPos AddAtTimePosition(const TYPE_TIMEPOSITION & tp, GRNotationElement * grne);
 };
+
+std::ostream & operator << ( std::ostream & os, const NEPointerList* l);
+
 
 #endif
 

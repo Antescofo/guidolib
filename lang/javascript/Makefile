@@ -33,7 +33,7 @@ ifeq ($(SMUFL), yes)
 endif
 
 OPT ?= -O3
-CXXFLAGS += $(addprefix -I, $(subprojects)) $(SMUFLDEF) -DMSLIGHT -DINDEPENDENTSVG -DJSON_ONLY -DCANVASSYSTEM $(OPT) -std=c++11
+CXXFLAGS += $(addprefix -I, $(subprojects)) $(SMUFLDEF) -DMSLIGHT -DINDEPENDENTSVG -DJSON_ONLY -DCANVASSYSTEM $(OPT) -std=c++11 --llvm-opts "['-O3']"
 
 
 library = libGUIDOEngine
@@ -41,8 +41,7 @@ target = $(library).js
 
 
 OPTIONS :=  -s ALLOW_MEMORY_GROWTH=1 -s DISABLE_EXCEPTION_CATCHING=1 -s ASSERTIONS=0 -s MODULARIZE=1 -s EXPORT_NAME="'GuidoModule'"
-
-OPT1    := -O3 --bind --memory-init-file 0
+OPT1    := -O3 --bind --memory-init-file 0 --llvm-opts "['-O3']"
 
 all: $(library).js
 
@@ -53,7 +52,7 @@ help :
 	@echo "   clean        : remove objects and output files"	
 	@echo "   depend       : recompute dependencies"	
 	@echo "   test         : run API tests"	
-	@echo "   npm          : publish to npm (use with caution),"	
+	@echo "   publish      : publish to npm (use with caution),"	
 	@echo "                  check the npm folder."	
 	@echo "Options:"
 	@echo "   SMUFL   use SMUFL Bravura font when set to 'yes' (default is $(SMUFL))"
@@ -78,9 +77,20 @@ test: $(npmdir)/$(library).js $(npmdir)/$(library).wasm
 ##############################################################
 # publishing to npm
 ##############################################################
-npm: $(npmdir)/$(library).js $(npmdir)/$(library).wasm $(webfont)
-	npm publish $(npmdir) --access public
-	@echo "Guido Engine version " $(shell grep version $(npmdir)/package.json | cut -d: -f 2) "published"
+publish: VERSION := $(shell grep '"version"' $(npmdir)/package.json | sed -e 's/[^0-9.]*//g')
+publish: GVERSION := $(shell grep '"engine-version"' $(npmdir)/package.json | sed -e 's/[^0-9.]*//g')
+publish: $(npmdir)/$(library).js $(npmdir)/$(library).wasm $(webfont)
+	@echo "You are about to publish the Guido Engine package v.$(VERSION) on npm."
+	@echo "Engine version $(GVERSION)."
+	@echo "Make sure you are logged in (npm login)"
+	@read -p "Continue [y|n]: " answer && [ $$answer == "y" ]
+	cd npm && npm publish --access public
+	@echo "Guido Engine version " $(VERSION) " published"
+
+# 
+# publish: $(npmdir)/$(library).js $(npmdir)/$(library).wasm $(webfont)
+# 	npm publish $(npmdir) --access public
+# 	@echo "Guido Engine version " $(shell grep version $(npmdir)/package.json | cut -d: -f 2) "published"
 	
 $(npmdir)/$(library).js : $(library).js
 	cp $(library).js $(npmdir)/$(library).js
@@ -1054,6 +1064,8 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/abstract/ARMusic.o: ../../src/engine/abstract/TagParametersMaps.h
 ../../src/engine/abstract/ARMusic.o: ../../src/engine/abstract/TagParameterStrings.h
 ../../src/engine/abstract/ARMusic.o: ../../src/engine/abstract/TagParameterRGBColor.h
+../../src/engine/abstract/ARMusic.o: ../../src/engine/abstract/AROctava.h
+../../src/engine/abstract/ARMusic.o: ../../src/engine/abstract/ARPositionTag.h
 ../../src/engine/abstract/ARMusic.o: ../../src/engine/lib/MeterVisitor.h
 ../../src/engine/abstract/ARMusic.o: ../../src/engine/lib/TempoVisitor.h
 ../../src/engine/abstract/ARMusic.o: ../../src/engine/lib/TimeMapper.h
@@ -1109,110 +1121,110 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/include/VGColor.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/include/GUIDOExport.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/include/VGSystem.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMusicalVoice.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ObjectList.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMusicalEvent.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/misc/GUIDOTypes.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARAlter.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMTParameter.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMusicalTag.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMusicalObject.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/lib/defines.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/misc/nvstring.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/Fraction.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/operations/ARVisitable.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/misc/kf_ilist.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/misc/kf_list.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/parser/GuidoDefs.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/lib/MusicalSymbols.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMusicalVoiceState.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARStaff.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMTParameter.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMusicalTag.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/TagParameterMap.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/TagParameter.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/operations/ARVisitor.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/TagParametersMaps.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/TagParameterStrings.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/TagParameterRGBColor.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARClef.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARTStem.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARPositionTag.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARColor.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/misc/GUIDOTypes.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARAuto.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARAutoBeam.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARBeam.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARBeamState.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARNewSystem.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARNote.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARAlter.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARNoteName.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMeter.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMMRest.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARBar.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARAutoBeamEnd.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARTagEnd.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARTie.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARBowing.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARDummyRangeEnd.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMerge.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARBar.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARBase.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARDisplayDuration.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARTuplet.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/TagParameterFloat.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARNewPage.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARKey.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARAuto.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARNaturalKey.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARSecondGlue.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARFinishBar.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARRepeatEnd.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMusicalEvent.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARBeamState.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARChordComma.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/lib/TimeUnwrap.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/include/GUIDOScoreMap.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/include/TRect.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARStaffFormat.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARDotFormat.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARChordTag.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARShareStem.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARChordComma.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARShareLocation.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARClef.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARCluster.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARCoda.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARJump.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/lib/FormatStringParser.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/lib/TimeMapper.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARColor.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARDisplayDuration.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARDotFormat.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARDummyRangeEnd.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARFeatheredBeam.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARFinishBar.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARGlissando.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARGrace.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARNoteFormat.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMusic.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/MusicalVoiceList.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARKey.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/parser/GuidoDefs.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/lib/MusicalSymbols.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARLyrics.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARFontAble.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARText.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMerge.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMeter.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMMRest.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMusic.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/MusicalVoiceList.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMusicalVoice.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ObjectList.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/misc/kf_ilist.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/misc/kf_list.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARMusicalVoiceState.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARNaturalKey.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARNewPage.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARNewSystem.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARNote.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARNoteName.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARNoteFormat.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/AROctava.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARPossibleBreak.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARRepeatBegin.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARRepeatEnd.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARRest.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARSecondGlue.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARSegno.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARShareLocation.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARShareStem.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARSlur.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARBowing.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARStaff.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARStaffFormat.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/TagParameterFloat.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARSymbol.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARText.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARTie.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARTremolo.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARTrill.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARGlissando.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRTrill.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRPTagARNotationElement.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRPositionTag.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRTag.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/NVPoint.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRARNotationElement.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRNotationElement.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GObject.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/NVRect.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/operations/GRVisitable.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/operations/GRVisitor.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARTStem.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARTuplet.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRSingleNote.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARTHead.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRNote.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GREvent.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRARCompositeNotationElement.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRARNotationElement.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRNotationElement.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GObject.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/NVPoint.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/NVRect.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/operations/GRVisitable.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/operations/GRVisitor.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/NEPointerList.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/NEList.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARCluster.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARSymbol.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARFeatheredBeam.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARTremolo.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/AROctava.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARPossibleBreak.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARRepeatBegin.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARCoda.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARJump.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/lib/FormatStringParser.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/lib/TimeMapper.h
-../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/abstract/ARSegno.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRTrill.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRPTagARNotationElement.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRPositionTag.h
+../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/graphic/GRTag.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/operations/GMNCodePrintVisitor.h
 ../../src/engine/abstract/ARMusicalVoice.o: ../../src/engine/tools/benchtools.h
 ../../src/engine/abstract/ARMusicalVoiceState.o: ../../src/engine/abstract/TagList.h
@@ -1330,6 +1342,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/abstract/AROctava.o: ../../src/engine/misc/GUIDOTypes.h
 ../../src/engine/abstract/AROctava.o: ../../src/engine/abstract/TagParameterInt.h
 ../../src/engine/abstract/AROctava.o: ../../src/engine/abstract/TagParameterFloat.h
+../../src/engine/abstract/AROctava.o: ../../src/engine/abstract/TagParameterString.h
 ../../src/engine/abstract/ARPageFormat.o: ../../src/engine/abstract/ARPageFormat.h
 ../../src/engine/abstract/ARPageFormat.o: ../../src/engine/abstract/ARMTParameter.h
 ../../src/engine/abstract/ARPageFormat.o: ../../src/engine/abstract/ARMusicalTag.h
@@ -2585,6 +2598,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRBeam.o: ../../src/engine/graphic/GRRest.h
 ../../src/engine/graphic/GRBeam.o: ../../src/engine/graphic/GRStaff.h
 ../../src/engine/graphic/GRBeam.o: ../../src/engine/graphic/GRCompositeNotationElement.h
+../../src/engine/graphic/GRBeam.o: ../../src/engine/graphic/GRStem.h
 ../../src/engine/graphic/GRBeam.o: ../../src/engine/graphic/GRPage.h
 ../../src/engine/graphic/GRBeam.o: ../../src/engine/graphic/GRMusic.h
 ../../src/engine/graphic/GRBeam.o: ../../src/engine/misc/TCollisions.h
@@ -2643,14 +2657,13 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRBowing.o: ../../src/engine/misc/kf_ilist.h
 ../../src/engine/graphic/GRBowing.o: ../../src/engine/misc/kf_list.h
 ../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/GRARNotationElement.h
-../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/GREmpty.h
-../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/GREvent.h
-../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/GRARCompositeNotationElement.h
-../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/NEPointerList.h
-../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/NEList.h
 ../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/GRStaff.h
 ../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/GRCompositeNotationElement.h
+../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/NEPointerList.h
+../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/NEList.h
 ../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/GRRest.h
+../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/GREvent.h
+../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/GRARCompositeNotationElement.h
 ../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/GRSingleNote.h
 ../../src/engine/graphic/GRBowing.o: ../../src/engine/abstract/ARTHead.h
 ../../src/engine/graphic/GRBowing.o: ../../src/engine/graphic/GRNote.h
@@ -2736,23 +2749,22 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/NEList.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/misc/kf_ilist.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/misc/kf_list.h
-../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRSpring.h
-../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRVoice.h
-../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRARCompositeNotationElement.h
-../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRARNotationElement.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRSystem.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/abstract/ARBar.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRBar.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRTagARNotationElement.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRTag.h
+../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRARNotationElement.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRRod.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRSystemSlice.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GREvent.h
+../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRARCompositeNotationElement.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRSystemTag.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRChordTag.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRPTagARNotationElement.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRPositionTag.h
 ../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRSystemTagInterface.h
+../../src/engine/graphic/GRChordTag.o: ../../src/engine/graphic/GRVoice.h
 ../../src/engine/graphic/GRClef.o: ../../src/engine/abstract/ARClef.h
 ../../src/engine/graphic/GRClef.o: ../../src/engine/abstract/TagParameterStrings.h
 ../../src/engine/graphic/GRClef.o: ../../src/engine/abstract/ARMTParameter.h
@@ -2799,6 +2811,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRClef.o: ../../src/engine/abstract/ARSpace.h
 ../../src/engine/graphic/GRClef.o: ../../src/engine/lib/FontManager.h
 ../../src/engine/graphic/GRClef.o: ../../src/engine/include/VGSystem.h
+../../src/engine/graphic/GRClef.o: ../../src/engine/abstract/TagParameterFloat.h
 ../../src/engine/graphic/GRClef.o: ../../src/engine/include/VGDevice.h
 ../../src/engine/graphic/GRClef.o: ../../src/engine/misc/secureio.h
 ../../src/engine/graphic/GRCluster.o: ../../src/engine/graphic/GRCluster.h
@@ -3495,40 +3508,38 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/abstract/TagParameterRGBColor.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/abstract/ARPositionTag.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/misc/GUIDOTypes.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRGlobalLocation.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRPTagARNotationElement.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRPositionTag.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRTag.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/NVPoint.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/misc/kf_ilist.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/misc/kf_list.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/parser/GuidoDefs.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/lib/MusicalSymbols.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GREvent.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRARCompositeNotationElement.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRARNotationElement.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRNotationElement.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GObject.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/NVPoint.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/NVRect.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/lib/MusicalSymbols.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/include/GUIDOScoreMap.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/include/GUIDOExport.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/include/GUIDOEngine.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/include/VGColor.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/include/TRect.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/parser/GuidoDefs.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/operations/GRVisitable.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/operations/GRVisitor.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRStaff.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRCompositeNotationElement.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/NEPointerList.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/NEList.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GREmpty.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GREvent.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRARCompositeNotationElement.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRSpring.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRVoice.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/misc/kf_ilist.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/misc/kf_list.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRGlobalLocation.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRPTagARNotationElement.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRPositionTag.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRTag.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRGlobalStem.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRSystemTagInterface.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRStaff.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRCompositeNotationElement.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRStdNoteHead.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRNoteHead.h
 ../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/abstract/ARTHead.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRGlobalStem.h
-../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRSystemTagInterface.h
+../../src/engine/graphic/GRGlobalLocation.o: ../../src/engine/graphic/GRVoice.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/abstract/ARDisplayDuration.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/abstract/ARMTParameter.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/abstract/ARMusicalTag.h
@@ -3573,19 +3584,16 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/misc/kf_list.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRARNotationElement.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRSystemTagInterface.h
-../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GREmpty.h
-../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GREvent.h
-../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRARCompositeNotationElement.h
-../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/NEPointerList.h
-../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/NEList.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRFlag.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRGlobalStem.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRNoteDot.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/abstract/ARTHead.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRSingleNote.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRNote.h
-../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRSpring.h
-../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRVoice.h
+../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GREvent.h
+../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRARCompositeNotationElement.h
+../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/NEPointerList.h
+../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/NEList.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRStaff.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRCompositeNotationElement.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRStdNoteHead.h
@@ -3598,6 +3606,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRRod.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRSystemSlice.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRSystemTag.h
+../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/graphic/GRVoice.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/abstract/TagParameterFloat.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/abstract/TagParameterString.h
 ../../src/engine/graphic/GRGlobalStem.o: ../../src/engine/include/VGDevice.h
@@ -4351,6 +4360,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GROctava.o: ../../src/engine/graphic/GRNote.h
 ../../src/engine/graphic/GROctava.o: ../../src/engine/graphic/GRSingleRest.h
 ../../src/engine/graphic/GROctava.o: ../../src/engine/graphic/GRRest.h
+../../src/engine/graphic/GROctava.o: ../../src/engine/abstract/TagParameterFloat.h
 ../../src/engine/graphic/GRPTagARNotationElement.o: ../../src/engine/abstract/ARMusicalTag.h
 ../../src/engine/graphic/GRPTagARNotationElement.o: ../../src/engine/abstract/ARMusicalObject.h
 ../../src/engine/graphic/GRPTagARNotationElement.o: ../../src/engine/lib/defines.h
@@ -4646,6 +4656,12 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRRange.o: ../../src/engine/graphic/NEList.h
 ../../src/engine/graphic/GRRange.o: ../../src/engine/graphic/GREvent.h
 ../../src/engine/graphic/GRRange.o: ../../src/engine/graphic/GRARCompositeNotationElement.h
+../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/misc/kf_ivect.h
+../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/misc/kf_vect.h
+../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/misc/kf_list.h
+../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/parser/GuidoDefs.h
+../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/lib/MusicalSymbols.h
+../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/misc/GUIDOTypes.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/abstract/ARRepeatBegin.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/abstract/ARBar.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/abstract/ARMTParameter.h
@@ -4670,24 +4686,22 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/GRNotationElement.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/GObject.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/NVRect.h
-../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/lib/MusicalSymbols.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/include/GUIDOScoreMap.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/include/GUIDOExport.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/include/GUIDOEngine.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/include/VGColor.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/include/TRect.h
-../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/parser/GuidoDefs.h
-../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/misc/GUIDOTypes.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/operations/GRVisitable.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/operations/GRVisitor.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/GRDefine.h
+../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/GRSystem.h
+../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/misc/kf_ilist.h
+../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/NEPointerList.h
+../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/NEList.h
+../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/GRRod.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/GRSystemSlice.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/GREvent.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/GRARCompositeNotationElement.h
-../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/NEPointerList.h
-../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/NEList.h
-../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/misc/kf_ilist.h
-../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/misc/kf_list.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/GRStaff.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/graphic/GRCompositeNotationElement.h
 ../../src/engine/graphic/GRRepeatBegin.o: ../../src/engine/abstract/TagParameterFloat.h
@@ -4847,6 +4861,7 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRSingleNote.o: ../../src/engine/misc/GUIDOTypes.h
 ../../src/engine/graphic/GRSingleNote.o: ../../src/engine/graphic/NVPoint.h
 ../../src/engine/graphic/GRSingleNote.o: ../../src/engine/include/VGDevice.h
+../../src/engine/graphic/GRSingleNote.o: ../../src/engine/include/VGFont.h
 ../../src/engine/graphic/GRSingleNote.o: ../../src/engine/abstract/ARNoteFormat.h
 ../../src/engine/graphic/GRSingleNote.o: ../../src/engine/abstract/ARMTParameter.h
 ../../src/engine/graphic/GRSingleNote.o: ../../src/engine/abstract/ARMusicalTag.h
@@ -4915,8 +4930,6 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRSingleNote.o: ../../src/engine/abstract/TagList.h
 ../../src/engine/graphic/GRSingleNote.o: ../../src/engine/graphic/GRCluster.h
 ../../src/engine/graphic/GRSingleNote.o: ../../src/engine/graphic/GRTuplet.h
-../../src/engine/graphic/GRSingleNote.o: ../../src/engine/graphic/GRSpring.h
-../../src/engine/graphic/GRSingleNote.o: ../../src/engine/graphic/GRVoice.h
 ../../src/engine/graphic/GRSingleNote.o: ../../src/engine/graphic/GRPage.h
 ../../src/engine/graphic/GRSingleNote.o: ../../src/engine/graphic/GRSlur.h
 ../../src/engine/graphic/GRSingleNote.o: ../../src/engine/abstract/ARSlur.h
@@ -5385,6 +5398,12 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRTag.h
 ../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRARNotationElement.h
 ../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRBarFormat.h
+../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRBeam.h
+../../src/engine/graphic/GRStaff.o: ../../src/engine/abstract/ARBeam.h
+../../src/engine/graphic/GRStaff.o: ../../src/engine/abstract/ARFeatheredBeam.h
+../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRPTagARNotationElement.h
+../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRPositionTag.h
+../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRSystemTagInterface.h
 ../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRClef.h
 ../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRDoubleBar.h
 ../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRDummy.h
@@ -5407,9 +5426,6 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRSpace.h
 ../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRSpecial.h
 ../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRGlobalStem.h
-../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRPTagARNotationElement.h
-../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRPositionTag.h
-../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRSystemTagInterface.h
 ../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GRStem.h
 ../../src/engine/graphic/GRStaff.o: ../../src/engine/abstract/ARTHead.h
 ../../src/engine/graphic/GRStaff.o: ../../src/engine/graphic/GROctava.h
@@ -6562,7 +6578,6 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/graphic/GRRepeatEnd.h
 ../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/graphic/GRRest.h
 ../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/graphic/GRSegno.h
-../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/graphic/GRSimpleBeam.h
 ../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/graphic/GRSingleNote.h
 ../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/graphic/GRNote.h
 ../../src/engine/graphic/GRVoiceManager.o: ../../src/engine/graphic/GRSingleRest.h
@@ -6642,17 +6657,21 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRPTagARNotationElement.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRPositionTag.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRSystemTagInterface.h
+../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRGlue.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRNote.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRRest.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRStem.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/abstract/ARTHead.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRFlag.h
+../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRRepeatBegin.h
+../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRSingleNote.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRStaff.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRCompositeNotationElement.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRSystem.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRRod.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRSystemSlice.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/graphic/GRVolta.h
+../../src/engine/graphic/GRVolta.o: ../../src/engine/abstract/TagParameterFloat.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/misc/kf_ivect.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/misc/kf_vect.h
 ../../src/engine/graphic/GRVolta.o: ../../src/engine/include/VGDevice.h
@@ -6806,13 +6825,13 @@ obj/parser/guidolex.o : $(srcdir)/parser/guidolex.cpp
 ../../src/engine/lib/GUIDOEngine.o: ../../src/engine/graphic/NEList.h
 ../../src/engine/lib/GUIDOEngine.o: ../../src/engine/misc/TCollisions.h
 ../../src/engine/lib/GUIDOEngine.o: ../../src/engine/abstract/ARSpace.h
-../../src/engine/lib/GUIDOEngine.o: ../../src/engine/graphic/GRSpringForceIndex.h
-../../src/engine/lib/GUIDOEngine.o: ../../src/engine/misc/kf_vect.h
-../../src/engine/lib/GUIDOEngine.o: ../../src/engine/graphic/GRSpring.h
-../../src/engine/lib/GUIDOEngine.o: ../../src/engine/graphic/GRVoice.h
 ../../src/engine/lib/GUIDOEngine.o: ../../src/engine/graphic/GRStaffManager.h
+../../src/engine/lib/GUIDOEngine.o: ../../src/engine/misc/kf_vect.h
 ../../src/engine/lib/GUIDOEngine.o: ../../src/engine/misc/kr_hash.h
 ../../src/engine/lib/GUIDOEngine.o: ../../src/engine/graphic/GRBeginSpaceForceFunction2.h
+../../src/engine/lib/GUIDOEngine.o: ../../src/engine/graphic/GRSpringForceIndex.h
+../../src/engine/lib/GUIDOEngine.o: ../../src/engine/graphic/GRSpring.h
+../../src/engine/lib/GUIDOEngine.o: ../../src/engine/graphic/GRVoice.h
 ../../src/engine/lib/GUIDOEngine.o: ../../src/engine/graphic/GRRod.h
 ../../src/engine/lib/GUIDOEngine.o: ../../src/engine/graphic/GRPage.h
 ../../src/engine/lib/GUIDOEngine.o: ../../src/engine/lib/GUIDOInternal.h
