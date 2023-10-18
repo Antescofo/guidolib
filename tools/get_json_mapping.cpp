@@ -12,7 +12,7 @@
 #include <codecvt>
 #include <iostream>
 #include <fcntl.h>
-#include <libmusicxml/libmusicxml.h>
+#include <libmusicxml2/libmusicxml.h>
 #include "engine.h"
 #include "Base64.h"
 #include "common.hh"

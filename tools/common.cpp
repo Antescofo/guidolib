@@ -2,7 +2,7 @@
 #include <cstring>
 #include <algorithm>
 #include <string>
-#include <libmusicxml/libmusicxml.h>
+#include <libmusicxml2/libmusicxml.h>
 
 int parse_int(std::string& content, int& off) {
   int num = 0;
