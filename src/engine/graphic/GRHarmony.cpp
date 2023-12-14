@@ -34,6 +34,11 @@
 
 using namespace std;
 
+#ifndef WIN32
+#warning ("TODO: set bounding box (currently ignored)");
+#endif
+
+
 extern GRStaff * gCurStaff;
 
 GRHarmony::GRHarmony(GRStaff * p_staff, const ARHarmony * ar)
@@ -158,10 +163,13 @@ void GRHarmony::DrawHarmonyString (VGDevice & hdc, const VGFont* font, const str
 	if (str.empty()) return;
 
 	const VGFont* mfont = hdc.GetMusicFont();
+	if (!mfont) mfont = FontManager::gFontScriab;
+	
 	float ratio = font->GetSize() / 150.f; // 150 is the default font size for harmony (20 pt)
+	int fsize = mfont->GetSize() * ratio;
 
-	const VGFont* mBigFont = FontManager::FindOrCreateFont( int(mfont->GetSize() * 1.0 * ratio), mfont->GetName(), "");
-	const VGFont* mSmallFont = FontManager::FindOrCreateFont( int(mfont->GetSize() * 0.8 * ratio), mfont->GetName(), "");
+	const VGFont* mBigFont = FontManager::FindOrCreateFont( int(fsize * 1.0), mfont->GetName(), "");
+	const VGFont* mSmallFont = FontManager::FindOrCreateFont( int(fsize * 0.8), mfont->GetName(), "");
 	const VGFont* tSmallFont = FontManager::FindOrCreateFont( int(font->GetSize() * 0.8), font->GetName(), "");
 	const VGFont* curmfont = mBigFont;
 	const VGFont* curtfont = font;

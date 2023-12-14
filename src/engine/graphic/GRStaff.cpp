@@ -911,11 +911,19 @@ float GRStaff::getKeyPosition(TYPE_PITCH pit, int numkeys) const
 /** \brief Returns the graphical y-position of a note.
 
 	Idea: Each clef has a root-note  (violin-
-	clef has G, base-clef has F) and a 
+	clef has G, base-clef has F) and a
 	corresponding staff line
-
 */
 float GRStaff::getNotePosition(TYPE_PITCH pit, TYPE_REGISTER oct) const
+{
+//cerr << "GRStaff::getNotePosition " << pit << " " << oct << " state: " << mStaffState.basepit << " " << mStaffState.baseline << " " <<  mStaffState.baseoct << endl;
+	return getNotePosition(pit, oct, mStaffState.basepit, mStaffState.baseline, mStaffState.baseoct);
+}
+
+// ----------------------------------------------------------------------------
+/** \brief Returns the graphical y-position of a note.
+*/
+float GRStaff::getNotePosition(TYPE_PITCH pit, TYPE_REGISTER oct, int basePitch, int baseLine, int baseOct) const
 {
 // redundant correction of octave: already shifted when the GRNote is created
 //	oct -= mStaffState.octava;	//  depends on current clef.
@@ -924,18 +932,18 @@ float GRStaff::getNotePosition(TYPE_PITCH pit, TYPE_REGISTER oct) const
 	float calc = 0;
 	if (pit >= NOTE_C && pit <= NOTE_H)
 	{
-		calc = (float)((mStaffState.basepit - pit ) * myHalfSpace + mStaffState.baseline * getStaffLSPACE() -
-			((int)oct - mStaffState.baseoct) * (7 * myHalfSpace));
+		calc = (float)((basePitch - pit ) * myHalfSpace + baseLine * getStaffLSPACE() -
+			((int)oct - baseOct) * (7 * myHalfSpace));
 	}
 	else if (pit>= NOTE_CIS && pit <= NOTE_DIS)
 	{
-		calc = (float)((mStaffState.basepit - (pit - 7) )* myHalfSpace + mStaffState.baseline * getStaffLSPACE()-
-			((int)oct - mStaffState.baseoct) * (7 * myHalfSpace));
+		calc = (float)((basePitch - (pit - 7) )* myHalfSpace + baseLine * getStaffLSPACE()-
+			((int)oct - baseOct) * (7 * myHalfSpace));
 	}
 	else if (pit>= NOTE_FIS && pit <= NOTE_AIS)
 	{
-		calc = (float)((mStaffState.basepit - (pit - 6) )* myHalfSpace + mStaffState.baseline * getStaffLSPACE() -
-			((int)oct - mStaffState.baseoct) * (7 * myHalfSpace));
+		calc = (float)((basePitch - (pit - 6) )* myHalfSpace + baseLine * getStaffLSPACE() -
+			((int)oct - baseOct) * (7 * myHalfSpace));
 	}
 	return calc;
 }
@@ -1820,6 +1828,8 @@ void GRStaff::setStaffFormat( const ARStaffFormat * staffrmt)
 		const TagParameterFloat* size = staffrmt->getSize();
 		if (size && size->TagIsSet())
 			mStaffState.staffLSPACE = size->getValue() * 2;
+		else if (staffrmt->isTAB())
+			mStaffState.staffLSPACE = 70.f;
 		
 		mStaffState.numlines = staffrmt->getLinesCount();		
         mStaffState.lineThickness = staffrmt->getLineThickness();

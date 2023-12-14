@@ -115,7 +115,7 @@ class GRMusic : public GREvent
     
                 void    setStaffSize(int staffNum, float size);
                 float   getStaffSize(int staffNum);
-    
+
 		std::vector<TCollisionInfo> getCollisions() const	{ return fCollisions.list(); }
 
 		virtual void accept   (GRVisitor& visitor);

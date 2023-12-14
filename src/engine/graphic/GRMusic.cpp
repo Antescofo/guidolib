@@ -266,7 +266,7 @@ void GRMusic::pagetrace(VGDevice & hdc)
 				const GRSystem* sys = (*sysl)[j];
 				const StaffVector * staves = sys->getStaves();
 				if (staves) {
-					for (int i = staves->GetMinimum(); i <= staves->GetMaximum(); i++) {
+					for (int i = staves->GetMinimum(); i < staves->GetMaximum(); i++) {
 						const GRStaff * staff = staves->Get(i);
 						if (staff) {
 							cerr << "staff --- " << i << endl;
@@ -696,8 +696,6 @@ ARMusicalVoice* GRMusic::getARVoice (int n)
 	}
 	return 0;
 }
-
-
 
 // --------------------------------------------------------------------------
 /** \brief Finds the index of a given voice (zero based)

@@ -21,6 +21,7 @@
 #include "TagParameterString.h"
 #include "GRARNotationElement.h"
 #include "GRPositionTag.h"
+#include "GRVisitor.h"
 
 class NVstring;
 class GRStaff;
@@ -36,16 +37,18 @@ class GROctava : public GRARNotationElement, public GRPositionTag
 					 GROctava( GRStaff *, const NVstring & txt, const AROctava* ar, bool bassa );
 		virtual 	~GROctava();
 
+		virtual void accept (GRVisitor& visitor);
 		virtual void tellPosition(GObject *caller, const NVPoint & );
 
 		virtual void OnDraw( VGDevice & hdc ) const;
 		virtual void setColRef(const TagParameterString *tps);
 		virtual bool DeleteStaff(GRStaff * grstaff);
-        virtual const GROctava *    isGROctava() const      { return this; }
 
-    virtual void accept   (GRVisitor& visitor);
+        virtual const GROctava *    isGROctava() const      { return this; }
     
-    virtual int getStaffNumber();
+        virtual int getStaffNumber();
+
+        virtual int  getOctava() const { return fOctava; };
 	
 	private:
 		typedef struct segment {
