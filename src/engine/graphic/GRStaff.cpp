@@ -241,6 +241,7 @@ GRStaffState & GRStaffState::operator=(const GRStaffState & state)
 	}
 	
 	fMeasureAccidentals = state.fMeasureAccidentals;
+	fInstrument = state.fInstrument;
 
 	// clef-Parameter
 	clefset		= state.clefset; // CLEFINTERN, CLEFEXPLICIT, CLEFAUTO, [ CLEFOFF ]
@@ -1275,11 +1276,11 @@ GRInstrument * GRStaff::AddInstrument(const ARInstrument * arinstr)
 {
 	GRInstrument * tmp = new GRInstrument(arinstr, this);
 	addNotationElement(tmp);
+	if (arinstr->repeat())
+		mStaffState.fInstrument = tmp;
 	bool downwards = true;
 
 	// now we need to test, whether the instrument is transposed (e.g. "clarinet in A")
-//	const TagParameterString * ts = arinstr->getTransp();
-//	if ( ts && ts->TagIsSet())
 	const string& ts = arinstr->getTransp();
 	if ( ts.size() )
 	{
@@ -1555,6 +1556,7 @@ void GRStaff::CreateBeginElements( GRStaffManager * staffmgr, GRStaffState & sta
 staff_debug("CreateBeginElements");
 	mStaffState.basepitoffs = state.basepitoffs;
 	mStaffState.instrNumKeys = state.instrNumKeys;
+	mStaffState.fInstrument = state.fInstrument;
 	
 	// we have to look, what kind of state-settings are set.
 	if (state.curbarfrmt != NULL)
@@ -1864,6 +1866,7 @@ void GRStaff::setInstrumentFormat(const GRStaffState & state)
 	{
 		mStaffState.instrKeyArray[i] = state.instrKeyArray[i];
 	}
+	mStaffState.fInstrument = state.getRepeatInstrument();
 }
 
 // ----------------------------------------------------------------------------
@@ -1886,6 +1889,7 @@ staff_debug("setStaffState");
 	mStaffState.keyset = state->keyset;
 	mStaffState.curkey = state->curkey;
 	mStaffState.numkeys = state->numkeys;
+	mStaffState.fInstrument = state->fInstrument;
 	mStaffState.fMultiVoiceCollisions = state->fMultiVoiceCollisions;
 	for ( int i = 0; i < NUMNOTES; ++i )
 	{
@@ -2306,7 +2310,6 @@ void GRStaff::GetMap( GuidoElementSelector sel, MapCollector& f, MapInfos& infos
 void GRStaff::OnDraw( VGDevice & hdc ) const
 {
     traceMethod("OnDraw");
-
 #if 0
 	// - Change font settings
 	const int fontsize = getFontSize();
@@ -2330,6 +2333,12 @@ void GRStaff::OnDraw( VGDevice & hdc ) const
 	
 	// - 
 	DrawNotationElements(hdc);
+
+	
+	if ((mPosition.x == 0)  && getStaffState()->getRepeatInstrument()) {
+		const GRInstrument* instr = getStaffState()->getRepeatInstrument();
+		if (instr) instr->OnDraw (hdc, mPosition.y);
+	}
 
 	if (gBoundingBoxesMap & kStavesBB)
 		DrawBoundingBox(hdc, kStaffBBColor);

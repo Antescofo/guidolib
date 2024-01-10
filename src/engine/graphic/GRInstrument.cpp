@@ -17,6 +17,7 @@
 #include "GRInstrument.h"
 #include "GRDefine.h"
 #include "GRStaff.h"
+#include "GRSystem.h"
 #include "ARMusicalObject.h"
 #include "ARInstrument.h"
 #include "FontManager.h"
@@ -25,6 +26,7 @@
 
 using namespace std;
 
+extern GRSystem * gCurSystem;
 
 GRInstrument::GRInstrument(const ARInstrument * ar, GRStaff* staff)
 		: GRTagARNotationElement(ar, LSPACE)
@@ -51,9 +53,22 @@ GRInstrument::GRInstrument(const ARInstrument * ar, GRStaff* staff)
 
 	setGRStaff(staff);
 	if (ar->autoPos())
-		fRefPos = NVPoint(-LSPACE*2, (staff->getDredgeSize() + LSPACE) / 2);
+		fRefPos = NVPoint(0, (staff->getDredgeSize() + LSPACE) / 2);
 	else
 		fRefPos = NVPoint(0,0);
+
+	string text = ar->getName();
+	string sub;
+	size_t len = text.size();
+	for(size_t i = 0; i < len; i++)  {
+		char c = text[i];
+		if (c == '\n') {
+			fSubstrings.push_back ( sub);
+			sub = "";
+		}
+		else sub += c;
+	}
+	fSubstrings.push_back ( sub);
 }
 
 
@@ -62,8 +77,32 @@ const NVPoint& GRInstrument::getReferencePosition() const { return fRefPos; }
 const ARInstrument* GRInstrument::getARInstrument() const
 		{ return static_cast<const ARInstrument*>(getAbstractRepresentation()); };
 
+// -----------------------------------------------------------------------------
+void GRInstrument::getMetrics(VGDevice & hdc, float& h, float& w) const
+{
+	const VGFont* savedFont = hdc.GetTextFont();
+	hdc.SetTextFont( fFont );
+	float lw, lh, maxw=0;
+	for (auto elt: fSubstrings) {
+		fFont->GetExtent(elt.c_str(), (int)elt.size(), &lw, &lh, &hdc);
+		if (lw > maxw) maxw = lw;
+	}
+	hdc.SetTextFont( savedFont );
+	h = lh;
+	w = maxw;
+}
 
+// -----------------------------------------------------------------------------
 void GRInstrument::OnDraw(VGDevice & hdc) const
+{
+	// repeated instr are drawn by GRStaff
+	if(!mDraw || !mShow || getARInstrument()->repeat()) return;
+	OnDraw(hdc, mPosition.y);
+}
+
+
+// -----------------------------------------------------------------------------
+void GRInstrument::OnDraw(VGDevice & hdc, float ypos) const
 {
 	if(!mDraw || !mShow) return;
 
@@ -77,11 +116,23 @@ void GRInstrument::OnDraw(VGDevice & hdc) const
 		hdc.SetFontColor( VGColor( mColRef ));
 	hdc.SetFontAlign( fTextAlign );
 
-	const NVPoint & refpos = getReferencePosition();
+	NVPoint refpos = getReferencePosition();
 	const NVPoint & offset = getOffset();
 	const NVPoint pos = mPosition;
-	hdc.DrawString(	pos.x + offset.x + refpos.x, pos.y + offset.y + refpos.y, name.c_str(), int(name.size()) );
+	float w, h;
+	getMetrics(hdc, h, w);
+	if (getARInstrument()->autoPos())
+		refpos = NVPoint(gCurSystem->getBoundingBox().left - LSPACE*2, fRefPos.y);
+
+    float x = pos.x + offset.x + refpos.x;
+    float y = ypos + offset.y + refpos.y;
+    if (fSubstrings.size() > 1) {
+		for (auto a: fSubstrings) {
+			hdc.DrawString(x, y, a.c_str(), (int)a.size());
+			y += h;
+		}
+	}
+	else hdc.DrawString (x, y, name.c_str(), int(name.size()) );
 	if( mColRef )
 		hdc.SetFontColor( prevTextColor );
 }
-
