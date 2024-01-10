@@ -26,6 +26,7 @@ class GRPitchYVisitor : public GRVisitor
 	int fBaseOct;
 	int fOctava;
 	float fNextX;
+    TYPE_TIMEPOSITION fNextDate = 0;
 	TYPE_TIMEPOSITION fTargetDate = 0;
 	const GRNotationElement* fTargetElt;
 	bool fDone = false;
@@ -53,7 +54,8 @@ class GRPitchYVisitor : public GRVisitor
 	private:
 		void 	check (const GRNotationElement* elt);
 		bool 	checkTimePos (const GRNotationElement* elt);
-		float 	interpolateXPos (const GRNotationElement* elt, TYPE_TIMEPOSITION date, float nextx) const;
+		float 	interpolateXPos (const GRNotationElement* elt, TYPE_TIMEPOSITION date, float nextx, TYPE_TIMEPOSITION nextDate) const;
+        void    checkNextElement(const GRNotationElement* elt);
 };
 
 #endif

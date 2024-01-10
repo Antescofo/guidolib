@@ -51,18 +51,22 @@ NVPoint GRPitchYVisitor::getPitchPos (GRMusic* music, int staffNum, int midipitc
 		pitch = ((pitch < 5) ? (pitch / 2) : (pitch+1) / 2) + 2;
 		NVPoint spos = fStaff->getPosition();
 		float y = fStaff->getNotePosition ( pitch, oct, fBasePitch, fBaseLine, fBaseOct);
-		p.x = interpolateXPos(fTargetElt, fTargetDate, fNextX);
+		p.x = interpolateXPos(fTargetElt, fTargetDate, fNextX, fNextDate);
 		p.y = (spos.y + y);
 	}
 	return p;
 }
 
 //-------------------------------------------------------------------------------
-float GRPitchYVisitor::interpolateXPos (const GRNotationElement* elt, TYPE_TIMEPOSITION target, float nextx) const
+float GRPitchYVisitor::interpolateXPos (const GRNotationElement* elt, TYPE_TIMEPOSITION target, float nextx, TYPE_TIMEPOSITION nextDate) const
 {
 	TYPE_TIMEPOSITION offset = target - elt->getRelativeTimePosition();
-	float ratio = float(offset) / float(elt->getDuration());
+    float segmentDuration = float(nextDate - elt->getRelativeTimePosition()); //float(elt->getDuration())
+	float ratio = float(offset) / segmentDuration;
 	float x = elt->getPosition().x;
+//    cerr<<"\t<<< ui guidog x="<<x<<" nextx="<<nextx;
+//    cerr<<" dates: "<<double(elt->getRelativeTimePosition())<<"-"<<double(target)<<"-"<<double(nextDate)
+//    cerr<<endl;
 	return x + (nextx - x) * ratio;
 }
 
@@ -91,9 +95,24 @@ void GRPitchYVisitor::check (const GRNotationElement* o)
 {
 	if (fCurrentStaff != fTargetStaff) return;
 	if (fDone) {
-		if (!fNextX) fNextX = o->getPosition().x;
+        checkNextElement(o);
 	}
 	else fDone = checkTimePos(o);
+}
+
+void GRPitchYVisitor::checkNextElement(const GRNotationElement* elt)
+{
+    if (fCurrentStaff != fTargetStaff) return;
+    if (fDone && !fNextX) {
+        // fNextX MUST BE greater than fTargetElt's x-pos!
+        float currentX = fTargetElt->getPosition().x;
+        TYPE_TIMEPOSITION runningDate = elt->getRelativeTimePosition();
+        float runningX = elt->getPosition().x;
+        if ((runningX > currentX)) { //&& (runningDate > fTargetDate)
+            fNextX = elt->getPosition().x;
+            fNextDate = elt->getRelativeTimePosition();
+        }
+    }
 }
 
 //-------------------------------------------------------------------------------
