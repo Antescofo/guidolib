@@ -60,12 +60,20 @@ NVPoint GRPitchYVisitor::getPitchPos (GRMusic* music, int staffNum, int midipitc
 //-------------------------------------------------------------------------------
 float GRPitchYVisitor::interpolateXPos (const GRNotationElement* elt, TYPE_TIMEPOSITION target, float nextx, TYPE_TIMEPOSITION nextDate) const
 {
-	TYPE_TIMEPOSITION offset = target - elt->getRelativeTimePosition();
-    float segmentDuration = float(nextDate - elt->getRelativeTimePosition()); //float(elt->getDuration())
+    TYPE_TIMEPOSITION currentEltTime = elt->getRelativeTimePosition();
+	TYPE_TIMEPOSITION offset = target - currentEltTime;
+    float segmentDuration;
+    // To calculate segment: if nextDate is on a note we are > than currentEltTime. If it's less or equal then we might be on a Bar or similar and we use duration (case of notes at the end of measure)
+    if (nextDate <= currentEltTime) {
+        segmentDuration = float(elt->getDuration());
+    } else {
+        segmentDuration = float(nextDate - currentEltTime);
+    }
 	float ratio = float(offset) / segmentDuration;
 	float x = elt->getPosition().x;
 //    cerr<<"\t<<< ui guidog x="<<x<<" nextx="<<nextx;
-//    cerr<<" dates: "<<double(elt->getRelativeTimePosition())<<"-"<<double(target)<<"-"<<double(nextDate)
+//    cerr<<" dates: "<<double(currentEltTime)<<"-"<<double(target)<<"-"<<double(nextDate);
+//    cerr<<" segmentDuration="<<segmentDuration;
 //    cerr<<endl;
 	return x + (nextx - x) * ratio;
 }
