@@ -31,6 +31,7 @@ class GRPitchYVisitor : public GRVisitor
 	const GRNotationElement* fTargetElt;
 	bool fDone = false;
 	const GRStaff * fStaff;
+    int fNumKeys; // for capturing flats in GRKey
 
 	public:
 				 GRPitchYVisitor() {}
@@ -56,6 +57,8 @@ class GRPitchYVisitor : public GRVisitor
 		bool 	checkTimePos (const GRNotationElement* elt);
 		float 	interpolateXPos (const GRNotationElement* elt, TYPE_TIMEPOSITION date, float nextx, TYPE_TIMEPOSITION nextDate) const;
         void    checkNextElement(const GRNotationElement* elt);
+        /// Converts MIDI pitch to GuidoPitch with Key consideration
+        int midiToGuidoPitch(int midipitch, int numKeys);
 };
 
 #endif

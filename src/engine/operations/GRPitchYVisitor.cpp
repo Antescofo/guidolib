@@ -41,20 +41,72 @@ NVPoint GRPitchYVisitor::getPitchPos (GRMusic* music, int staffNum, int midipitc
 	fDone = false;
 	fStaff = nullptr;
 	fTargetElt = nullptr;
+    fNumKeys = 0;
 	music->accept (*this);
 	NVPoint p;
 	if (fDone && fStaff && fTargetElt) {
 		midipitch -= (12 * fOctava);
 		// convert midi pitch in pitch class and octava
 		int oct = (midipitch / 12) - 4;
-		int pitch = midipitch % 12;
-		pitch = ((pitch < 5) ? (pitch / 2) : (pitch+1) / 2) + 2;
+        int pitch = midiToGuidoPitch(midipitch, fNumKeys);
+        // calculate position
 		NVPoint spos = fStaff->getPosition();
 		float y = fStaff->getNotePosition ( pitch, oct, fBasePitch, fBaseLine, fBaseOct);
 		p.x = interpolateXPos(fTargetElt, fTargetDate, fNextX, fNextDate);
 		p.y = (spos.y + y);
 	}
 	return p;
+}
+
+int GRPitchYVisitor::midiToGuidoPitch(int midipitch, int numKeys) {
+    int pitch = midipitch % 12;
+    int guidoPitch;
+    switch (pitch) {
+        case 0: guidoPitch = NOTE_C; break;
+        case 1: guidoPitch = NOTE_CIS; break;
+        case 2: guidoPitch = NOTE_D; break;
+        case 3: guidoPitch = NOTE_DIS; break;
+        case 4: guidoPitch = NOTE_E; break;
+        case 5: guidoPitch = NOTE_F; break;
+        case 6: guidoPitch = NOTE_FIS; break;
+        case 7: guidoPitch = NOTE_G; break;
+        case 8: guidoPitch = NOTE_GIS; break;
+        case 9: guidoPitch = NOTE_A; break;
+        case 10: guidoPitch = NOTE_AIS; break;
+        case 11: guidoPitch = NOTE_H; break;
+        default: return  EMPTY;
+    }
+    // Key Consideration: if fNumKey is 0 or positive (sharps) nothing to do! If negative, we need to adjust
+    if (numKeys >= 0) {
+        return guidoPitch;
+    } else {
+        // if numkeys is negative we have flats beginning at quint[6-j]=B
+        // (B,Es,As,Des,Ges)
+        // The allFlats array below orders flats (in their sharp names)! Just truncate using numKeys!
+        int allFlats[] = { NOTE_AIS, NOTE_DIS, NOTE_GIS, NOTE_CIS, NOTE_FIS };
+        int flatNums = abs(numKeys);
+        int myFlats[flatNums];
+        memcpy(myFlats, &allFlats[0], flatNums*sizeof(*allFlats));
+        // if guidoPitch is contained in flat array, then the "next note" should be sent to getNotePosition!
+        int found = -1;
+        for (int i = 0; i < flatNums; i++) {
+            if (myFlats[i] == guidoPitch) {
+                found = i;
+            }
+        }
+        if (found != -1) {
+            switch (guidoPitch) {
+                case NOTE_AIS: return NOTE_H;
+                case NOTE_DIS: return NOTE_E;
+                case NOTE_GIS: return NOTE_A;
+                case NOTE_CIS: return NOTE_D;
+                case NOTE_FIS: return NOTE_G;
+                default: return guidoPitch;
+            }
+        } else {
+            return guidoPitch;
+        }
+    }
 }
 
 //-------------------------------------------------------------------------------
@@ -141,7 +193,13 @@ void GRPitchYVisitor::visitStart (GRMeter* o)
 void GRPitchYVisitor::visitStart (GRKey* o)
 {
 	if (fCurrentStaff != fTargetStaff) return;
-	if (fDone && !fNextX) fNextX = o->getPosition().x;
+    if (fDone) {
+        if (!fNextX) fNextX = o->getPosition().x;
+        return;
+    }
+    int mynumkeys = NUMNOTES;
+    float mymkarray [ NUMNOTES ];
+    fNumKeys = o->getKeyArray(mymkarray);
 }
 
 //-------------------------------------------------------------------------------
