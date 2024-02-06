@@ -163,14 +163,25 @@ void GRPitchYVisitor::check (const GRNotationElement* o)
 void GRPitchYVisitor::checkNextElement(const GRNotationElement* elt)
 {
     if (fCurrentStaff != fTargetStaff) return;
-    if (fDone && !fNextX) {
-        // fNextX MUST BE greater than fTargetElt's x-pos!
-        float currentX = fTargetElt->getPosition().x;
-        TYPE_TIMEPOSITION runningDate = elt->getRelativeTimePosition();
+    // IMPORTANT: Visitors are NOT visited in order of appearance in GMN! A GRBar can be visited BEFORE the next note! We must take this into account
+    if (fDone) {
         float runningX = elt->getPosition().x;
-        if ((runningX > currentX)) { //&& (runningDate > fTargetDate)
-            fNextX = elt->getPosition().x;
-            fNextDate = elt->getRelativeTimePosition();
+        float currentX = fTargetElt->getPosition().x;
+        if (!fNextX) {
+            // Choose if X is greater than targetX (aka system change!!!)
+            if ((runningX > currentX)) {
+                fNextX = elt->getPosition().x;
+                fNextDate = elt->getRelativeTimePosition();
+            }
+        } else {
+            // Choose if the starting date coincides with TargetDate+TargetDuration
+            // AND its X is greater than targetX (aka system change!!!)
+            TYPE_TIMEPOSITION runningDate = elt->getRelativeTimePosition();
+            TYPE_TIMEPOSITION targetEndDate= fTargetElt->getRelativeEndTimePosition();
+            if ((runningX > currentX) && (runningDate == targetEndDate) ) {
+                fNextX = elt->getPosition().x;
+                fNextDate = elt->getRelativeTimePosition();
+            }
         }
     }
 }
@@ -179,7 +190,11 @@ void GRPitchYVisitor::checkNextElement(const GRNotationElement* elt)
 void GRPitchYVisitor::visitStart (GRBar* o)
 {
 	if (fCurrentStaff != fTargetStaff) return;
-	if (fDone && !fNextX) fNextX = o->getPosition().x;
+    if (fDone) {
+        if (!fNextX) {
+            fNextX = o->getPosition().x;
+        }
+    }
 }
 
 //-------------------------------------------------------------------------------
