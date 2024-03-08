@@ -108,17 +108,24 @@ NVRect GROctava::getEltBox (const GRNotationElement* el) const
 NVRect GROctava::getExtensionLine (const NEPointerList * assoc, GuidoPos start, GuidoPos end) const
 {
 	NVRect outRect;
-	if (!assoc) return outRect;
-
 	float space = fStaff->getStaffLSPACE();
-	float staffTop		= space * -0.5f;
+	float staffTop		= space * -2.5f;
 	float staffBottom	= staffTop + fStaff->getDredgeSize() + space * 2.5f;
+    
+    if (!assoc) {
+        if (fBassa) {
+            if (staffBottom > outRect.bottom) outRect.top = outRect.bottom = staffBottom;
+        } else {
+            if (staffTop < outRect.top) outRect.top = outRect.bottom = staffTop - fTextHeight;
+        }
+        return outRect;
+    }
 	GuidoPos pos = start ? start :  assoc->GetHeadPosition();
 	const GRNotationElement* first = nullptr;
 //cerr << "------------- GROctava::getExtensionLine " << endl;
 	while (pos != end) {
 		const GRNotationElement* el = assoc->GetNext(pos);
-		if (!first) first = el;
+		if (first == nullptr) first = el;
 		NVRect bb = getEltBox(el);
 //cerr << "... " << el << " " << bb << endl;
 		if (bb.Height()) {
@@ -137,6 +144,14 @@ NVRect GROctava::getExtensionLine (const NEPointerList * assoc, GuidoPos start, 
 			}
 		}
 	}
+    if (first == nullptr) {
+        if (fBassa) {
+            if (staffBottom > outRect.bottom) outRect.top = outRect.bottom = staffBottom;
+        } else {
+            if (staffTop < outRect.top) outRect.top = outRect.bottom = staffTop - fTextHeight;
+        }
+        return outRect;
+    }
 	const GRStaff* firstStaff = first->getGRStaff();
 	if (getGRStaff()->getStaffNumber() != firstStaff->getStaffNumber()) {
 		outRect.top += firstStaff->getPosition().y;
