@@ -20,7 +20,7 @@ macro (get_major_minor_patch version)
 endmacro()
 get_major_minor_patch( ${VERSION} )
 set (SOVERS ${VERSION_MAJOR})
-set (STRVERS "v.1.7.4")
+set (STRVERS "1.7.7")
 set (GUIDOFWKVERS C)
 message (STATUS "Configuring version ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
