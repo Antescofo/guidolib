@@ -280,7 +280,7 @@ static bool mTimeAndBoxRightmostCompare( const pair<TimeSegment, FloatRect>& a, 
 {
     if (a.first < b.first) return true;
 	if (a.first.startEqual(b.first)) {
-//		if (a.first.duration() > b.first.duration()) return false;
+		if (a.first.duration() > b.first.duration()) return false;
 		if (a.second.left > b.second.left) return true;
 	}
 	return false;
