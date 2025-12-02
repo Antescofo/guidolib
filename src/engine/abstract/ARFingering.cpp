@@ -16,6 +16,7 @@
 #include "TagParameterStrings.h"
 #include "TagParameterString.h"
 #include "TagParameterFloat.h"
+#include <algorithm>
 
 using namespace std;
 
@@ -28,18 +29,45 @@ ARFingering::ARFingering(int pos) : fPosition(pos)
 
 void ARFingering::scanText(const string& text)
 {
+	fFingerings.clear();
 	size_t i = 0;
 	size_t len = text.length();
 	string part;
 	while (i < len) {
-		if (text[i] == ',') {
-			fFingerings.push_back (part);
+		if (text[i] == ',' || text[i] == '\n' || text[i] == '\r') {
+			if (!part.empty())
+				fFingerings.push_back (part);
 			part.clear();
 		}
 		else part += text[i];
 		i++;
 	}
 	if (part.size()) fFingerings.push_back (part);
+
+	// Some parsers can normalize embedded newlines to spaces inside quoted strings.
+	// As a fallback, split on whitespace when the text looks like stacked short tokens (digits or letters).
+	if (fFingerings.size() <= 1) {
+		std::vector<std::string> tokens;
+		std::string current;
+		for (char c : text) {
+			if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+				if (!current.empty()) {
+					tokens.push_back(current);
+					current.clear();
+				}
+			}
+			else current += c;
+		}
+		if (!current.empty())
+			tokens.push_back(current);
+
+		size_t maxToken = 0;
+		for (const auto& t : tokens)
+			maxToken = std::max(maxToken, t.size());
+
+		if (tokens.size() > 1 && maxToken <= 3)
+			fFingerings = tokens;
+	}
 }
 
 void ARFingering::setTagParameters (const TagParameterMap& params)
@@ -55,5 +83,3 @@ void ARFingering::setTagParameters (const TagParameterMap& params)
 	if (fSize && !getParameter<TagParameterFloat>(kFSizeStr)) fFontSize = fSize;
 	scanText (getText());
 }
-
-

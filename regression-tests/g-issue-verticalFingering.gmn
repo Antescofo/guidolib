@@ -1,0 +1,11 @@
+{[  
+   (* meas. 8 *)  \beamBegin:1 \stacc( c3/8)
+ \stacc( {g2/8, \fingering<dy=8.652hs, text="5
+1">( e3/8)
+  })
+ \beamEnd:1 \stemsUp \beamsOff {e2/8, \fingering<dy=11.14hs, text="4
+1">( c3/8)
+  } \oct<0> _/8 \bar<measNum=9> 
+   ]
+  }
+

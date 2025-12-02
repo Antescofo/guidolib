@@ -75,7 +75,8 @@ void GFontOSX::GetExtent( const char * s, int inCharCount, float * outWidth,
                                                                      CGSizeMake (CGFLOAT_MAX, CGFLOAT_MAX), // mSize+1
                                                                      &fitRange);
     *outWidth = ceil(frameSize.width);
-    *outHeight = mSize; // frameSize.height;
+    // Use the real text height so multi-line strings are measured correctly.
+    *outHeight = frameSize.height > 0 ? ceil(frameSize.height) : mSize;
     CFRelease(fsetter);
     CFRelease(attrString);
     CFRelease(string);
