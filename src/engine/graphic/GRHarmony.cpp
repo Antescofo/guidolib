@@ -111,11 +111,11 @@ void GRHarmony::OnDraw( VGDevice & hdc ) const
 {
 	if(!mDraw || !mShow)
 		return;
+    const ARHarmony * arText = getARHarmony();
 	GRSystemStartEndStruct * sse = getSystemStartEndStruct( gCurSystem );
 	assert(sse);
 	GRTextSaveStruct * st = (GRTextSaveStruct *) sse->p;
 
-	const ARHarmony * arText = getARHarmony();
 	const float curLSPACE = gCurStaff ? gCurStaff->getStaffLSPACE(): LSPACE;
 
 	// - Setup position.
@@ -138,8 +138,9 @@ void GRHarmony::OnDraw( VGDevice & hdc ) const
 		}
 		else drawPos.y = -curLSPACE;
 	}
-	float dx = arText->getDX()->getValue( curLSPACE );
-	float dy = -arText->getDY()->getValue( curLSPACE );;
+	// use computed offsets (including duration-based dx adjustments)
+	float dx = getOffset().x;
+	float dy = getOffset().y;
 
 	hdc.SetTextFont( fFont);
 	const VGColor prevTextColor = hdc.GetFontColor();
@@ -314,7 +315,7 @@ void GRHarmony::tellPosition(GObject * caller, const NVPoint & inPosition)
 //		const char* text = arText ? arText->getText() : 0;
 //		if (text) st->text = text;
         
-        FloatRect r = getTextMetrics (*gGlobalSettings.gDevice, staff);
+		FloatRect r = getTextMetrics (*gGlobalSettings.gDevice, staff);
         setPosition (NVPoint(r.left, r.top));
         NVRect bb (0, 0, r.Width(), r.Height());
         mBoundingBox = bb;
@@ -325,6 +326,8 @@ void GRHarmony::tellPosition(GObject * caller, const NVPoint & inPosition)
             xoffset = mBoundingBox.Width();
         mBoundingBox -= NVPoint(xoffset, 0);
 	}
+    // apply duration-based dx once position is anchored
+    applyDurationDx(staff);
 }
 
 FloatRect GRHarmony::getTextMetrics(VGDevice & hdc, const GRStaff* staff ) const
