@@ -78,8 +78,8 @@ using namespace std;
 // ==========================================================================
 const int GUIDOENGINE_MAJOR_VERSION = 1;
 const int GUIDOENGINE_MINOR_VERSION = 7;
-const int GUIDOENGINE_SUB_VERSION   = 7;
-const char* GUIDOENGINE_VERSION_STR = "1.7.7";
+const int GUIDOENGINE_SUB_VERSION   = 9;
+const char* GUIDOENGINE_VERSION_STR = "1.7.9";
 
 ARPageFormat* gARPageFormat;
 const TagParametersMaps* gMaps = 0;
@@ -1132,4 +1132,3 @@ GUIDOAPI long 	GuidoGetOnDrawTime(const GRHandler gr)
     GRMusic *grMusic = gr ? gr->grmusic : 0;
     return grMusic ? grMusic->getDrawTime() : -1;
 }
-
