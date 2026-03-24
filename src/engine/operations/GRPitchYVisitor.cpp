@@ -38,21 +38,46 @@ NVPoint GRPitchYVisitor::getPitchPos (GRMusic* music, int staffNum, int midipitc
 	fOctava 	= 0;
 	fTargetDate = date;
 	fNextX = 0.f;
+    fNextDate = TYPE_TIMEPOSITION(0, 1);
 	fDone = false;
+	fSearchingNext = false;
 	fStaff = nullptr;
 	fTargetElt = nullptr;
     fNumKeys = 0;
 	music->accept (*this);
 	NVPoint p;
 	if (fDone && fStaff && fTargetElt) {
-		midipitch -= (12 * fOctava);
+        const int targetBasePitch = fBasePitch;
+        const int targetBaseLine = fBaseLine;
+        const int targetBaseOct = fBaseOct;
+        const int targetOctava = fOctava;
+        const int targetNumKeys = fNumKeys;
+        const GRStaff* targetStaff = fStaff;
+
+        // Resolve the interpolation boundary in a second pass so the next
+        // element is chosen by chronological order across the whole staff,
+        // independently of the traversal order.
+        //
+        // Rationale: the visitor order is not guaranteed to match the score
+        // chronology for a rendered staff. Using "first later element whose X
+        // is greater than the target X" can therefore skip the true next
+        // boundary on layouts where X is not monotonic with time and latch onto
+        // a later note farther to the right.
+        fSearchingNext = true;
+        fCurrentStaff = 0;
+        fNextX = 0.f;
+        fNextDate = TYPE_TIMEPOSITION(0, 1);
+        music->accept (*this);
+        fSearchingNext = false;
+
+		midipitch -= (12 * targetOctava);
 		// convert midi pitch in pitch class and octava
 		int oct = (midipitch / 12) - 4;
-        int pitch = midiToGuidoPitch(midipitch, fNumKeys);
+        int pitch = midiToGuidoPitch(midipitch, targetNumKeys);
         // calculate position
-		NVPoint spos = fStaff->getPosition();
-		float y = fStaff->getNotePosition ( pitch, oct, fBasePitch, fBaseLine, fBaseOct);
-		p.x = interpolateXPos(fTargetElt, fTargetDate, fNextX, fNextDate);
+		NVPoint spos = targetStaff->getPosition();
+		float y = targetStaff->getNotePosition ( pitch, oct, targetBasePitch, targetBaseLine, targetBaseOct);
+		p.x = fNextX ? interpolateXPos(fTargetElt, fTargetDate, fNextX, fNextDate) : fTargetElt->getPosition().x;
 		p.y = (spos.y + y);
 	}
 	return p;
@@ -133,9 +158,8 @@ float GRPitchYVisitor::interpolateXPos (const GRNotationElement* elt, TYPE_TIMEP
 //-------------------------------------------------------------------------------
 void GRPitchYVisitor::visitStart (GRStaff* o)
 {
-	if (fDone) return;
 	fCurrentStaff = o->getStaffNumber();
-	fStaff = o;
+    if (!fSearchingNext && !fDone) fStaff = o;
 }
 
 //-------------------------------------------------------------------------------
@@ -154,34 +178,47 @@ bool GRPitchYVisitor::checkTimePos (const GRNotationElement* elt)
 void GRPitchYVisitor::check (const GRNotationElement* o)
 {
 	if (fCurrentStaff != fTargetStaff) return;
-	if (fDone) {
-        checkNextElement(o);
-	}
-	else fDone = checkTimePos(o);
+    if (fSearchingNext) {
+        considerNextCandidate(o);
+    }
+	else if (!fDone) {
+        fDone = checkTimePos(o);
+    }
 }
 
-void GRPitchYVisitor::checkNextElement(const GRNotationElement* elt)
+void GRPitchYVisitor::considerNextCandidate(const GRNotationElement* elt)
 {
-    if (fCurrentStaff != fTargetStaff) return;
-    // IMPORTANT: Visitors are NOT visited in order of appearance in GMN! A GRBar can be visited BEFORE the next note! We must take this into account
-    if (fDone) {
-        float runningX = elt->getPosition().x;
-        float currentX = fTargetElt->getPosition().x;
-        if (!fNextX) {
-            // Choose if X is greater than targetX (aka system change!!!)
-            if ((runningX > currentX)) {
-                fNextX = elt->getPosition().x;
-                fNextDate = elt->getRelativeTimePosition();
-            }
-        } else {
-            // Choose if the starting date coincides with TargetDate+TargetDuration
-            // AND its X is greater than targetX (aka system change!!!)
-            TYPE_TIMEPOSITION runningDate = elt->getRelativeTimePosition();
-            TYPE_TIMEPOSITION targetEndDate= fTargetElt->getRelativeEndTimePosition();
-            if ((runningX > currentX) && (runningDate == targetEndDate) ) {
-                fNextX = elt->getPosition().x;
-                fNextDate = elt->getRelativeTimePosition();
-            }
+    if ((fCurrentStaff != fTargetStaff) || !fTargetElt || (elt == fTargetElt)) return;
+
+    TYPE_TIMEPOSITION runningDate = elt->getRelativeTimePosition();
+    TYPE_TIMEPOSITION targetEndDate = fTargetElt->getRelativeEndTimePosition();
+    if (runningDate < targetEndDate) return;
+
+    float runningX = elt->getPosition().x;
+    if (!fNextX || (runningDate < fNextDate)) {
+        fNextX = runningX;
+        fNextDate = runningDate;
+        return;
+    }
+    if (runningDate > fNextDate) return;
+
+    // For elements on the same date, prefer candidates that stay on the right
+    // of the current element, then pick the closest one in X. This keeps the
+    // interpolation tied to the nearest chronological boundary while still
+    // behaving sensibly on line breaks and measure changes.
+    float currentX = fTargetElt->getPosition().x;
+    bool candidateForward = (runningX >= currentX);
+    bool bestForward = (fNextX >= currentX);
+
+    if (candidateForward && !bestForward) {
+        fNextX = runningX;
+        fNextDate = runningDate;
+    }
+    else if (candidateForward == bestForward) {
+        bool betterX = candidateForward ? (runningX < fNextX) : (runningX > fNextX);
+        if (betterX) {
+            fNextX = runningX;
+            fNextDate = runningDate;
         }
     }
 }
@@ -190,28 +227,25 @@ void GRPitchYVisitor::checkNextElement(const GRNotationElement* elt)
 void GRPitchYVisitor::visitStart (GRBar* o)
 {
 	if (fCurrentStaff != fTargetStaff) return;
-    if (fDone) {
-        if (!fNextX) {
-            fNextX = o->getPosition().x;
-        }
-    }
+    if (fSearchingNext) considerNextCandidate(o);
 }
 
 //-------------------------------------------------------------------------------
 void GRPitchYVisitor::visitStart (GRMeter* o)
 {
 	if (fCurrentStaff != fTargetStaff) return;
-	if (fDone && !fNextX) fNextX = o->getPosition().x;
+    if (fSearchingNext) considerNextCandidate(o);
 }
 
 //-------------------------------------------------------------------------------
 void GRPitchYVisitor::visitStart (GRKey* o)
 {
 	if (fCurrentStaff != fTargetStaff) return;
-    if (fDone) {
-        if (!fNextX) fNextX = o->getPosition().x;
+    if (fSearchingNext) {
+        considerNextCandidate(o);
         return;
     }
+    if (fDone) return;
     int mynumkeys = NUMNOTES;
     float mymkarray [ NUMNOTES ];
     fNumKeys = o->getKeyArray(mymkarray);
@@ -221,7 +255,7 @@ void GRPitchYVisitor::visitStart (GRKey* o)
 void GRPitchYVisitor::visitStart (GRRepeatBegin* o)
 {
 	if (fCurrentStaff != fTargetStaff) return;
-	if (fDone && !fNextX) fNextX = o->getPosition().x;
+    if (fSearchingNext) considerNextCandidate(o);
 }
 
 //-------------------------------------------------------------------------------
@@ -232,10 +266,11 @@ void GRPitchYVisitor::visitStart (GRSingleRest* o) 	{ check(o); }
 void GRPitchYVisitor::visitStart (GRClef* o)
 {
 	if (fCurrentStaff != fTargetStaff) return;
-	if (fDone) {
-		if (!fNextX) fNextX = o->getPosition().x;
+    if (fSearchingNext) {
+        considerNextCandidate(o);
 		return;
 	}
+    if (fDone) return;
 	fBasePitch = o->getBasePitch();
 	fBaseOct = o->getBaseOct();
 	fBaseLine = o->getBaseLine();
@@ -243,6 +278,6 @@ void GRPitchYVisitor::visitStart (GRClef* o)
 
 void GRPitchYVisitor::visitStart (GROctava* o)
 {
-	if (fDone || (fCurrentStaff != fTargetStaff)) return;
+	if (fSearchingNext || fDone || (fCurrentStaff != fTargetStaff)) return;
 	fOctava = o->getOctava();
 }
