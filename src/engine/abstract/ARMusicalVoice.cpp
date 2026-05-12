@@ -4280,6 +4280,10 @@ void ARMusicalVoice::doAutoTies()
 					tiestruct->tie = tie;
 					tiestruct->curchordtag = vst.curchordtag;
                     tiestruct->startnote = static_cast<ARNote *>(o->isARNote());
+                    if (tiestruct->startnote) {
+                        tiestruct->startnote->setTied(true);
+                        tiestruct->startnote->setOriginTied(true);
+                    }
 					tiestructlist.AddTail(tiestruct);
 				}
 			}
@@ -4353,6 +4357,8 @@ void ARMusicalVoice::doAutoTies()
 					atstruct->origtie     = tiestruct->tie;
 					atstruct->curchordtag = vst.curchordtag;
                     atstruct->startnote = static_cast<ARNote *>(o->isARNote());
+                    if (atstruct->startnote)
+                        atstruct->startnote->setTied(true);
 					autotiestructlist.AddTail(atstruct);
 				}
 			// check the first element...

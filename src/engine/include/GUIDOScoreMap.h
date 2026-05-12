@@ -58,6 +58,8 @@ typedef struct {
 	int			     voiceNum;	///< the element voice number or 0 when na
     int              midiPitch; ///< the element midi pitch, or -1 when na
     std::string      noteName;  ///< the element American standard pitch name (A4 for 440Hz, C4 for MIDI 60), or empty when na
+    bool             isTied;        ///< true when the element belongs to a tie
+    bool             isOriginTied;  ///< true when the element starts a tie continuation
 } GuidoElementInfos;
 
 
@@ -333,6 +335,5 @@ GUIDOAPI GuidoErrCode	GuidoGetTimeMap( CARHandler ar, TimeMapCollector& f);
 #endif
 
 #endif
-
 
 

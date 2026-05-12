@@ -110,6 +110,8 @@ void GRNotationElement::SendMap (const NVRect& map, MapCollector& f, TYPE_TIMEPO
     const ARNote *arNote = dynamic_cast<const ARNote *>(ar);
     inf.midiPitch = (arNote ? arNote->getMidiPitch() : -1);
     inf.noteName = (arNote ? arNote->getPitchName() : "");
+    inf.isTied = (arNote ? arNote->isTied() : false);
+    inf.isOriginTied = (arNote ? arNote->isOriginTied() : false);
 
 	f.Graph2TimeMap (r, dates, inf);
 }

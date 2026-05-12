@@ -103,10 +103,17 @@ class ARNote : public ARMusicalEvent
 		bool		isAuto() const						{ return fAuto; }
 		void		setAuto(bool val)					{ fAuto = val; }
 
+		bool		isTied() const						{ return fIsTied; }
+		bool		isOriginTied() const				{ return fIsOriginTied; }
+		void		setTied(bool tied)					{ fIsTied = tied; }
+		void		setOriginTied(bool tied)			{ fIsOriginTied = tied; }
+
 
 	private:
 		ARNoteName fName;
 
+		bool       fIsTied = false;
+		bool       fIsOriginTied = false;
 		int		   fPitch;
 		int		   fOctave;
 		int		   fAccidentals;

@@ -62,6 +62,10 @@ ARNote::ARNote(const ARNote & arnote, bool istied)
         fClusterHaveToBeDrawn(false), fSubElementsHaveToBeDrawn(true), fAuto(true), fTremolo(0), fOctava(0)
 {
 	(*this) = &arnote;
+	if (istied) {
+		fIsTied = true;
+		fIsOriginTied = false;
+	}
 }
 
 ARNote * ARNote::Clone(bool istied) const	{ return new ARNote (*this, istied); }
@@ -79,6 +83,8 @@ void ARNote::operator= (const ARNote* note)
 	fAccidentals = note->fAccidentals;
 	fAlter = note->getAlter();
 	fIntensity = note->fIntensity;
+	fIsTied = note->fIsTied;
+	fIsOriginTied = note->fIsOriginTied;
     fVoiceNum = note->getVoiceNum(); // Added to fix a bug during chord copy (in doAutoBarlines)
 	fOctava = note->getOctava();
 	const ARTrill* trill = note->getOrnament();
@@ -396,4 +402,3 @@ string ARNote::getPitchName () const
     else
         return "";
 }
-
