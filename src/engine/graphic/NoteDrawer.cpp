@@ -84,7 +84,8 @@ float NoteDrawer::DrawNote( VGDevice & hdc, const TYPE_DURATION & noteDur, float
 	float w, hh;
 	fFont->GetExtent( symbol, &w, &hh, &hdc );
 	float xPos = xOffset + fPosition.x;
-	float yPos = fYAlign + yOffset + fPosition.y - w / 2;
+	// Align inline duration markers with the surrounding tempo text baseline.
+	float yPos = fYAlign + yOffset + fPosition.y + w / 4;
 
 	// - Draw Head
 	hdc.DrawMusicSymbol(xPos, yPos, symbol);
