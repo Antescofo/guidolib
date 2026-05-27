@@ -53,6 +53,7 @@ GRMusic::GRMusic(const ARMusic * ar, const ARPageFormat * inFormat, const GuidoL
     mAR2GRTime = -1;
     mDrawTime  = -1;
 	fLyricsChecked = false;
+	fHarmonyChecked = false;
 	GuidoGetDefaultLayoutSettings (&fSettings);
 	createGR(inFormat, settings );
 }
@@ -84,6 +85,22 @@ bool GRMusic::checkLyricsCollisions()
 	if (n) {
 		resolveCollisions (getCollisions());
 		fLyricsChecked = true;
+		return true;
+	}
+	return false;
+}
+
+// --------------------------------------------------------------------------
+bool GRMusic::checkHarmonyCollisions()
+{
+	fCollisions.clear();
+	for (int i= 0; i < getNumPages(); i++) {
+		GRPage * page = mPages[i];
+		page->checkHarmonyCollisions(fCollisions);
+	}
+	if (fCollisions.count()) {
+		resolveCollisions (getCollisions());
+		fHarmonyChecked = true;
 		return true;
 	}
 	return false;
@@ -621,6 +638,7 @@ void GRMusic::createGR (const ARPageFormat * inPageFormat, const GuidoLayoutSett
 	GRStaffManager grsm( this, fInFormat, &fSettings);
 	grsm.createStaves();
 	fLyricsChecked = false;
+	fHarmonyChecked = false;
 
 	// intended to fix tellPosition order issues
 	//GRFixVisitor ffix;
@@ -826,4 +844,3 @@ bool GRMusic::getRTPofPage( int pagenum, int * num, int * denom ) const
 	}
 	return false;
 }
-

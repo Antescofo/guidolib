@@ -100,6 +100,7 @@ public:
 	void 	FinishSystem( ISpringVector * pvect, IRodList * prods1, IRodList * prods2,
 						  GRSpaceForceFunction2 * psff, const TYPE_TIMEPOSITION & tp, int lastline = 0);
 	void	checkCollisions (TCollisions& state, bool lyrics) const;
+	void	checkHarmonyCollisions (TCollisions& state) const;
 	float	getNotesDensity () const;
 	const GRSystemSlice* lastSlice() const		{ return mSystemSlices.GetTail(); }
 
@@ -152,6 +153,8 @@ private:
 	const GRStaff*	getStaff (int index) const;
 	void	checkCollisions (TCollisions& state, std::vector<const GRNotationElement*>& elts) const;
 	float	checkCollision (const GRNotationElement* e1, const GRNotationElement* e2) const;
+	void	checkHarmonyCollisions (TCollisions& state, std::vector<const GRNotationElement*>& elts) const;
+	float	checkHarmonyCollision (const GRNotationElement* e1, const GRNotationElement* e2) const;
 	void	DrawAccolade( VGDevice & hdc, const GRSystemSlice * slice, const GRStaff * staff) const;
 	void	HandleStaffOnOff (GuidoPos pos, const GRSystemSlice * slice) const;
 	void	patchTempoIssue ();
@@ -162,5 +165,3 @@ private:
 };
 
 #endif
-
-

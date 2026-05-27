@@ -51,6 +51,7 @@ class GRPage : public GREvent
 	void		setPageFormat(const ARPageFormat * inFormat);
 	void 		adjustPageSize();
 	void		checkCollisions(TCollisions& state, bool lyrics) const;
+	void		checkHarmonyCollisions(TCollisions& state) const;
 	float		getNotesDensity() const;
 
 	const ARMusic *	getARMusic() const;

@@ -296,10 +296,16 @@ static GRHandler CreateGr(ARHandler ar, ARPageFormat* format, const GuidoLayoutS
 
 	long startTime = GuidoTiming::getCurrentmsTime();
 
+	// Automatic collision passes insert ARSpace tags into the AR. Remove stale
+	// generated spaces before building a fresh GR so repeated conversions do
+	// not accumulate previous layout decisions.
+	GRMusic::removeAutoSpace(arMusic);
+
 	// Create new gr music object with a copy of default pageFormat.
 	GRMusic *grMusic = new GRMusic(arMusic, format, settings, false);
 	if (grMusic == 0) return 0;
 
+	grMusic->checkHarmonyCollisions();
 	if (settings  && settings->checkLyricsCollisions)
 		grMusic->checkLyricsCollisions();
 
@@ -424,10 +430,10 @@ GUIDOAPI GuidoErrCode GuidoUpdateGR( GRHandler gr, const GuidoLayoutSettings * s
 	if (!settings && gr->arHandle->fEngineSettings) settings = gr->arHandle->fEngineSettings;
 
 	GRMusic* music = gr->grmusic;
-	if (music->lyricsChecked() && (!settings || !settings->checkLyricsCollisions)) {
-		music->removeAutoSpace(gr->arHandle->armusic);
-	}
+	if (music->harmonyChecked() || music->lyricsChecked())
+		GRMusic::removeAutoSpace(gr->arHandle->armusic);
 	music->createGR(gARPageFormat, settings);
+	music->checkHarmonyCollisions();
 	if (settings && settings->checkLyricsCollisions) {
 		music->checkLyricsCollisions();
 	}
@@ -462,7 +468,13 @@ GUIDOAPI GuidoErrCode	GuidoUpdateGRParameterized( GRHandler gr, const GuidoGrPar
 		pf = *gARPageFormat;
 	}
 
-	gr->grmusic->createGR(&pf, settings);
+	GRMusic* music = gr->grmusic;
+	if (music->harmonyChecked() || music->lyricsChecked())
+		GRMusic::removeAutoSpace(gr->arHandle->armusic);
+	music->createGR(&pf, settings);
+	music->checkHarmonyCollisions();
+	if (settings && settings->checkLyricsCollisions)
+		music->checkLyricsCollisions();
 	return guidoNoErr;
 }
 

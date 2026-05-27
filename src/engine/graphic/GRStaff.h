@@ -330,6 +330,7 @@ class GRStaff : public GRCompositeNotationElement
 		void	checkMultiVoiceNotesCollision ();
 		float	getNotesDensity () const;
 		size_t	getLyrics (std::vector<const GRNotationElement*>& list) const;
+		size_t	getHarmonies (std::vector<const GRNotationElement*>& list) const;
 		void	inhibitNextReset2Key()		{ fInhibitNextReset2key = true; }
 
   protected:

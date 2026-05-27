@@ -741,6 +741,19 @@ size_t GRStaff::getLyrics (vector<const GRNotationElement*>& list) const
 }
 
 // ----------------------------------------------------------------------------
+size_t GRStaff::getHarmonies (vector<const GRNotationElement*>& list) const
+{
+	const NEPointerList& elts = getElements();
+	GuidoPos pos = elts.GetHeadPosition();
+	while (pos) {
+		const GRNotationElement * e = elts.GetNext(pos);
+		if (e->isGRHarmony())
+			list.push_back(e);
+	}
+	return list.size();
+}
+
+// ----------------------------------------------------------------------------
 GRClef * GRStaff::AddClef(const ARClef * arclef)
 {
 	// look, whether the clef really is a clef-change. If not, do nothing!!!!

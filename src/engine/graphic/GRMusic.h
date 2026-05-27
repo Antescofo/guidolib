@@ -107,9 +107,11 @@ class GRMusic : public GREvent
 
 				float	getNotesDensity () const;
 				bool	checkLyricsCollisions ();		// checks lyrics collisions and resolves the collisions if any
+				bool	checkHarmonyCollisions ();		// checks harmony collisions and resolves the collisions if any
 				bool	collides () const					{ return !fCollisions.list().empty(); }
 				bool	lyricsChecked () const				{ return fLyricsChecked; }
-				void	removeAutoSpace (ARMusic * arm);// removes space tags inserted by checkLyricsCollisions()
+				bool	harmonyChecked () const				{ return fHarmonyChecked; }
+		static	void	removeAutoSpace (ARMusic * arm);// removes space tags inserted by automatic collision passes
 
 				void	printVoices (std::ostream& os) const;
     
@@ -142,9 +144,9 @@ class GRMusic : public GREvent
 		GuidoLayoutSettings fSettings;
 		TCollisions			fCollisions;
 		bool				fLyricsChecked;		// true when lyrics collisions have been solved
+		bool				fHarmonyChecked;	// true when harmony collisions have been solved
 };
 
 
 #endif
-
 

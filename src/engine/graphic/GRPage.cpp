@@ -127,6 +127,17 @@ void GRPage::checkCollisions (TCollisions& state, bool lyrics) const
 }
 
 // ----------------------------------------------------------------------------
+void GRPage::checkHarmonyCollisions (TCollisions& state) const
+{
+	size_t n = mSystems.size();
+	state.reset(true);
+	for (size_t i = 0; i < n; i++) {
+		state.setSystem ((int)i);
+		mSystems[i]->checkHarmonyCollisions (state);
+	}
+}
+
+// ----------------------------------------------------------------------------
 /** \brief Returns true if the system was added to the page false otherwise.
 */
 bool GRPage::addSystem( GRSystem * inSystem, float * ioUsedSystemDistance )
@@ -715,6 +726,5 @@ void GRPage::setHorizontalSpacing()
 	updateBoundingBox();//mBoundingBox.right=maxpointx; // Korrektur der Musikgrenzen
 	*/
 }
-
 
 

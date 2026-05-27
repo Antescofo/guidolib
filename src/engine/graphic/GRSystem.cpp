@@ -666,6 +666,53 @@ void GRSystem::checkCollisions (TCollisions& state, std::vector<const GRNotation
 }
 
 // --------------------------------------------------------------------------
+float GRSystem::checkHarmonyCollision (const GRNotationElement* e1, const GRNotationElement* e2) const
+{
+	NVRect bb1 = e1->getBoundingBox();
+	bb1 += e1->getPosition();
+	NVRect bb2 = e2->getBoundingBox();
+	bb2 += e2->getPosition();
+
+	const float wordSpace = LSPACE / 2;
+	bb1.right += wordSpace;
+	if (bb1.Collides(bb2)) {
+		float gap = bb1.right - bb2.left;
+		if (gap > 0) return gap;
+	}
+	return 0;
+}
+
+// --------------------------------------------------------------------------
+void GRSystem::checkHarmonyCollisions (TCollisions& state, std::vector<const GRNotationElement*>& elts) const
+{
+	sort(elts.begin(), elts.end(), [] (const GRNotationElement* e1, const GRNotationElement* e2) {
+		NVRect bb1 = e1->getBoundingBox();
+		bb1 += e1->getPosition();
+		NVRect bb2 = e2->getBoundingBox();
+		bb2 += e2->getPosition();
+		if (bb1.left == bb2.left)
+			return e1->getRelativeTimePosition() < e2->getRelativeTimePosition();
+		return bb1.left < bb2.left;
+	});
+
+	size_t n = elts.size();
+	for (size_t i=1; i < n; i++) {
+		const GRNotationElement* e1 = elts[i-1];
+		size_t next = i;
+		float gap = 0;
+		do {
+			const GRNotationElement* e2 = elts[next];
+			float v = checkHarmonyCollision (e1, e2);
+			if (v > gap) gap = v;
+			if (e1->getRelativeTimePosition() != e2->getRelativeTimePosition()) break;
+			next++;
+		} while (next < n);
+		if (gap > 0)
+			state.resolve(elts[i-1]->getAbstractRepresentation(), gap);
+	}
+}
+
+// --------------------------------------------------------------------------
 void GRSystem::accept (GRVisitor& visitor)
 {
 	visitor.visitStart (this);
@@ -730,6 +777,26 @@ void GRSystem::checkCollisions (TCollisions& state, bool lyrics) const
 			slice->checkCollisions(state);
 			state.update (slice, r);
 		}
+	}
+}
+
+// --------------------------------------------------------------------------
+void GRSystem::checkHarmonyCollisions (TCollisions& state) const
+{
+	state.reset(false);
+	const StaffVector * staves = getStaves();
+	int n = staves->size();
+	for (int i= 1; i <= n; i++) {
+		vector<const GRNotationElement*> elts;
+		const GRStaff* staff = staves->Get (i);
+		while (staff) {
+			staff->getHarmonies(elts);
+			staff = staff->getNextStaff();
+		}
+		// Harmony symbols form a floating group on a staff. Resolve horizontal
+		// overlaps by adding real AR spacing, so the next layout pass moves the
+		// following notation instead of shifting chord symbols independently.
+		checkHarmonyCollisions(state, elts);
 	}
 }
 
@@ -1194,5 +1261,3 @@ void GRSystem::notifyAccoladeTag( const ARAccolade * inAccoladeTag )
 	mAccolade.push_back(accolade);
 
 }
-
-
