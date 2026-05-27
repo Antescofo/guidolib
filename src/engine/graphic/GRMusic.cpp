@@ -93,17 +93,26 @@ bool GRMusic::checkLyricsCollisions()
 // --------------------------------------------------------------------------
 bool GRMusic::checkHarmonyCollisions()
 {
-	fCollisions.clear();
-	for (int i= 0; i < getNumPages(); i++) {
-		GRPage * page = mPages[i];
-		page->checkHarmonyCollisions(fCollisions);
-	}
-	if (fCollisions.count()) {
+	bool resolved = false;
+	const int maxHarmonyPasses = 8;
+	for (int pass = 0; pass < maxHarmonyPasses; ++pass) {
+		fCollisions.clear();
+		for (int i= 0; i < getNumPages(); i++) {
+			GRPage * page = mPages[i];
+			page->checkHarmonyCollisions(fCollisions);
+		}
+		if (!fCollisions.count())
+			return resolved;
+
+		// Harmony spacing is solved at AR level by inserting auto \space tags.
+		// A relayout after one inserted space can expose the next downstream
+		// overlap, especially when duration-based dx places a harmony inside a
+		// rest. Iterate with a small guard instead of assuming one pass is enough.
 		resolveCollisions (getCollisions());
 		fHarmonyChecked = true;
-		return true;
+		resolved = true;
 	}
-	return false;
+	return resolved;
 }
 
 // --------------------------------------------------------------------------
@@ -187,9 +196,16 @@ void GRMusic::resolveCollisions (vector<TCollisionInfo> list)
 					GuidoPos prev = pos;
 					while (pos) {		// browse the voice up to the corresponding date
 						const ARMusicalObject* obj = voice->GetNextObject(pos);
-						// place the space tag before the next note
-						if (obj->isARNote() && (obj->getRelativeTimePosition() > d)) {
-							voice->AddElementAt(prev,  ci. fSpace);
+						const TYPE_TIMEPOSITION objDate = obj->getRelativeTimePosition();
+						const bool dateMatches = ci.fAllowSameDatePositionInsert ? (objDate >= d) : (objDate > d);
+						// Position tags are not always stored in the event stream, so
+						// place their auto space by date. Harmony symbols may be attached
+						// to rests and duration-offset positions; lyrics keep the
+						// historical next-note insertion behavior.
+						const bool insertTarget = ci.fUseTimeBearingPositionInsert ?
+							(obj->getDuration() > DURATION_0) : (obj->isARNote() != 0);
+						if (insertTarget && dateMatches) {
+							voice->AddElementAt(prev, ci.fSpace);
 							break;
 						}
 						prev = pos;

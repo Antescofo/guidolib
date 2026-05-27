@@ -70,6 +70,21 @@
 
 using namespace std;
 
+namespace
+{
+	// Harmony collision checks must use the drawn rectangle, not only the
+	// anchor rectangle. getOffset() includes manual dx/dy and the computed
+	// duration-based dx used by MusicXML harmony offsets.
+	NVRect harmonyElementBox(const GRNotationElement* element)
+	{
+		NVRect box = element->getBoundingBox();
+		box += element->getPosition();
+		box += element->getOffset();
+		return box;
+	}
+
+}
+
 //#define TRACE
 #ifdef TRACE
 #define traceMethod(method)		cout << (void*)this << " GRSystem::" << method << endl
@@ -668,10 +683,8 @@ void GRSystem::checkCollisions (TCollisions& state, std::vector<const GRNotation
 // --------------------------------------------------------------------------
 float GRSystem::checkHarmonyCollision (const GRNotationElement* e1, const GRNotationElement* e2) const
 {
-	NVRect bb1 = e1->getBoundingBox();
-	bb1 += e1->getPosition();
-	NVRect bb2 = e2->getBoundingBox();
-	bb2 += e2->getPosition();
+	NVRect bb1 = harmonyElementBox(e1);
+	NVRect bb2 = harmonyElementBox(e2);
 
 	const float wordSpace = LSPACE / 2;
 	bb1.right += wordSpace;
@@ -686,12 +699,17 @@ float GRSystem::checkHarmonyCollision (const GRNotationElement* e1, const GRNota
 void GRSystem::checkHarmonyCollisions (TCollisions& state, std::vector<const GRNotationElement*>& elts) const
 {
 	sort(elts.begin(), elts.end(), [] (const GRNotationElement* e1, const GRNotationElement* e2) {
-		NVRect bb1 = e1->getBoundingBox();
-		bb1 += e1->getPosition();
-		NVRect bb2 = e2->getBoundingBox();
-		bb2 += e2->getPosition();
+		// Duration-based dx can draw an earlier harmony inside a later measure.
+		// Keep musical order primary so spacing is added before the later event.
+		const TYPE_TIMEPOSITION t1 = e1->getRelativeTimePosition();
+		const TYPE_TIMEPOSITION t2 = e2->getRelativeTimePosition();
+		if (t1 != t2)
+			return t1 < t2;
+
+		NVRect bb1 = harmonyElementBox(e1);
+		NVRect bb2 = harmonyElementBox(e2);
 		if (bb1.left == bb2.left)
-			return e1->getRelativeTimePosition() < e2->getRelativeTimePosition();
+			return false;
 		return bb1.left < bb2.left;
 	});
 
@@ -700,15 +718,19 @@ void GRSystem::checkHarmonyCollisions (TCollisions& state, std::vector<const GRN
 		const GRNotationElement* e1 = elts[i-1];
 		size_t next = i;
 		float gap = 0;
+		bool allowSameDatePositionInsert = false;
 		do {
 			const GRNotationElement* e2 = elts[next];
 			float v = checkHarmonyCollision (e1, e2);
-			if (v > gap) gap = v;
+			if (v > gap) {
+				gap = v;
+				allowSameDatePositionInsert = (e1->getRelativeTimePosition() == e2->getRelativeTimePosition());
+			}
 			if (e1->getRelativeTimePosition() != e2->getRelativeTimePosition()) break;
 			next++;
 		} while (next < n);
 		if (gap > 0)
-			state.resolve(elts[i-1]->getAbstractRepresentation(), gap);
+			state.resolve(elts[i-1]->getAbstractRepresentation(), gap, allowSameDatePositionInsert, true);
 	}
 }
 

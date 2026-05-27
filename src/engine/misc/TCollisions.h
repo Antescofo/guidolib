@@ -34,7 +34,13 @@ class GRSystemSlice;
 class  TCollisionInfo {
 	public:
 		TCollisionInfo (const ARMusicalObject* ar, int voice, ARSpace* space)
-			: fSpace(space), fARObject(ar), fVoice(voice) {}
+			: fSpace(space), fARObject(ar), fVoice(voice),
+			  fAllowSameDatePositionInsert(false), fUseTimeBearingPositionInsert(false) {}
+		TCollisionInfo (const ARMusicalObject* ar, int voice, ARSpace* space, bool allowSameDatePositionInsert,
+						bool useTimeBearingPositionInsert)
+			: fSpace(space), fARObject(ar), fVoice(voice),
+			  fAllowSameDatePositionInsert(allowSameDatePositionInsert),
+			  fUseTimeBearingPositionInsert(useTimeBearingPositionInsert) {}
 	
 		void print(std::ostream& os) const;
 
@@ -44,6 +50,12 @@ class  TCollisionInfo {
 		ARSpace*		 fSpace;		// a space element intended to solve the collision
 		const ARMusicalObject* fARObject;	// the ar object after which the space should be inserted
 		int				 fVoice;			// the corresponding ARVoice number
+
+		// Position tags are resolved by date because their AR object may not be
+		// in the voice event list. These flags keep the generic collision path
+		// compatible with lyrics while allowing harmony-specific spacing anchors.
+		bool			 fAllowSameDatePositionInsert;	// true when the target can be the event at the tag date
+		bool			 fUseTimeBearingPositionInsert;	// true when rests may be the spacing anchor, as for harmonies
 };
 
 std::ostream& operator<< (std::ostream& os, const TCollisionInfo* ci);
@@ -76,7 +88,8 @@ class  TCollisions {
 		void	clear ();
 		void	print (std::ostream& out) const;
 
-		void	resolve (const ARMusicalObject* ar, float gap);
+		void	resolve (const ARMusicalObject* ar, float gap, bool allowSameDatePositionInsert=false,
+						 bool useTimeBearingPositionInsert=false);
 
 	private:
 		bool	checkElement (const NVRect& r);

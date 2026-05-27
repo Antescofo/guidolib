@@ -99,12 +99,14 @@ bool TCollisions::checkSlice (const NVRect& r)
 }
 
 // ----------------------------------------------------------------------------
-void TCollisions::resolve (const ARMusicalObject* ar, float gap)
+void TCollisions::resolve (const ARMusicalObject* ar, float gap, bool allowSameDatePositionInsert,
+						   bool useTimeBearingPositionInsert)
 {
 	ARSpace * arspace = new ARSpace (gap);
 	arspace->setRelativeTimePosition (ar->getRelativeTimePosition());
 	arspace->setIsAuto (true);
-	TCollisionInfo ci (ar, ar->getVoiceNum(), arspace);
+	TCollisionInfo ci (ar, ar->getVoiceNum(), arspace, allowSameDatePositionInsert,
+					   useTimeBearingPositionInsert);
 	fCollisions.push_back (ci);
 }
 
@@ -143,4 +145,3 @@ void TCollisions::update (const GRNotationElement * e, const NVRect& r)
 	fLastElements[fStaff] = e;
 	fLastBB[fStaff] = r + yOffset();
 }
-
