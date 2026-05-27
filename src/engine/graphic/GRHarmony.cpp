@@ -94,6 +94,31 @@ GRHarmony::GRHarmony(GRStaff * p_staff, const ARHarmony * ar)
     mBoundingBox.bottom = sizey;
 }
 
+const NVPoint& GRHarmony::getOffset() const
+{
+	mResolvedOffset = GRPTagARNotationElement::getOffset();
+	mResolvedOffset.y += mAutoYOffset;
+	return mResolvedOffset;
+}
+
+void GRHarmony::setAutoYOffset(float y)
+{
+	mAutoYOffset = y;
+}
+
+bool GRHarmony::hasManualYOffset() const
+{
+	const ARHarmony * ar = getARHarmony();
+	const TagParameterFloat * dy = ar ? ar->getDY() : 0;
+	return dy && dy->TagIsSet();
+}
+
+bool GRHarmony::isAboveStaff() const
+{
+	const ARHarmony * ar = getARHarmony();
+	return ar && (ar->position() == ARHarmony::kAbove);
+}
+
 
 GRHarmony::~GRHarmony()
 {

@@ -117,6 +117,32 @@ int gd_noteName2pc(const char *name);
 #endif
 #define trace1Method(method)		cout << (void*)this << " GRStaff::" << method << endl
 
+namespace
+{
+	bool validBox(const NVRect& box)
+	{
+		return box.Width() > 0 && box.Height() > 0;
+	}
+
+	bool horizontalOverlap(const NVRect& a, const NVRect& b)
+	{
+		return (a.left < b.right) && (a.right > b.left);
+	}
+
+	NVRect elementBox(const GRNotationElement* element)
+	{
+		NVRect box = element->getBoundingBox();
+		box += element->getPosition();
+		box += element->getOffset();
+		return box;
+	}
+
+	bool isAboveStaffCandidate(const NVRect& box)
+	{
+		return validBox(box) && (box.top < 0);
+	}
+}
+
 // ===========================================================================
 //		MeasureAccidentals
 // ===========================================================================
@@ -2043,6 +2069,81 @@ float GRStaff::FirstNoteORRestXPos() const
 	return getPosition().x;
 }
 
+void GRStaff::adjustHarmonyCollisions()
+{
+	vector<NVRect> obstacles;
+	vector<GRHarmony *> harmonies;
+	vector<GRHarmony *> placedHarmonies;
+	vector<NVRect> harmonyBoxes;
+	vector<float> harmonyOffsets;
+	const float margin = getStaffLSPACE() * 0.35f;
+
+	GuidoPos pos = mCompElements.GetHeadPosition();
+	while (pos) {
+		GRNotationElement * e = mCompElements.GetNext(pos);
+		if (!e) continue;
+
+		GRHarmony * harmony = dynamic_cast<GRHarmony *>(e);
+		if (harmony) {
+			harmony->resetAutoYOffset();
+			if (harmony->isAboveStaff() && !harmony->hasManualYOffset())
+				harmonies.push_back(harmony);
+			else {
+				NVRect box = elementBox(harmony);
+				if (isAboveStaffCandidate(box))
+					obstacles.push_back(box);
+			}
+			continue;
+		}
+
+		NVRect box = elementBox(e);
+		if (isAboveStaffCandidate(box))
+			obstacles.push_back(box);
+	}
+
+	// Compute each harmony's required lift independently against fixed above-staff
+	// objects such as fingerings, bow marks and articulations.
+	for (vector<GRHarmony *>::iterator i = harmonies.begin(); i != harmonies.end(); ++i) {
+		GRHarmony * harmony = *i;
+		NVRect box = elementBox(harmony);
+		if (!validBox(box)) continue;
+
+		float targetBottom = box.bottom;
+		for (vector<NVRect>::const_iterator j = obstacles.begin(); j != obstacles.end(); ++j) {
+			if (horizontalOverlap(box, *j)) {
+				const float desiredBottom = j->top - margin;
+				if (desiredBottom < targetBottom)
+					targetBottom = desiredBottom;
+			}
+		}
+
+		placedHarmonies.push_back(harmony);
+		harmonyBoxes.push_back(box);
+		harmonyOffsets.push_back(targetBottom - box.bottom);
+	}
+
+	if (harmonyOffsets.empty())
+		return;
+
+	// Harmonies on one staff are visually a row. Apply the largest required lift
+	// to every auto-placed harmony so isolated collisions do not create jagged y positions.
+	float groupOffset = 0;
+	for (vector<float>::const_iterator i = harmonyOffsets.begin(); i != harmonyOffsets.end(); ++i) {
+		if (*i < groupOffset)
+			groupOffset = *i;
+	}
+
+	for (size_t i = 0; i < placedHarmonies.size(); ++i) {
+		GRHarmony * harmony = placedHarmonies[i];
+		harmony->setAutoYOffset(groupOffset);
+
+		NVRect box = harmonyBoxes[i];
+		box += NVPoint(0, groupOffset);
+		if (isAboveStaffCandidate(box))
+			obstacles.push_back(box);
+	}
+}
+
 // ----------------------------------------------------------------------------
 void GRStaff::FinishStaff() 
 {
@@ -2080,6 +2181,7 @@ void GRStaff::FinishStaff()
         }
     }
     if (mStaffState.fMultiVoiceCollisions) checkMultiVoiceNotesCollision();
+	adjustHarmonyCollisions();
 	updateBoundingBox();
 //	GRStaffOnOffVisitor v;
 //	accept (v);
@@ -2096,6 +2198,7 @@ void GRStaff::boundingBoxPreview()
 {
     traceMethod("boundingBoxPreview");
     if (extendedBB) {
+		adjustHarmonyCollisions();
         updateBoundingBox();
         
         // AC: calculate noteOnlyBoundingBox for AutoPos
@@ -2116,6 +2219,7 @@ void GRStaff::boundingBoxPreview()
         return;
     }
 	
+	adjustHarmonyCollisions();
     mBoundingBox.Set (0,0,0,0);
 	GuidoPos pos = mCompElements.GetHeadPosition();
 	while (pos)

@@ -67,6 +67,12 @@ public:
     virtual void 	setHPosition( float nx );
 			void	mustFollowPitch( bool flag ) { mMustFollowPitch = flag; }
     virtual const GRHarmony *		isGRHarmony() const			{ return this; }
+	virtual const NVPoint& getOffset() const;
+			void	setAutoYOffset(float y);
+			void	resetAutoYOffset()				{ setAutoYOffset(0); }
+			float	getAutoYOffset() const			{ return mAutoYOffset; }
+			bool	hasManualYOffset() const;
+			bool	isAboveStaff() const;
 
 protected:
 
@@ -74,6 +80,10 @@ protected:
 
     unsigned int mTextAlign;
     bool	mMustFollowPitch; // (when the text tag has a range)
+	// Layout-time displacement added by GRStaff after bounding boxes are known.
+	// Kept separate from the parsed dy parameter so explicit user positioning is preserved.
+	float	mAutoYOffset = 0;
+	mutable NVPoint mResolvedOffset;
 
 private:
 	void 	DrawHarmonyString (VGDevice & hdc, const VGFont* font, const std::string& str, float x, float y) const;
@@ -83,4 +93,3 @@ private:
 };
 
 #endif
-
