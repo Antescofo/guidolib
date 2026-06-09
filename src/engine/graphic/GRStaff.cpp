@@ -66,6 +66,7 @@ using namespace std;
 #include "GRClef.h"
 #include "GRDoubleBar.h"
 #include "GRDummy.h"
+#include "GRFingering.h"
 #include "GRFinishBar.h"
 #include "GRGlue.h"
 #include "GRInstrument.h"
@@ -133,6 +134,11 @@ namespace
 	{
 		NVRect box = element->getBoundingBox();
 		box += element->getPosition();
+		// Plain GRText resolves its dx/dy into mPosition before drawing, so
+		// adding getOffset() here would count text offsets twice. Fingerings
+		// inherit from GRText but draw at mPosition + getOffset().
+		if (element->isText() && !dynamic_cast<const GRFingering*>(element))
+			return box;
 		box += element->getOffset();
 		return box;
 	}
