@@ -54,6 +54,7 @@
 #include "GRFingering.h"
 #include "GRFixVisitor.h"
 #include "GRGlue.h"
+#include "GRHarmony.h"
 #include "GRKey.h"
 #include "GRMusic.h"
 #include "GRPage.h"
@@ -81,6 +82,12 @@ namespace
 		box += element->getPosition();
 		box += element->getOffset();
 		return box;
+	}
+
+	bool hasDurationDxHarmony(const GRNotationElement* element)
+	{
+		const GRHarmony * harmony = element ? element->isGRHarmony() : 0;
+		return harmony && harmony->hasDurationDx();
 	}
 
 }
@@ -722,6 +729,11 @@ void GRSystem::checkHarmonyCollisions (TCollisions& state, std::vector<const GRN
 		do {
 			const GRNotationElement* e2 = elts[next];
 			float v = checkHarmonyCollision (e1, e2);
+			if (hasDurationDxHarmony(e1) || hasDurationDxHarmony(e2)) {
+				if (e1->getRelativeTimePosition() != e2->getRelativeTimePosition()) break;
+				next++;
+				continue;
+			}
 			if (v > gap) {
 				gap = v;
 				allowSameDatePositionInsert = (e1->getRelativeTimePosition() == e2->getRelativeTimePosition());

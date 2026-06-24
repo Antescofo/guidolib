@@ -97,8 +97,14 @@ GRHarmony::GRHarmony(GRStaff * p_staff, const ARHarmony * ar)
 const NVPoint& GRHarmony::getOffset() const
 {
 	mResolvedOffset = GRPTagARNotationElement::getOffset();
+	mResolvedOffset.x += mAutoXOffset;
 	mResolvedOffset.y += mAutoYOffset;
 	return mResolvedOffset;
+}
+
+void GRHarmony::setAutoXOffset(float x)
+{
+	mAutoXOffset = x;
 }
 
 void GRHarmony::setAutoYOffset(float y)

@@ -55,6 +55,7 @@ public:
 	virtual float       getSize() const         { return mTagSize; }
 	virtual float       getSConst() const       { return sconst; }
 	virtual void        applyDurationDx(GRStaff * grstaff);
+			bool        hasDurationDx() const   { return fHasDurationDx; }
 
     // returns name of a font if present ...
 	virtual const char*  getFont() const         { return fFontName.c_str(); }

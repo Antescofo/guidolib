@@ -147,6 +147,73 @@ namespace
 	{
 		return validBox(box) && (box.top < 0);
 	}
+
+	struct HarmonyPlacement
+	{
+		GRHarmony * harmony;
+		bool movable;
+	};
+
+	NVRect harmonyPlacementBox(const HarmonyPlacement& placement)
+	{
+		NVRect box = elementBox(placement.harmony);
+		// Blockers from the next staff slice may still carry a stale local x
+		// correction from an earlier preview pass. Use their anchor position.
+		if (!placement.movable)
+			box += NVPoint(-placement.harmony->getAutoXOffset(), 0);
+		return box;
+	}
+
+	void adjustDurationDxHarmonyCollisions(vector<HarmonyPlacement>& harmonies, float margin)
+	{
+		vector<HarmonyPlacement> sorted;
+		for (vector<HarmonyPlacement>::iterator i = harmonies.begin(); i != harmonies.end(); ++i) {
+			NVRect box = harmonyPlacementBox(*i);
+			if (isAboveStaffCandidate(box))
+				sorted.push_back(*i);
+		}
+
+		// Duration-based dx is recomputed from the measure width. Resolving these
+		// collisions with AR spacing can therefore widen the measure, recompute a
+		// larger dx, and make the next pass wider again. Keep the correction local.
+		for (int pass = 0; pass < 4; ++pass) {
+			sort(sorted.begin(), sorted.end(), [] (const HarmonyPlacement& h1, const HarmonyPlacement& h2) {
+				NVRect b1 = harmonyPlacementBox(h1);
+				NVRect b2 = harmonyPlacementBox(h2);
+				if (b1.left == b2.left)
+					return h1.harmony->getRelativeTimePosition() < h2.harmony->getRelativeTimePosition();
+				return b1.left < b2.left;
+			});
+
+			bool moved = false;
+			for (size_t i = sorted.size(); i > 1; --i) {
+				HarmonyPlacement current = sorted[i - 2];
+				if (!current.movable || !current.harmony->hasDurationDx())
+					continue;
+
+				NVRect currentBox = harmonyPlacementBox(current);
+				NVRect nextBox = harmonyPlacementBox(sorted[i - 1]);
+				const float overlap = currentBox.right + margin - nextBox.left;
+				if (overlap <= 0)
+					continue;
+
+				float shift = overlap;
+				if ((i > 2) && (!sorted[i - 3].movable || !sorted[i - 3].harmony->hasDurationDx())) {
+					NVRect previousBox = harmonyPlacementBox(sorted[i - 3]);
+					const float room = currentBox.left - (previousBox.right + margin);
+					if (room <= 0)
+						continue;
+					shift = min(shift, room);
+				}
+
+				current.harmony->setAutoXOffset(current.harmony->getAutoXOffset() - shift);
+				moved = true;
+			}
+
+			if (!moved)
+				break;
+		}
+	}
 }
 
 // ===========================================================================
@@ -2091,6 +2158,8 @@ float GRStaff::FirstNoteORRestXPos() const
 void GRStaff::adjustHarmonyCollisions()
 {
 	vector<NVRect> obstacles;
+	vector<HarmonyPlacement> aboveHarmonies;
+	vector<GRHarmony *> obstacleHarmonies;
 	vector<GRHarmony *> harmonies;
 	vector<GRHarmony *> placedHarmonies;
 	vector<NVRect> harmonyBoxes;
@@ -2104,18 +2173,44 @@ void GRStaff::adjustHarmonyCollisions()
 
 		GRHarmony * harmony = dynamic_cast<GRHarmony *>(e);
 		if (harmony) {
+			harmony->resetAutoXOffset();
 			harmony->resetAutoYOffset();
-			if (harmony->isAboveStaff() && !harmony->hasManualYOffset())
-				harmonies.push_back(harmony);
+			if (harmony->isAboveStaff()) {
+				HarmonyPlacement placement = { harmony, true };
+				aboveHarmonies.push_back(placement);
+				if (!harmony->hasManualYOffset())
+					harmonies.push_back(harmony);
+				else
+					obstacleHarmonies.push_back(harmony);
+			}
 			else {
-				NVRect box = elementBox(harmony);
-				if (isAboveStaffCandidate(box))
-					obstacles.push_back(box);
+				obstacleHarmonies.push_back(harmony);
 			}
 			continue;
 		}
 
 		NVRect box = elementBox(e);
+		if (isAboveStaffCandidate(box))
+			obstacles.push_back(box);
+	}
+
+	GRStaff * nextStaff = getNextStaff();
+	if (nextStaff) {
+		GuidoPos nextPos = nextStaff->mCompElements.GetHeadPosition();
+		while (nextPos) {
+			GRNotationElement * e = nextStaff->mCompElements.GetNext(nextPos);
+			GRHarmony * harmony = dynamic_cast<GRHarmony *>(e);
+			if (harmony && harmony->isAboveStaff()) {
+				HarmonyPlacement placement = { harmony, false };
+				aboveHarmonies.push_back(placement);
+			}
+		}
+	}
+
+	adjustDurationDxHarmonyCollisions(aboveHarmonies, margin);
+
+	for (vector<GRHarmony *>::iterator i = obstacleHarmonies.begin(); i != obstacleHarmonies.end(); ++i) {
+		NVRect box = elementBox(*i);
 		if (isAboveStaffCandidate(box))
 			obstacles.push_back(box);
 	}

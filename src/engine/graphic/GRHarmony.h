@@ -66,8 +66,11 @@ public:
     virtual void 	setPosition(const NVPoint & inPosition );
     virtual void 	setHPosition( float nx );
 			void	mustFollowPitch( bool flag ) { mMustFollowPitch = flag; }
-    virtual const GRHarmony *		isGRHarmony() const			{ return this; }
+	virtual const GRHarmony *		isGRHarmony() const			{ return this; }
 	virtual const NVPoint& getOffset() const;
+			void	setAutoXOffset(float x);
+			void	resetAutoXOffset()				{ setAutoXOffset(0); }
+			float	getAutoXOffset() const			{ return mAutoXOffset; }
 			void	setAutoYOffset(float y);
 			void	resetAutoYOffset()				{ setAutoYOffset(0); }
 			float	getAutoYOffset() const			{ return mAutoYOffset; }
@@ -81,7 +84,8 @@ protected:
     unsigned int mTextAlign;
     bool	mMustFollowPitch; // (when the text tag has a range)
 	// Layout-time displacement added by GRStaff after bounding boxes are known.
-	// Kept separate from the parsed dy parameter so explicit user positioning is preserved.
+	// Kept separate from parsed dx/dy parameters so explicit user positioning is preserved.
+	float	mAutoXOffset = 0;
 	float	mAutoYOffset = 0;
 	mutable NVPoint mResolvedOffset;
 
