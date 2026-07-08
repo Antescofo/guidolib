@@ -335,7 +335,7 @@ class GRStaff : public GRCompositeNotationElement
 
   protected:
 		void	DebugPrintState(const char * info) const;
-		void	adjustHarmonyCollisions();
+		void	adjustFloatingCollisions();
 
 		void	DrawStaffUsingSymbolScale( VGDevice & hdc ) const;
 		void	DrawStaffUsingSymbolRepeat( VGDevice & hdc ) const;

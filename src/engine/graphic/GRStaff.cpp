@@ -42,9 +42,11 @@ using namespace std;
 #include "TagParameterFloat.h"
 
 // - Guido AR
+#include "ARArticulation.h"
 #include "ARBarFormat.h"
 #include "ARClef.h"
 #include "ARDoubleBar.h"
+#include "ARFingering.h"
 #include "ARKey.h"
 #include "AROctava.h"
 #include "ARNaturalKey.h"
@@ -66,6 +68,7 @@ using namespace std;
 #include "GRClef.h"
 #include "GRDoubleBar.h"
 #include "GRDummy.h"
+#include "GREvent.h"
 #include "GRFingering.h"
 #include "GRFinishBar.h"
 #include "GRGlue.h"
@@ -73,6 +76,7 @@ using namespace std;
 #include "GRIntens.h"
 #include "GRKey.h"
 #include "GRMeter.h"
+#include "GRArticulation.h"
 #include "GRMusic.h"
 #include "GRNote.h"
 #include "GRRest.h"
@@ -90,6 +94,7 @@ using namespace std;
 #include "GRStaffManager.h"
 #include "GRSystem.h"
 #include "GRSystemSlice.h"
+#include "GRTempo.h"
 #include "GRText.h"
 #include "GRVoice.h"
 
@@ -132,13 +137,23 @@ namespace
 
 	NVRect elementBox(const GRNotationElement* element)
 	{
+		if (const GRTempo * tempo = element->isGRTempo())
+			return tempo->getLayoutBoundingBox();
+
 		NVRect box = element->getBoundingBox();
 		box += element->getPosition();
-		// Plain GRText resolves its dx/dy into mPosition before drawing, so
-		// adding getOffset() here would count text offsets twice. Fingerings
-		// inherit from GRText but draw at mPosition + getOffset().
-		if (element->isText() && !dynamic_cast<const GRFingering*>(element))
+
+		// Plain GRText resolves its parsed dx/dy into mPosition before drawing,
+		// so adding getOffset() here would count text offsets twice. Only add
+		// the floating stack's automatic y correction. Fingerings inherit from
+		// GRText but draw at mPosition + getOffset().
+		if (const GRText * text = element->isText()) {
+			if (dynamic_cast<const GRFingering*>(element))
+				box += element->getOffset();
+			else
+				box += NVPoint(0, text->getAutoYOffset());
 			return box;
+		}
 		box += element->getOffset();
 		return box;
 	}
@@ -148,11 +163,72 @@ namespace
 		return validBox(box) && (box.top < 0);
 	}
 
+	NVRect bowStackBox(const GRArticulation* articulation, float lspace)
+	{
+		NVRect box = elementBox(articulation);
+		if (!validBox(box))
+			return box;
+
+		// Up/down bow glyphs reserve more room than their nominal font extent:
+		// the U/V shapes visually wrap nearby fingerings even when their narrow
+		// symbol box does not overlap. Keep this conservative box local to the
+		// floating stack so drawing and note-local placement stay unchanged.
+		const float xpad = lspace * 0.45f;
+		const float ypad = lspace * 0.55f;
+		box.left -= xpad;
+		box.right += xpad;
+		box.top -= ypad;
+		return box;
+	}
+
 	struct HarmonyPlacement
 	{
 		GRHarmony * harmony;
 		bool movable;
 	};
+
+	enum FloatingRole
+	{
+		kFloatingBowing = 0,
+		kFloatingFingering,
+		kFloatingText,
+		kFloatingHarmony,
+		kFloatingTempo
+	};
+
+	struct FloatingItem
+	{
+		GRNotationElement * element = 0;
+		GRHarmony * harmony = 0;
+		FloatingRole role = kFloatingBowing;
+		size_t sequence = 0;
+	};
+
+	bool hasEventAssociation(const GRNotationElement * element)
+	{
+		const NEPointerList * associations = element ? element->getAssociations() : 0;
+		if (!associations)
+			return false;
+
+		GuidoPos pos = associations->GetHeadPosition();
+		NEPointerList * mutableAssociations = const_cast<NEPointerList *>(associations);
+		while (pos) {
+			GRNotationElement * associated = mutableAssociations->GetNext(pos);
+			if (associated && associated->isGREvent())
+				return true;
+		}
+		return false;
+	}
+
+	// Only text that is graphically attached to a note belongs in the local
+	// above-staff stack. System text, lyrics, headers, and tempo-like text must
+	// keep their own placement instead of being pulled into note collision logic.
+	bool isNoteLocalText(const GRText * text)
+	{
+		if (!text || text->isLyrics())
+			return false;
+		return hasEventAssociation(text);
+	}
 
 	NVRect harmonyPlacementBox(const HarmonyPlacement& placement)
 	{
@@ -213,6 +289,211 @@ namespace
 			if (!moved)
 				break;
 		}
+	}
+
+	void resetFloatingAutoOffset(GRNotationElement * element)
+	{
+		if (GRHarmony * harmony = dynamic_cast<GRHarmony *>(element)) {
+			harmony->resetAutoXOffset();
+			harmony->resetAutoYOffset();
+		}
+		else if (GRFingering * fingering = dynamic_cast<GRFingering *>(element)) {
+			fingering->resetAutoYOffset();
+		}
+		else if (GRArticulation * articulation = dynamic_cast<GRArticulation *>(element)) {
+			articulation->resetAutoYOffset();
+		}
+		else if (GRText * text = dynamic_cast<GRText *>(element)) {
+			text->resetAutoYOffset();
+		}
+		else if (GRTempo * tempo = dynamic_cast<GRTempo *>(element)) {
+			tempo->resetAutoYOffset();
+		}
+	}
+
+	void resetFloatingAutoOffsets(GRNotationElement * element)
+	{
+		resetFloatingAutoOffset(element);
+		if (GREvent * event = element->isGREvent()) {
+			GRNEList& articulations = event->getArticulations();
+			for (GRNEList::iterator i = articulations.begin(); i != articulations.end(); ++i)
+				resetFloatingAutoOffset(*i);
+		}
+	}
+
+	void setFloatingAutoYOffset(FloatingItem& item, float y)
+	{
+		if (item.harmony)
+			item.harmony->setAutoYOffset(y);
+		else if (GRFingering * fingering = dynamic_cast<GRFingering *>(item.element))
+			fingering->setAutoYOffset(y);
+		else if (GRArticulation * articulation = dynamic_cast<GRArticulation *>(item.element))
+			articulation->setAutoYOffset(y);
+		else if (GRText * text = dynamic_cast<GRText *>(item.element))
+			text->setAutoYOffset(y);
+		else if (GRTempo * tempo = dynamic_cast<GRTempo *>(item.element))
+			tempo->setAutoYOffset(y);
+	}
+
+	NVRect floatingStackBox(const FloatingItem& item, float lspace)
+	{
+		if (GRArticulation * articulation = dynamic_cast<GRArticulation *>(item.element)) {
+			if (articulation->isBow())
+				return bowStackBox(articulation, lspace);
+		}
+		return elementBox(item.element);
+	}
+
+	bool floatingItemFor(GRNotationElement * element, FloatingItem& item, size_t sequence)
+	{
+		if (GRArticulation * articulation = dynamic_cast<GRArticulation *>(element)) {
+			// MusicXML up/down bows are represented by GRArticulation. Move
+			// those through the floating stack, but keep other articulations as
+			// blockers because they already have note-local collision rules.
+			if (!articulation->isBow())
+				return false;
+			item.element = articulation;
+			item.role = kFloatingBowing;
+			item.sequence = sequence;
+			return true;
+		}
+		if (GRFingering * fingering = dynamic_cast<GRFingering *>(element)) {
+			item.element = fingering;
+			item.role = kFloatingFingering;
+			item.sequence = sequence;
+			return true;
+		}
+		if (GRText * text = dynamic_cast<GRText *>(element)) {
+			if (!isNoteLocalText(text))
+				return false;
+			item.element = text;
+			item.role = kFloatingText;
+			item.sequence = sequence;
+			return true;
+		}
+		if (GRHarmony * harmony = dynamic_cast<GRHarmony *>(element)) {
+			item.element = harmony;
+			item.harmony = harmony;
+			item.role = kFloatingHarmony;
+			item.sequence = sequence;
+			return true;
+		}
+		if (GRTempo * tempo = dynamic_cast<GRTempo *>(element)) {
+			item.element = tempo;
+			item.role = kFloatingTempo;
+			item.sequence = sequence;
+			return true;
+		}
+		return false;
+	}
+
+	bool isAboveFloatingItemCandidate(const FloatingItem& item, const NVRect& box)
+	{
+		if (GRArticulation * articulation = dynamic_cast<GRArticulation *>(item.element)) {
+			const ARArticulation * ar = dynamic_cast<const ARArticulation *>(articulation->getAbstractRepresentation());
+			return ar ? ar->getArticulationPosition() != ARArticulation::kBelow : isAboveStaffCandidate(box);
+		}
+		if (GRFingering * fingering = dynamic_cast<GRFingering *>(item.element)) {
+			const ARFingering * ar = fingering->getARFingering();
+			if (!ar)
+				return isAboveStaffCandidate(box);
+			if (ar->getFingeringPosition() == ARFingering::kBelow)
+				return false;
+			if (ar->getFingeringPosition() == ARFingering::kAbove)
+				return true;
+			return isAboveStaffCandidate(box);
+		}
+		if (GRText * text = dynamic_cast<GRText *>(item.element)) {
+			return !text->isLyrics() && isAboveStaffCandidate(box);
+		}
+		// Harmonies carry an explicit above/below semantic from MusicXML/GMN.
+		// Their text box can still start at the staff edge before the stack pass,
+		// so do not require a negative top coordinate to include them.
+		if (item.harmony && item.harmony->isAboveStaff())
+			return true;
+		if (dynamic_cast<GRTempo *>(item.element))
+			return isAboveStaffCandidate(box);
+		return isAboveStaffCandidate(box);
+	}
+
+	void collectFloatingCandidate(GRNotationElement * element, size_t& sequence, vector<FloatingItem>& floatingItems,
+								  vector<FloatingItem>& manualHarmonies, vector<FloatingItem>& harmonies,
+								  vector<FloatingItem>& tempos,
+								  vector<NVRect>& obstacles)
+	{
+		if (!element)
+			return;
+
+		const NVRect box = elementBox(element);
+		FloatingItem item;
+		if (floatingItemFor(element, item, sequence)) {
+			if (isAboveFloatingItemCandidate(item, box)) {
+				if (item.harmony) {
+					if (item.harmony->hasManualYOffset())
+						manualHarmonies.push_back(item);
+					else
+						harmonies.push_back(item);
+				}
+				else if (item.role == kFloatingTempo) {
+					tempos.push_back(item);
+				}
+				else {
+					floatingItems.push_back(item);
+				}
+			}
+		}
+		else if (isAboveStaffCandidate(box)) {
+			obstacles.push_back(box);
+		}
+		++sequence;
+	}
+
+	float requiredAboveShift(const NVRect& box, const vector<NVRect>& obstacles, float margin)
+	{
+		float targetBottom = box.bottom;
+		for (vector<NVRect>::const_iterator i = obstacles.begin(); i != obstacles.end(); ++i) {
+			if (!horizontalOverlap(box, *i))
+				continue;
+
+			const float desiredBottom = i->top - margin;
+			if (desiredBottom < targetBottom)
+				targetBottom = desiredBottom;
+		}
+		return targetBottom - box.bottom;
+	}
+
+	float compactAboveShift(const NVRect& box, const vector<NVRect>& obstacles, float margin)
+	{
+		bool foundObstacle = false;
+		float targetBottom = box.bottom;
+		for (vector<NVRect>::const_iterator i = obstacles.begin(); i != obstacles.end(); ++i) {
+			if (!horizontalOverlap(box, *i))
+				continue;
+
+			const float desiredBottom = i->top - margin;
+			if (!foundObstacle || desiredBottom < targetBottom) {
+				targetBottom = desiredBottom;
+				foundObstacle = true;
+			}
+		}
+		// Imported MusicXML can contain large explicit dy values whose only goal
+		// was collision avoidance in the source program. For note-local objects we
+		// compact back toward the staff while preserving the required clearance.
+		return foundObstacle ? targetBottom - box.bottom : 0;
+	}
+
+	bool sortAboveFloatingItems(const FloatingItem& a, const FloatingItem& b)
+	{
+		if (a.role != b.role)
+			return a.role < b.role;
+
+		const NVRect boxA = elementBox(a.element);
+		const NVRect boxB = elementBox(b.element);
+		if (boxA.bottom != boxB.bottom)
+			return boxA.bottom > boxB.bottom;
+		if (boxA.left != boxB.left)
+			return boxA.left < boxB.left;
+		return a.sequence < b.sequence;
 	}
 }
 
@@ -2155,12 +2436,14 @@ float GRStaff::FirstNoteORRestXPos() const
 	return getPosition().x;
 }
 
-void GRStaff::adjustHarmonyCollisions()
+void GRStaff::adjustFloatingCollisions()
 {
 	vector<NVRect> obstacles;
 	vector<HarmonyPlacement> aboveHarmonies;
-	vector<GRHarmony *> obstacleHarmonies;
-	vector<GRHarmony *> harmonies;
+	vector<FloatingItem> floatingItems;
+	vector<FloatingItem> manualHarmonies;
+	vector<FloatingItem> harmonies;
+	vector<FloatingItem> tempos;
 	vector<GRHarmony *> placedHarmonies;
 	vector<NVRect> harmonyBoxes;
 	vector<float> harmonyOffsets;
@@ -2169,29 +2452,32 @@ void GRStaff::adjustHarmonyCollisions()
 	GuidoPos pos = mCompElements.GetHeadPosition();
 	while (pos) {
 		GRNotationElement * e = mCompElements.GetNext(pos);
+		if (e) resetFloatingAutoOffsets(e);
+	}
+
+	GRSystem * system = getGRSystem();
+	if (system && system->getStaffNumber(this) == 1) {
+		const NEPointerList& systemElements = system->GetCompositeElements();
+		GuidoPos sysPos = systemElements.GetHeadPosition();
+		while (sysPos) {
+			GRNotationElement * e = systemElements.GetNext(sysPos);
+			if (e && e->isGRTempo())
+				resetFloatingAutoOffset(e);
+		}
+	}
+
+	pos = mCompElements.GetHeadPosition();
+	while (pos) {
+		GRNotationElement * e = mCompElements.GetNext(pos);
 		if (!e) continue;
 
 		GRHarmony * harmony = dynamic_cast<GRHarmony *>(e);
 		if (harmony) {
-			harmony->resetAutoXOffset();
-			harmony->resetAutoYOffset();
 			if (harmony->isAboveStaff()) {
 				HarmonyPlacement placement = { harmony, true };
 				aboveHarmonies.push_back(placement);
-				if (!harmony->hasManualYOffset())
-					harmonies.push_back(harmony);
-				else
-					obstacleHarmonies.push_back(harmony);
 			}
-			else {
-				obstacleHarmonies.push_back(harmony);
-			}
-			continue;
 		}
-
-		NVRect box = elementBox(e);
-		if (isAboveStaffCandidate(box))
-			obstacles.push_back(box);
 	}
 
 	GRStaff * nextStaff = getNextStaff();
@@ -2209,52 +2495,97 @@ void GRStaff::adjustHarmonyCollisions()
 
 	adjustDurationDxHarmonyCollisions(aboveHarmonies, margin);
 
-	for (vector<GRHarmony *>::iterator i = obstacleHarmonies.begin(); i != obstacleHarmonies.end(); ++i) {
-		NVRect box = elementBox(*i);
-		if (isAboveStaffCandidate(box))
-			obstacles.push_back(box);
+	size_t sequence = 0;
+	pos = mCompElements.GetHeadPosition();
+	while (pos) {
+		GRNotationElement * e = mCompElements.GetNext(pos);
+		if (!e) continue;
+
+		collectFloatingCandidate(e, sequence, floatingItems, manualHarmonies, harmonies, tempos, obstacles);
+		if (GREvent * event = e->isGREvent()) {
+			GRNEList& articulations = event->getArticulations();
+			for (GRNEList::iterator i = articulations.begin(); i != articulations.end(); ++i)
+				collectFloatingCandidate(*i, sequence, floatingItems, manualHarmonies, harmonies, tempos, obstacles);
+		}
 	}
 
-	// Compute each harmony's required lift independently against fixed above-staff
-	// objects such as fingerings, bow marks and articulations.
-	for (vector<GRHarmony *>::iterator i = harmonies.begin(); i != harmonies.end(); ++i) {
-		GRHarmony * harmony = *i;
+	if (system && system->getStaffNumber(this) == 1) {
+		const NEPointerList& systemElements = system->GetCompositeElements();
+		GuidoPos sysPos = systemElements.GetHeadPosition();
+		while (sysPos) {
+			GRNotationElement * e = systemElements.GetNext(sysPos);
+			if (e && e->isGRTempo())
+				collectFloatingCandidate(e, sequence, floatingItems, manualHarmonies, harmonies, tempos, obstacles);
+		}
+	}
+
+	// Process classes from staff outward. MuseScore/Verovio place bow marks
+	// closest to the staff, fingerings and note-local text above them, and
+	// harmonies outermost. Non-harmony note-local objects are compacted toward
+	// the staff first, so imported high dy values do not inflate the system.
+	sort(floatingItems.begin(), floatingItems.end(), sortAboveFloatingItems);
+	for (vector<FloatingItem>::iterator i = floatingItems.begin(); i != floatingItems.end(); ++i) {
+		NVRect box = floatingStackBox(*i, getStaffLSPACE());
+		if (!validBox(box)) continue;
+
+		const float shift = compactAboveShift(box, obstacles, margin);
+		setFloatingAutoYOffset(*i, shift);
+		box += NVPoint(0, shift);
+		obstacles.push_back(box);
+	}
+
+	for (vector<FloatingItem>::iterator i = manualHarmonies.begin(); i != manualHarmonies.end(); ++i) {
+		NVRect box = elementBox(i->element);
+		if (!validBox(box)) continue;
+
+		const float shift = requiredAboveShift(box, obstacles, margin);
+		setFloatingAutoYOffset(*i, shift);
+		box += NVPoint(0, shift);
+		obstacles.push_back(box);
+	}
+
+	// Compute each harmony's required lift against fixed above-staff objects, then
+	// keep the auto-placed harmonies aligned as an outer row.
+	for (vector<FloatingItem>::iterator i = harmonies.begin(); i != harmonies.end(); ++i) {
+		GRHarmony * harmony = i->harmony;
 		NVRect box = elementBox(harmony);
 		if (!validBox(box)) continue;
 
-		float targetBottom = box.bottom;
-		for (vector<NVRect>::const_iterator j = obstacles.begin(); j != obstacles.end(); ++j) {
-			if (horizontalOverlap(box, *j)) {
-				const float desiredBottom = j->top - margin;
-				if (desiredBottom < targetBottom)
-					targetBottom = desiredBottom;
-			}
-		}
-
 		placedHarmonies.push_back(harmony);
 		harmonyBoxes.push_back(box);
-		harmonyOffsets.push_back(targetBottom - box.bottom);
+		harmonyOffsets.push_back(requiredAboveShift(box, obstacles, margin));
 	}
 
-	if (harmonyOffsets.empty())
-		return;
+	if (!harmonyOffsets.empty()) {
+		// Harmonies on one staff are visually a row. Apply the largest required lift
+		// to every auto-placed harmony so isolated collisions do not create jagged y positions.
+		float groupOffset = 0;
+		for (vector<float>::const_iterator i = harmonyOffsets.begin(); i != harmonyOffsets.end(); ++i) {
+			if (*i < groupOffset)
+				groupOffset = *i;
+		}
 
-	// Harmonies on one staff are visually a row. Apply the largest required lift
-	// to every auto-placed harmony so isolated collisions do not create jagged y positions.
-	float groupOffset = 0;
-	for (vector<float>::const_iterator i = harmonyOffsets.begin(); i != harmonyOffsets.end(); ++i) {
-		if (*i < groupOffset)
-			groupOffset = *i;
-	}
+		for (size_t i = 0; i < placedHarmonies.size(); ++i) {
+			GRHarmony * harmony = placedHarmonies[i];
+			harmony->setAutoYOffset(groupOffset);
 
-	for (size_t i = 0; i < placedHarmonies.size(); ++i) {
-		GRHarmony * harmony = placedHarmonies[i];
-		harmony->setAutoYOffset(groupOffset);
-
-		NVRect box = harmonyBoxes[i];
-		box += NVPoint(0, groupOffset);
-		if (isAboveStaffCandidate(box))
+			NVRect box = harmonyBoxes[i];
+			box += NVPoint(0, groupOffset);
 			obstacles.push_back(box);
+		}
+	}
+
+	// Tempo marks are system-level text. Keep them outside the note-local and
+	// harmony stack, but only lift them when the bounded imported position still
+	// overlaps above-staff material.
+	for (vector<FloatingItem>::iterator i = tempos.begin(); i != tempos.end(); ++i) {
+		NVRect box = elementBox(i->element);
+		if (!validBox(box)) continue;
+
+		const float shift = requiredAboveShift(box, obstacles, margin);
+		setFloatingAutoYOffset(*i, shift);
+		box += NVPoint(0, shift);
+		obstacles.push_back(box);
 	}
 }
 
@@ -2295,7 +2626,7 @@ void GRStaff::FinishStaff()
         }
     }
     if (mStaffState.fMultiVoiceCollisions) checkMultiVoiceNotesCollision();
-	adjustHarmonyCollisions();
+	adjustFloatingCollisions();
 	updateBoundingBox();
 //	GRStaffOnOffVisitor v;
 //	accept (v);
@@ -2312,7 +2643,7 @@ void GRStaff::boundingBoxPreview()
 {
     traceMethod("boundingBoxPreview");
     if (extendedBB) {
-		adjustHarmonyCollisions();
+		adjustFloatingCollisions();
         updateBoundingBox();
         
         // AC: calculate noteOnlyBoundingBox for AutoPos
@@ -2333,7 +2664,7 @@ void GRStaff::boundingBoxPreview()
         return;
     }
 	
-	adjustHarmonyCollisions();
+	adjustFloatingCollisions();
     mBoundingBox.Set (0,0,0,0);
 	GuidoPos pos = mCompElements.GetHeadPosition();
 	while (pos)
@@ -2430,11 +2761,11 @@ void GRStaff::updateBoundingBox()
 
                 GRPositionTag * ptag = dynamic_cast<GRPositionTag *>(e);
                 if (ptag) {
-                    if (e->isText()) { // || e->isGRHarmony()) {
-                        tmp = e->getBoundingBox() + e->getPosition();
-                        if (r.top > tmp.top)         r.top = tmp.top;
-                        if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
-                        continue;
+					if (const GRText * text = e->isText()) { // || e->isGRHarmony()) {
+						tmp = e->getBoundingBox() + e->getPosition() + NVPoint(0, text->getAutoYOffset());
+						if (r.top > tmp.top)         r.top = tmp.top;
+						if (r.bottom < tmp.bottom)    r.bottom = tmp.bottom;
+						continue;
                     }
                 }
 

@@ -70,6 +70,11 @@ class GRText : public GRPTagARNotationElement
 		virtual void 	setPosition(const NVPoint & inPosition );
 		virtual void 	setHPosition( float nx );
 				void	mustFollowPitch( bool flag ) { mMustFollowPitch = flag; }
+		// Layout-time displacement added by GRStaff after text boxes are known.
+		// This is kept separate from parsed MusicXML/GMN dx/dy values.
+		virtual void	setAutoYOffset(float y)		{ mAutoYOffset = y; }
+		virtual void	resetAutoYOffset()			{ setAutoYOffset(0); }
+		virtual float	getAutoYOffset() const		{ return mAutoYOffset; }
 
 		virtual bool	checkCollisionWith() const	{ return true; }
 		virtual bool	isLyrics() const;
@@ -93,6 +98,7 @@ class GRText : public GRPTagARNotationElement
 		bool	mMustFollowPitch; // (when the text tag has a range)
 		float	mStaffBottom;
 		float 	fLineHeight = 0.f;
+		float	mAutoYOffset = 0.f;
 
 	private:
 		std::vector<std::string> fSubstrings;
@@ -100,4 +106,3 @@ class GRText : public GRPTagARNotationElement
 };
 
 #endif
-

@@ -34,6 +34,18 @@ GRFingering::GRFingering(GRStaff * staff, const ARText * ar) : GRText(staff, ar)
 	mMustFollowPitch = true;
 }
 
+const NVPoint& GRFingering::getOffset() const
+{
+	mResolvedOffset = GRText::getOffset();
+	mResolvedOffset.y += mAutoYOffset;
+	return mResolvedOffset;
+}
+
+void GRFingering::setAutoYOffset(float y)
+{
+	mAutoYOffset = y;
+}
+
 // -----------------------------------------------------------------------------
 void GRFingering::accept (GRVisitor& visitor)
 {

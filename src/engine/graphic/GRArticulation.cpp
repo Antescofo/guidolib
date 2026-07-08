@@ -144,6 +144,18 @@ void GRArticulation::print(ostream& os) const
 	os << "articulation " << mArticulationFlag ;
 }
 
+const NVPoint& GRArticulation::getOffset() const
+{
+	mResolvedOffset = GRTagARNotationElement::getOffset();
+	mResolvedOffset.y += mAutoYOffset;
+	return mResolvedOffset;
+}
+
+void GRArticulation::setAutoYOffset(float y)
+{
+	mAutoYOffset = y;
+}
+
 
 // -----------------------------------------------------------------------------
 int GRArticulation::getArticulationFlag		( const ARMusicalTag * ar ) const

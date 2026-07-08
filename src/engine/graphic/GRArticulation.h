@@ -45,6 +45,7 @@ class GRArticulation : public GRTagARNotationElement
 		virtual ~GRArticulation() {}
 
 		virtual const NVPoint & getReferencePosition() const;
+		virtual const NVPoint & getOffset() const;
 		virtual void setPosition(const NVPoint & point);
 
 		// this will be done by the event to which
@@ -55,6 +56,9 @@ class GRArticulation : public GRTagARNotationElement
 		virtual void OnDraw( VGDevice & hdc ) const;
 
 		int	 	getArticulationType() const		{ return mArticulationFlag; }
+		void	setAutoYOffset(float y);
+		void	resetAutoYOffset()				{ setAutoYOffset(0); }
+		float	getAutoYOffset() const			{ return mAutoYOffset; }
 		void 	print(std::ostream& os) const;
 	
 		static bool  compare (GRArticulation* i, GRArticulation* j) 	{ return (i->getArticulationOrder() < j->getArticulationOrder()); }
@@ -107,6 +111,8 @@ class GRArticulation : public GRTagARNotationElement
 		void	initOrder ();
 	
 		NVPoint fRefPos;
+		float	mAutoYOffset = 0;
+		mutable NVPoint mResolvedOffset;
 };
 
 #endif

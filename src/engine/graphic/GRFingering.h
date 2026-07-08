@@ -31,10 +31,16 @@ class GRFingering : public GRText
 		virtual void 	tellPosition( GObject * caller, const NVPoint & inPosition );
 		virtual void 	OnDraw( VGDevice & hdc ) const;
 		virtual GRFingering *	isGRFingering()	{ return this; }
+		virtual const NVPoint& getOffset() const;
+		virtual void	setAutoYOffset(float y);
+		virtual void	resetAutoYOffset()				{ setAutoYOffset(0); }
+		virtual float	getAutoYOffset() const			{ return mAutoYOffset; }
 
 		virtual void	tellPositionEnd( GRSingleNote * caller, const NVPoint & inPosition );
 		const ARFingering * getARFingering() const;
+
+	private:
+		mutable NVPoint mResolvedOffset;
 };
 
 #endif
-

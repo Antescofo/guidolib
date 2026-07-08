@@ -196,7 +196,7 @@ void GRText::OnDraw( VGDevice & hdc ) const
     if (!st->text.empty()) {
 		const char* t = st->text.c_str();
 		size_t prevpos = 0 , pos = 0;
-		float y = mPosition.y;
+		float y = mPosition.y + mAutoYOffset;
 		bool align = fSubstrings.size() > 1;
 		for (auto a: fSubstrings) {
 			hdc.DrawString(mPosition.x, y, a.c_str(), (int)a.size());

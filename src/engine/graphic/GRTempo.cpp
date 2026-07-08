@@ -91,6 +91,25 @@ float GRTempo::getXPos() const
 }
 
 // ----------------------------------------------------------------------------
+const NVPoint& GRTempo::getOffset() const
+{
+	mResolvedOffset = GRTagARNotationElement::getOffset();
+	mResolvedOffset.y += mAutoYOffset;
+	return mResolvedOffset;
+}
+
+// ----------------------------------------------------------------------------
+NVRect GRTempo::getLayoutBoundingBox() const
+{
+	// Tempo is a system tag, but getXPos() resolves its actual draw anchor from
+	// the musical date. Collision layout must use that same x coordinate;
+	// otherwise multiple tempo marks on one system all look horizontally stacked.
+	NVRect box = getBoundingBox();
+	box += NVPoint(mPosition.x + getXPos() + fXAlign, mPosition.y + getOffset().y);
+	return box;
+}
+
+// ----------------------------------------------------------------------------
 void GRTempo::OnDraw( VGDevice & hdc ) const
 {
 	if(!mDraw || !mShow) return;
@@ -103,8 +122,7 @@ void GRTempo::OnDraw( VGDevice & hdc ) const
 
 	float space = getGRStaff()->getStaffLSPACE() / 2 * fNoteScale;
 	float currX = getXPos() + fXAlign;
-//	float dy = ar->getDY() ? - ar->getDY()->getValue(LSPACE) : 0.f;
-	float dy = - ar->getDY()->getValue(LSPACE);
+	float dy = getOffset().y;
 	for (auto l : ar->getTempoMark()) {
 		if (l.second == FormatStringParser::kSpecial) {
 			NoteDrawer nd (fMusicFont, mPosition, fYAlign);

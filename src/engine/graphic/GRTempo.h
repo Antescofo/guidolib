@@ -36,6 +36,14 @@ class GRTempo : public GRTagARNotationElement
 		virtual void			OnDraw( VGDevice & dev ) const;
 		virtual unsigned int	getTextAlign() const;
 		virtual const GRTempo *	isGRTempo() const		{ return this; }
+		virtual const NVPoint& getOffset() const;
+
+		/// Layout-time vertical correction used when tempo marks collide with
+		/// above-staff note-local stacks imported from MusicXML.
+		void setAutoYOffset(float y)		{ mAutoYOffset = y; }
+		void resetAutoYOffset()			{ mAutoYOffset = 0; }
+		float getAutoYOffset() const		{ return mAutoYOffset; }
+		NVRect getLayoutBoundingBox() const;
 
 	private:
 		TYPE_TIMEPOSITION fDate;
@@ -54,6 +62,8 @@ class GRTempo : public GRTagARNotationElement
 		float   	  fXAlign = 0.f;		// used as note X offset acording to text horizontal align
 
 		unsigned int  fTextAlign;
+		float		  mAutoYOffset = 0;
+		mutable NVPoint mResolvedOffset;
 };
 
 #endif
