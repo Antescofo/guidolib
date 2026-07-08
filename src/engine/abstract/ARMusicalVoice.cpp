@@ -3162,6 +3162,7 @@ void ARMusicalVoice::doAutoDisplayCheck()
 	// ATTENTION can a meter be turned off?
 	ARMeter * curmeter = NULL;
 	TYPE_DURATION curmetertime;
+	TYPE_TIMEPOSITION curmeasurestart = DURATION_0;
 	ARMusicalVoiceState vst;
 	const ARDisplayDuration* ardisp = nullptr;
 
@@ -3321,6 +3322,9 @@ void ARMusicalVoice::doAutoDisplayCheck()
 		}
 
 		ARMusicalObject * o = GetAt(pos);
+		if (o && o->isARBar())
+			curmeasurestart = o->getRelativeTimePosition();
+
 		ARMusicalEvent * ev = ARMusicalEvent::cast(o);
 		bool dontsplit = (tupletcount > 0); //false;
 		if (ev && !ev->getAppearance().empty()) dontsplit = true;
@@ -3330,6 +3334,15 @@ void ARMusicalVoice::doAutoDisplayCheck()
 
 		if (dur > DURATION_0)
 		{
+			const bool wholeMeasureRest = curmeter && ev && ev->isARRest() && !vst.fCurdispdur && !mergelookahead
+				&& (ev->getRelativeTimePosition() == curmeasurestart) && (dur == curmetertime);
+			if (wholeMeasureRest) {
+				// A full-measure rest is conventionally drawn as a whole rest even
+				// when the meter duration itself is not graphically displayable.
+				InsertDisplayDurationTag(DURATION_1, 0, ev->getRelativeTimePosition(), pos, vst);
+			}
+
+			if (!wholeMeasureRest) {
 			int dots = ev->getPoints();
 //cerr << __FILE__ << " " << __LINE__ << " check ev " << ev << " points: " << ev->getPoints() << endl;
 			// check, whether the duration fits the current base
@@ -3599,6 +3612,7 @@ void ARMusicalVoice::doAutoDisplayCheck()
 				lastevpos = pos;
 				FLA = vst.ptagpos;
 				continue;
+			}
 			}
 		} // if dur>DURATION_0
 
